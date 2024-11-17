@@ -1,8 +1,33 @@
 ﻿@page
 @model Fryzjer.Pages.LoginModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Logowanie";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Zaloguj się lub zarejestruj.</p>
+<h1>Logowanie</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<form method="post">
+    <div class="form-group">
+        <label for="Login">Login</label>
+        <input type="text" id="Login" name="Login" class="form-control" asp-for="Login" required />
+        <span asp-validation-for="Login" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Password">Hasło</label>
+        <input type="password" id="Password" name="Password" class="form-control" asp-for="Password" required />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Zaloguj się</button>
+</form>

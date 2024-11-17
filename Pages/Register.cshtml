@@ -1,0 +1,57 @@
+﻿@page
+@model Fryzjer.Pages.RegisterModel
+@{
+    ViewData["Title"] = "Rejestracja";
+}
+
+<h1>Rejestracja</h1>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label for="Name">Imię</label>
+        <input type="text" id="Name" name="Name" class="form-control" asp-for="Name" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Surname">Nazwisko</label>
+        <input type="text" id="Surname" name="Surname" class="form-control" asp-for="Surname" required />
+        <span asp-validation-for="Surname" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Gender">Płeć</label>
+        <select id="Gender" name="Gender" class="form-control" asp-for="Gender" required>
+            <option value="M">Mężczyzna</option>
+            <option value="K">Kobieta</option>
+            <option value="N">Inne</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="Login">Login</label>
+        <input type="text" id="Login" name="Login" class="form-control" asp-for="Login" required />
+        <span asp-validation-for="Login" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Password">Hasło</label>
+        <input type="password" id="Password" name="Password" class="form-control" asp-for="Password" required />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Phone">Numer telefonu</label>
+        <input type="text" id="Phone" name="Phone" class="form-control" asp-for="Phone" required />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Zarejestruj</button>
+</form>
