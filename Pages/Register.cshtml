@@ -15,42 +15,43 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="form-group">
-        <label for="Name">Imię</label>
-        <input type="text" id="Name" name="Name" class="form-control" asp-for="Name" required />
-        <span asp-validation-for="Name" class="text-danger"></span>
+        <label for="Client_Name">Imię</label>
+        <input type="text" id="Client_Name" name="Client.Name" class="form-control" asp-for="Client.Name" />
+        <span asp-validation-for="Client.Name" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label for="Surname">Nazwisko</label>
-        <input type="text" id="Surname" name="Surname" class="form-control" asp-for="Surname" required />
-        <span asp-validation-for="Surname" class="text-danger"></span>
+        <label for="Client_Surname">Nazwisko</label>
+        <input type="text" id="Client_Surname" name="Client.Surname" class="form-control" asp-for="Client.Surname" />
+        <span asp-validation-for="Client.Surname" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label for="Gender">Płeć</label>
-        <select id="Gender" name="Gender" class="form-control" asp-for="Gender" required>
+        <label for="Client_Gender">Płeć</label>
+        <select id="Client_Gender" name="Client.Gender" class="form-control" asp-for="Client.Gender">
             <option value="M">Mężczyzna</option>
             <option value="K">Kobieta</option>
             <option value="N">Inne</option>
         </select>
+        <span asp-validation-for="Client.Gender" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label for="Login">Login</label>
-        <input type="text" id="Login" name="Login" class="form-control" asp-for="Login" required />
-        <span asp-validation-for="Login" class="text-danger"></span>
+        <label for="Client_Login">Login</label>
+        <input type="text" id="Client_Login" name="Client.Login" class="form-control" asp-for="Client.Login" />
+        <span asp-validation-for="Client.Login" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label for="Password">Hasło</label>
-        <input type="password" id="Password" name="Password" class="form-control" asp-for="Password" required />
-        <span asp-validation-for="Password" class="text-danger"></span>
+        <label for="Client_Password">Hasło</label>
+        <input type="password" id="Client_Password" name="Client.Password" class="form-control" asp-for="Client.Password" />
+        <span asp-validation-for="Client.Password" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label for="Phone">Numer telefonu</label>
-        <input type="text" id="Phone" name="Phone" class="form-control" asp-for="Phone" required />
-        <span asp-validation-for="Phone" class="text-danger"></span>
+        <label for="Client_Phone">Numer telefonu</label>
+        <input type="text" id="Client_Phone" name="Client.Phone" class="form-control" asp-for="Client.Phone" />
+        <span asp-validation-for="Client.Phone" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Zarejestruj</button>

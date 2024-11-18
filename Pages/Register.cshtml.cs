@@ -2,6 +2,7 @@ using Fryzjer.Data;
 using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Identity;
 
 namespace Fryzjer.Pages
 {
@@ -12,22 +13,7 @@ namespace Fryzjer.Pages
         public string ErrorMessage { get; set; } = string.Empty;
 
         [BindProperty]
-        public string Name { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string Surname { get; set; } = string.Empty;
-
-        [BindProperty]
-        public char Gender { get; set; } = 'M';
-
-        [BindProperty]
-        public string Login { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string Password { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string Phone { get; set; } = string.Empty;
+        public Client Client { get; set; } = new Client();
 
         public RegisterModel(FryzjerContext context)
         {
@@ -40,6 +26,7 @@ namespace Fryzjer.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
+            // Walidacja modelu
             if (!ModelState.IsValid)
             {
                 ErrorMessage = "Wprowadzone dane s¹ nieprawid³owe.";
@@ -47,26 +34,19 @@ namespace Fryzjer.Pages
             }
 
             // SprawdŸ, czy login ju¿ istnieje
-            if (_context.Client.Any(c => c.Login == Login))
+            if (_context.Client.Any(c => c.Login == Client.Login))
             {
                 ErrorMessage = "Login zajêty, spróbuj inny.";
                 return Page();
             }
 
-            // Dodaj nowego u¿ytkownika
-            var client = new Client
-            {
-                Name = Name,
-                Surname = Surname,
-                Gender = Gender,
-                Login = Login,
-                Password = Password,
-                Phone = Phone
-            };
+            // Haszowanie has³a
+            var hasher = new PasswordHasher<string>();
+            Client.Password = hasher.HashPassword(null, Client.Password);
 
             try
             {
-                _context.Client.Add(client);
+                _context.Client.Add(Client);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -75,7 +55,7 @@ namespace Fryzjer.Pages
                 return Page();
             }
 
-            // Ustaw komunikat w TempData i przekieruj na stronê logowania
+            // Ustaw komunikat i przekieruj na stronê logowania
             TempData["SuccessMessage"] = "Konto zosta³o dodane.";
             return RedirectToPage("/Login");
         }
