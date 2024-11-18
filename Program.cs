@@ -5,6 +5,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Czas wygaœniêcia sesji
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 builder.Services.AddDbContext<FryzjerContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("FryzjerContext") ?? throw new InvalidOperationException("Connection string 'FryzjerContext' not found.")));
 
@@ -21,10 +28,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseSession();
 app.UseRouting();
-
 app.UseAuthorization();
+
 
 app.MapRazorPages();
 
 app.Run();
+

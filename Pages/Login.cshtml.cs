@@ -54,6 +54,8 @@ namespace Fryzjer.Pages
 
             if (result == PasswordVerificationResult.Success)
             {
+                // Przechowaj login u¿ytkownika w sesji
+                HttpContext.Session.SetString("UserLogin", user.Login);
                 // Logowanie udane
                 return RedirectToPage("/Index");
             }

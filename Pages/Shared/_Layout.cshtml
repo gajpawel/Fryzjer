@@ -23,14 +23,35 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Strona główna</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Login">Zaloguj się</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Register">Zarejestruj się</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Clients/Index">Klienci</a>
                         </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (Context.Session?.GetString("UserLogin") != null) // Sprawdzenie, czy użytkownik jest zalogowany
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Mój profil
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                    <li><a class="dropdown-item" asp-area="" asp-page="/Profile">Moje konto</a></li>
+                                    <li>
+                                        <form method="post" action="/Index?handler=Logout" style="display: inline;">
+                                            <button type="submit" class="dropdown-item">Wyloguj</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Login">Zaloguj się</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Register">Zarejestruj się</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
