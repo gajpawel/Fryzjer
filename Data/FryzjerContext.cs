@@ -29,7 +29,13 @@ namespace Fryzjer.Data
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            foreach (var property in modelBuilder.Model.GetEntityTypes()
+         .SelectMany(t => t.GetProperties())
+         .Where(p => p.ClrType == typeof(string)))
+            {
+                property.SetColumnType("TEXT"); // Ustaw TEXT dla wszystkich stringów
+            }
+
             base.OnModelCreating(modelBuilder);
 
             // Relacje w modelu

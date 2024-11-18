@@ -13,7 +13,7 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddDbContext<FryzjerContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("FryzjerContext") ?? throw new InvalidOperationException("Connection string 'FryzjerContext' not found.")));
+    options.UseSqlite("Data Source=fryzjer.db"));
 
 var app = builder.Build();
 
