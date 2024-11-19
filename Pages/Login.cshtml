@@ -8,12 +8,12 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    <div id="success-message" class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
-        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
 
 <form method="post">
@@ -31,3 +31,14 @@
 
     <button type="submit" class="btn btn-primary">Zaloguj się</button>
 </form>
+
+<!-- JavaScript do automatycznego ukrywania powiadomienia -->
+<script>
+    const successMessage = document.getElementById("success-message");
+
+    if (successMessage) {
+        setTimeout(() => {
+            successMessage.style.display = "none";
+        }, 2500); // 2,5 sekundy
+    }
+</script>

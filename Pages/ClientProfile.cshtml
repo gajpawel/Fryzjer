@@ -51,11 +51,11 @@
             <!-- Komunikaty -->
             @if (!string.IsNullOrEmpty(Model.SuccessMessage))
             {
-                <div class="alert alert-success">@Model.SuccessMessage</div>
+                <div id="success-message" class="alert alert-success">@Model.SuccessMessage</div>
             }
             @if (!ViewData.ModelState.IsValid)
             {
-                <div class="alert alert-danger">
+                <div id="error-message" class="alert alert-danger">
                     @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                     {
                         <p>@error.ErrorMessage</p>
@@ -86,3 +86,21 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript do automatycznego ukrywania powiadomień -->
+<script>
+    const successMessage = document.getElementById("success-message");
+    const errorMessage = document.getElementById("error-message");
+
+    if (successMessage) {
+        setTimeout(() => {
+            successMessage.style.display = "none";
+        }, 2500); // 2,5 sekundy
+    }
+
+    if (errorMessage) {
+        setTimeout(() => {
+            errorMessage.style.display = "none";
+        }, 2500); // 2,5 sekundy
+    }
+</script>

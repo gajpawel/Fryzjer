@@ -36,6 +36,7 @@ namespace Fryzjer.Pages
             if (string.IsNullOrEmpty(userLogin))
             {
                 ModelState.AddModelError(string.Empty, "Wyst¹pi³ b³¹d. Spróbuj ponownie.");
+                LoadUserData(); // Za³aduj dane u¿ytkownika
                 return RedirectToPage("/Login");
             }
 
@@ -44,6 +45,7 @@ namespace Fryzjer.Pages
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "U¿ytkownik nie zosta³ znaleziony.");
+                LoadUserData(); // Za³aduj dane u¿ytkownika
                 return RedirectToPage("/Login");
             }
 
@@ -53,6 +55,7 @@ namespace Fryzjer.Pages
             if (verificationResult != PasswordVerificationResult.Success)
             {
                 ModelState.AddModelError(string.Empty, "Nieprawid³owe obecne has³o.");
+                LoadUserData(); // Za³aduj dane u¿ytkownika
                 return Page();
             }
 
@@ -64,6 +67,7 @@ namespace Fryzjer.Pages
                 {
                     ModelState.AddModelError(string.Empty, error);
                 }
+                LoadUserData(); // Za³aduj dane u¿ytkownika
                 return Page();
             }
 
@@ -89,6 +93,7 @@ namespace Fryzjer.Pages
             if (string.IsNullOrEmpty(userLogin))
             {
                 ModelState.AddModelError(string.Empty, "Wyst¹pi³ b³¹d. Spróbuj ponownie.");
+                LoadUserData(); // Za³aduj dane u¿ytkownika
                 return RedirectToPage("/Login");
             }
 
@@ -97,6 +102,7 @@ namespace Fryzjer.Pages
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "U¿ytkownik nie zosta³ znaleziony.");
+                LoadUserData(); // Za³aduj dane u¿ytkownika
                 return RedirectToPage("/Login");
             }
 
