@@ -9,6 +9,14 @@
     <link rel="stylesheet" href="~/Fryzjer.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <!-- Globalne powiadomienie tylko dla usunięcia konta -->
+    @if (TempData["AccountDeleted"] != null)
+    {
+        <div id="global-message" class="alert alert-success text-center" style="position: fixed; top: 0; left: 0; right: 0; z-index: 1050;">
+            @TempData["AccountDeleted"]
+        </div>
+    }
+
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
@@ -75,6 +83,16 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Automatyczne ukrywanie powiadomienia -->
+    <script>
+        const globalMessage = document.getElementById("global-message");
+        if (globalMessage) {
+            setTimeout(() => {
+                globalMessage.style.display = "none";
+            }, 2500); // 2,5 sekundy
+        }
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

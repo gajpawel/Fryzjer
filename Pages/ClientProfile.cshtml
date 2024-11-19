@@ -77,7 +77,7 @@
             </form>
 
             <!-- Formularz usunięcia konta -->
-            <form method="post" asp-page-handler="DeleteProfile">
+            <form method="post" asp-page-handler="DeleteProfile" onsubmit="return confirm('Czy na pewno chcesz usunąć swoje konto?')">
                 <div class="alert alert-warning">
                     <strong>Uwaga:</strong> Usunięcie konta jest nieodwracalne. Wszystkie dane zostaną trwale usunięte.
                 </div>

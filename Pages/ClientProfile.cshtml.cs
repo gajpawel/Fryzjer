@@ -3,6 +3,7 @@ using Fryzjer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 
 namespace Fryzjer.Pages
 {
@@ -55,6 +56,17 @@ namespace Fryzjer.Pages
                 return Page();
             }
 
+            // Walidacja nowego has³a
+            var passwordValidationResults = ValidatePassword(NewPassword);
+            if (passwordValidationResults.Count > 0)
+            {
+                foreach (var error in passwordValidationResults)
+                {
+                    ModelState.AddModelError(string.Empty, error);
+                }
+                return Page();
+            }
+
             // Zmieñ has³o w bazie danych
             user.Password = hasher.HashPassword(null, NewPassword);
             _context.SaveChanges();
@@ -95,8 +107,8 @@ namespace Fryzjer.Pages
             // Wyloguj u¿ytkownika
             HttpContext.Session.Remove("UserLogin");
 
-            // Ustaw komunikat w TempData
-            TempData["SuccessMessage"] = "Twoje konto zosta³o usuniête.";
+            // Ustaw komunikat w TempData (widoczny w Layout)
+            TempData["AccountDeleted"] = "Twoje konto zosta³o usuniête.";
             return RedirectToPage("/Index");
         }
 
@@ -112,6 +124,27 @@ namespace Fryzjer.Pages
                     UserName = user.Name ?? "Nieznany u¿ytkownik";
                 }
             }
+        }
+
+        private List<string> ValidatePassword(string password)
+        {
+            var results = new List<string>();
+
+            // Walidacja z modelu Client
+            var client = new Client { Password = password };
+            var validationContext = new ValidationContext(client) { MemberName = nameof(Client.Password) };
+            var validationResults = new List<ValidationResult>();
+
+            bool isValid = Validator.TryValidateProperty(client.Password, validationContext, validationResults);
+            if (!isValid)
+            {
+                foreach (var validationResult in validationResults)
+                {
+                    results.Add(validationResult.ErrorMessage);
+                }
+            }
+
+            return results;
         }
     }
 }
