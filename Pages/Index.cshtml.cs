@@ -20,7 +20,8 @@ namespace Fryzjer.Pages
 
         public IActionResult OnPostLogout()
         {
-            HttpContext.Session.Clear(); // Wyczyœæ sesjê
+            // Usuñ sesjê u¿ytkownika
+            HttpContext.Session.Remove("UserLogin");
             _logger.LogInformation("U¿ytkownik zosta³ wylogowany."); // Informacja w logach
             return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹
         }

@@ -36,7 +36,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                                     <li><a class="dropdown-item" asp-area="" asp-page="/Profile">Moje konto</a></li>
                                     <li>
-                                        <form method="post" action="/Index?handler=Logout" style="display: inline;">
+                                        <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
                                             <button type="submit" class="dropdown-item">Wyloguj</button>
                                         </form>
                                     </li>
