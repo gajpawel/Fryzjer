@@ -1,0 +1,88 @@
+﻿@page
+@model Fryzjer.Pages.ClientProfileModel
+@{
+    ViewData["Title"] = "Mój profil";
+}
+
+<h1>Witaj, @Model.UserName!</h1>
+
+<div>
+    <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+        <!-- Aktualne rezerwacje -->
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(Model.ActiveTab == "reservations" ? "active" : "")" id="current-reservations-tab" data-bs-toggle="tab" data-bs-target="#current-reservations" type="button" role="tab" aria-controls="current-reservations" aria-selected="@(Model.ActiveTab == "reservations")">
+                Aktualne rezerwacje
+            </button>
+        </li>
+
+        <!-- Historia rezerwacji -->
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(Model.ActiveTab == "history" ? "active" : "")" id="reservation-history-tab" data-bs-toggle="tab" data-bs-target="#reservation-history" type="button" role="tab" aria-controls="reservation-history" aria-selected="@(Model.ActiveTab == "history")">
+                Historia rezerwacji
+            </button>
+        </li>
+
+        <!-- Ustawienia -->
+        <li class="nav-item ms-auto" role="presentation">
+            <button class="nav-link @(Model.ActiveTab == "settings" ? "active" : "")" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="@(Model.ActiveTab == "settings")">
+                <img src="/images/settings-icon.jpg" alt="Ustawienia" style="height: 20px; margin-right: 5px;" />
+                Ustawienia
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="profileTabsContent">
+        <!-- Sekcja: Aktualne rezerwacje -->
+        <div class="tab-pane fade @(Model.ActiveTab == "reservations" ? "show active" : "")" id="current-reservations" role="tabpanel" aria-labelledby="current-reservations-tab">
+            <h3>Aktualne rezerwacje</h3>
+            <p>Nie masz jeszcze żadnych aktualnych rezerwacji.</p>
+        </div>
+
+        <!-- Sekcja: Historia rezerwacji -->
+        <div class="tab-pane fade @(Model.ActiveTab == "history" ? "show active" : "")" id="reservation-history" role="tabpanel" aria-labelledby="reservation-history-tab">
+            <h3>Historia rezerwacji</h3>
+            <p>Tu znajdziesz swoje przeszłe rezerwacje.</p>
+        </div>
+
+        <!-- Sekcja: Ustawienia -->
+        <div class="tab-pane fade @(Model.ActiveTab == "settings" ? "show active" : "")" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+            <h3>Ustawienia</h3>
+
+            <!-- Komunikaty -->
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success">@Model.SuccessMessage</div>
+            }
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <p>@error.ErrorMessage</p>
+                    }
+                </div>
+            }
+
+            <!-- Formularz zmiany hasła -->
+            <form method="post" asp-page-handler="ChangePassword" class="mb-4">
+                <div class="form-group">
+                    <label for="currentPassword">Obecne hasło</label>
+                    <input type="password" id="currentPassword" name="CurrentPassword" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Nowe hasło</label>
+                    <input type="password" id="newPassword" name="NewPassword" class="form-control" required />
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Zmień hasło</button>
+            </form>
+
+            <!-- Formularz usunięcia konta -->
+            <form method="post" asp-page-handler="DeleteProfile">
+                <div class="alert alert-warning">
+                    <strong>Uwaga:</strong> Usunięcie konta jest nieodwracalne. Wszystkie dane zostaną trwale usunięte.
+                </div>
+                <button type="submit" class="btn btn-danger">Usuń konto</button>
+            </form>
+        </div>
+    </div>
+</div>
