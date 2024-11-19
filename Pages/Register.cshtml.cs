@@ -57,7 +57,9 @@ namespace Fryzjer.Pages
 
             // Ustaw komunikat i przekieruj na stronê logowania
             TempData["SuccessMessage"] = "Konto zosta³o dodane.";
-            return RedirectToPage("/Login");
+
+            //Jakub Haberek - przekierowanie z zapisanym loginem
+            return RedirectToPage("/Login", new { login = Client.Login});
         }
     }
 }

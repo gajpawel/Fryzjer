@@ -3,6 +3,7 @@ using Fryzjer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Reflection.Metadata;
 
 namespace Fryzjer.Pages
 {
@@ -29,6 +30,8 @@ namespace Fryzjer.Pages
             {
                 ViewData["SuccessMessage"] = TempData["SuccessMessage"].ToString();
             }
+
+            Login = Request.Query["login"];
         }
 
         public IActionResult OnPost()

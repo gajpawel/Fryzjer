@@ -20,3 +20,8 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+#form_button {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
