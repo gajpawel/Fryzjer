@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Fryzjer.Models.Client">
+    <Position X="8.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAACAAAAAAAQABAAAAAACAAAQIAAAAAA=</HashCode>
+      <FileName>Models\Client.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Fryzjer.Models.Reservation">
+    <Position X="5.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQDACAAAAAAAAAAgAAAAAAAAAAAQAAAEQAAAQAAAAQ=</HashCode>
+      <FileName>Models\Reservation.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Client" />
+      <Property Name="Hairdresser" />
+      <Property Name="Service" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Fryzjer.Models.Hairdresser">
+    <Position X="6" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQCAAAAAAAAAAAAAAAEAAQAAAAAAAAAAEAAAgAAFAA=</HashCode>
+      <FileName>Models\Hairdresser.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Place" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Fryzjer.Models.Place">
+    <Position X="9.25" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAIAQAAAIAEAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Place.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Fryzjer.Models.ReservedStation">
+    <Position X="8.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACgAAAAAABAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ReservedStation.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Reservation" />
+      <Property Name="Station" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Fryzjer.Models.Service">
+    <Position X="1.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAADAAAAAAACAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Service.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Fryzjer.Models.ServiceStation">
+    <Position X="2.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACACAAAAAAAAAIAAAAAAAAAAAAQAAAAAIAAAAAAAA=</HashCode>
+      <FileName>Models\ServiceStation.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Service" />
+      <Property Name="StationType" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Fryzjer.Models.Specialization">
+    <Position X="1" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACACAAAAAAAAAAAAAAAAAAAAAAQAAAEQAAAAAAAAA=</HashCode>
+      <FileName>Models\Specialization.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Hairdresser" />
+      <Property Name="Service" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Fryzjer.Models.Station">
+    <Position X="10.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAIAAAAAAAAAAAAAAAAAEIAAAAABAA=</HashCode>
+      <FileName>Models\Station.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="StationType" />
+      <Property Name="Place" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Fryzjer.Models.StationType">
+    <Position X="5.75" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\StationType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
