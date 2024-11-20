@@ -42,7 +42,15 @@ namespace Fryzjer.Pages
                 return Page();
             }
 
-            // SprawdŸ poprawnoœæ danych logowania
+            // Logowanie jako admin
+            if (Login == "Admin" && Password == "Admin")
+            {
+                HttpContext.Session.SetString("UserLogin", "Admin");
+                return RedirectToPage("/Admin/AdminProfile"); // Przekierowanie na stronê admina
+               
+            }
+
+            // SprawdŸ poprawnoœæ danych logowania z bazy danych
             var user = _context.Client.FirstOrDefault(c => c.Login == Login);
 
             if (user == null)
@@ -68,5 +76,11 @@ namespace Fryzjer.Pages
                 return Page();
             }
         }
+
     }
+
+
+
+
 }
+

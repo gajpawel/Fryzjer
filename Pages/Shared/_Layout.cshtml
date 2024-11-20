@@ -35,7 +35,25 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav">
-                        @if (Context.Session?.GetString("UserLogin") != null) // Sprawdzenie, czy użytkownik jest zalogowany
+                        @if (Context.Session?.GetString("UserLogin") == "Admin") // Sprawdzenie, czy zalogowany jest admin
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Panel admina
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-page="/Admin/AdminProfile">Strona główna admina</a>
+                                    </li>
+                                    <li>
+                                        <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
+                                            <button type="submit" class="dropdown-item">Wyloguj</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else if (Context.Session?.GetString("UserLogin") != null) // Zwykły użytkownik zalogowany
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -53,7 +71,7 @@
                                 </ul>
                             </li>
                         }
-                        else
+                        else // Niezalogowany użytkownik
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Login">Zaloguj się</a>
@@ -62,6 +80,7 @@
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Register">Zarejestruj się</a>
                             </li>
                         }
+
                     </ul>
                 </div>
             </div>
