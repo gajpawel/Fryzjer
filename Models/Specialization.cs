@@ -7,6 +7,7 @@ namespace Fryzjer.Models
     {
         [Key]
         public int Id { get; set; }
+        public string? Name { get; set; }
         
         [ForeignKey("Hairdresser")]
         public int HairdresserId { get; set; }

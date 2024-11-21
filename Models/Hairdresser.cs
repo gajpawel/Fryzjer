@@ -12,7 +12,6 @@ namespace Fryzjer.Models
         public string? login { get; set; } // zadbać by był niepowtarzalny
         public string? password { get; set; } // nałożyć wymagania silnego hasła
         public string? photoPath { get; set; } //ścieżka do zdjęcia profilowego
-        public char status { get; set; } // A - pracuje, X - zwolniony, T - tymczasowo bez przypisanego lokalu
         
         [ForeignKey("Place")]
         public int? PlaceId { get; set; } //ID lokalu, w którym pracuje

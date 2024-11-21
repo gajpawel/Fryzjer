@@ -25,8 +25,9 @@ namespace Fryzjer.Data
         public DbSet<Fryzjer.Models.Specialization> Specialization { get; set; } = default!;
         public DbSet<Fryzjer.Models.Station> Station { get; set; } = default!;
         public DbSet<Fryzjer.Models.StationType> StationType { get; set; } = default!;
+        public DbSet<Fryzjer.Models.Administrator> Administrator { get; set; } = default!;
 
-        
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             foreach (var property in modelBuilder.Model.GetEntityTypes()
