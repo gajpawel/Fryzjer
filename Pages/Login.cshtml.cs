@@ -3,7 +3,6 @@ using Fryzjer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Reflection.Metadata;
 
 namespace Fryzjer.Pages
 {
@@ -47,40 +46,53 @@ namespace Fryzjer.Pages
             {
                 HttpContext.Session.SetString("UserLogin", "Admin");
                 return RedirectToPage("/Admin/AdminProfile"); // Przekierowanie na stronê admina
-               
             }
 
-            // SprawdŸ poprawnoœæ danych logowania z bazy danych
-            var user = _context.Client.FirstOrDefault(c => c.Login == Login);
+            // Sprawdzenie w tabeli Fryzjerów (Hairdresser)
+            var hairdresser = _context.Hairdresser.FirstOrDefault(h => h.login == Login);
 
-            if (user == null)
+            if (hairdresser != null)
             {
-                ErrorMessage = "Nieprawid³owy login lub has³o.";
-                return Page();
+                // Weryfikacja has³a fryzjera
+                var hasher = new PasswordHasher<string>();
+                var result = hasher.VerifyHashedPassword(null, hairdresser.password, Password);
+
+                if (result == PasswordVerificationResult.Success)
+                {
+                    HttpContext.Session.SetString("UserLogin", hairdresser.login);
+                    return RedirectToPage("/Hairdressers/HairdresserMainPage"); // Przekierowanie na stronê g³ówn¹ fryzjera
+                }
+                else
+                {
+                    ErrorMessage = "Nieprawid³owy login lub has³o.";
+                    return Page();
+                }
             }
 
-            // Weryfikacja has³a
-            var hasher = new PasswordHasher<string>();
-            var result = hasher.VerifyHashedPassword(null, user.Password, Password);
+            // Sprawdzenie w tabeli Klientów (Client)
+            var client = _context.Client.FirstOrDefault(c => c.Login == Login);
 
-            if (result == PasswordVerificationResult.Success)
+            if (client != null)
             {
-                // Przechowaj login u¿ytkownika w sesji
-                HttpContext.Session.SetString("UserLogin", user.Login);
-                // Logowanie udane
-                return RedirectToPage("/Index");
+                // Weryfikacja has³a klienta
+                var hasher = new PasswordHasher<string>();
+                var result = hasher.VerifyHashedPassword(null, client.Password, Password);
+
+                if (result == PasswordVerificationResult.Success)
+                {
+                    HttpContext.Session.SetString("UserLogin", client.Login);
+                    return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹ klienta
+                }
+                else
+                {
+                    ErrorMessage = "Nieprawid³owy login lub has³o.";
+                    return Page();
+                }
             }
-            else
-            {
-                ErrorMessage = "Nieprawid³owy login lub has³o.";
-                return Page();
-            }
+
+            // Je¿eli login nie istnieje w ¿adnej tabeli
+            ErrorMessage = "Nie znaleziono u¿ytkownika z takim loginem.";
+            return Page();
         }
-
     }
-
-
-
-
 }
-

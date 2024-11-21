@@ -1,0 +1,31 @@
+﻿@page
+@model Fryzjer.Pages.Hairdressers.HairdresserMainPageModel
+@{
+    ViewData["Title"] = "Panel fryzjera";
+}
+
+<!-- Pasek nawigacji -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/Hairdressers/HairdresserMainPage">Panel Fryzjera</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Hairdressers/HairdresserProfile">Mój Profil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/Logout">Wyloguj się</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Główna zawartość strony -->
+<div class="container mt-4">
+    <h1>Witaj, Fryzjerze!</h1>
+    <p>To jest Twoja strona główna.</p>
+</div>

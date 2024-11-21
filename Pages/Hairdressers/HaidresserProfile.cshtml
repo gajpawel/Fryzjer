@@ -1,0 +1,17 @@
+﻿@page
+@model Fryzjer.Pages.Hairdressers.HairdresserProfileModel
+@{
+    ViewData["Title"] = "Mój Profil";
+}
+
+<h1>Mój Profil</h1>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">Imię i Nazwisko</h5>
+        <p class="card-text">Imię: @Model.Name</p>
+        <p class="card-text">Nazwisko: @Model.Surname</p>
+        <p class="card-text">Status: @Model.Status</p>
+        <a href="/Hairdressers/EditProfile" class="btn btn-primary">Edytuj Profil</a>
+    </div>
+</div>
