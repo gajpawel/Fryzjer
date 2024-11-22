@@ -6,6 +6,6 @@ namespace Fryzjer.Models
     {
         [Key]
         public int Id { get; set; }
-        public string? descripion { get; set; } //np. stanowisko do farbowania, do cięcia, do suszenia
+        public string? description { get; set; } //np. stanowisko do farbowania, do cięcia, do suszenia
     }
 }

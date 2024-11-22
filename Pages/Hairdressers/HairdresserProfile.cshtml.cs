@@ -1,7 +1,7 @@
-using Fryzjer.Data;
-using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Fryzjer.Data;
+using Fryzjer.Models;
 
 namespace Fryzjer.Pages.Hairdressers
 {
@@ -18,27 +18,25 @@ namespace Fryzjer.Pages.Hairdressers
 
         public IActionResult OnGet()
         {
-
+            // Sprawdzenie ID fryzjera w sesji
             int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
-
             if (hairdresserId == null)
             {
-                // Jeœli ID fryzjera nie istnieje w sesji, przekieruj na stronê g³ówn¹
+                // Jeœli brak ID w sesji, przekierowanie na stronê g³ówn¹
                 return RedirectToPage("/Index");
             }
 
-            // Pobierz dane fryzjera z bazy danych
+            // Pobranie danych fryzjera z bazy na podstawie ID
             Hairdresser = _context.Hairdresser.FirstOrDefault(h => h.Id == hairdresserId.Value);
 
             if (Hairdresser == null)
             {
-                // Jeœli fryzjer nie istnieje w bazie, równie¿ przekieruj na stronê g³ówn¹
+                // Jeœli fryzjer nie istnieje w bazie danych
                 return RedirectToPage("/Index");
             }
 
-            // Jeœli wszystko jest poprawne, wyœwietl profil fryzjera
+            // Jeœli wszystkie dane s¹ poprawne, wyœwietlenie profilu
             return Page();
         }
-
     }
 }
