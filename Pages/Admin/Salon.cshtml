@@ -1,4 +1,37 @@
 ﻿@page
 @model Fryzjer.Pages.Admin.SalonModel
+
 @{
+    ViewData["Title"] = "Salon";
 }
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-page="AddSalon" class="btn btn-primary">Add Salon</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Salon Name</th>
+            <th>Address</th>
+            <th>Telephone Number</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Places)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.address</td>
+                <td>@item.telephoneNumber</td>
+                <td>
+                    <a asp-page="EditPlace" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-page="DeletePlace" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
