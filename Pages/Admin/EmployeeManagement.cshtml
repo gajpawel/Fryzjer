@@ -1,4 +1,45 @@
 ﻿@page
 @model Fryzjer.Pages.Admin.EmployeeManagementModel
 @{
+    ViewData["Title"] = "Employee Management";
 }
+
+<h2>@ViewData["Title"]</h2>
+
+<!-- Table for displaying hairdressers -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Hairdressers != null && Model.Hairdressers.Any())
+        {
+            foreach (var hairdresser in Model.Hairdressers)
+            {
+                <tr>
+                    <td>@hairdresser.Name</td>
+                    <td>@hairdresser.surname</td>
+                    <td>
+                        <!-- Actions for Edit, Details, and Delete -->
+                        <a href="@Url.Page("/Admin/EditEmployee", new { id = hairdresser.Id })" class="btn btn-warning btn-sm">Edit</a> |
+                        <a href="@Url.Page("/Admin/DetailsEmployee", new { id = hairdresser.Id })" class="btn btn-info btn-sm">Details</a> |
+                        <a href="@Url.Page("/Admin/DeleteEmployee", new { id = hairdresser.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this hairdresser?')">Delete</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="3">No hairdressers available.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Button for adding new hairdresser -->
+<a class="btn btn-primary" href="@Url.Page("/Admin/AddEmployee")">Add New Employee</a>

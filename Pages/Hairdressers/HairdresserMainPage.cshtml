@@ -1,31 +1,66 @@
-﻿@page
-@model Fryzjer.Pages.Hairdressers.HairdresserMainPageModel
-@{
-    ViewData["Title"] = "Panel fryzjera";
-}
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Fryzjer.Data;
+using Fryzjer.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-<!-- Pasek nawigacji -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/Hairdressers/HairdresserMainPage">Panel Fryzjera</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="/Hairdressers/HairdresserProfile">Mój Profil</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-danger" href="/Logout">Wyloguj się</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+namespace Fryzjer.Pages.Admin
+{
+    public class AddEmployeeModel : PageModel
+    {
+        private readonly FryzjerContext _context;
 
-<!-- Główna zawartość strony -->
-<div class="container mt-4">
-    <h1>Witaj, Fryzjerze!</h1>
-    <p>To jest Twoja strona główna.</p>
-</div>
+        public AddEmployeeModel(FryzjerContext context)
+        {
+            _context = context;
+        }
+
+        // Property for binding the new Hairdresser data
+        [BindProperty]
+        public Hairdresser NewHairdresser { get; set; }
+
+        // List of available Places for the dropdown
+        public List<Place>
+    Places { get; set; }
+
+    // This method will load available places for the dropdown
+    public void OnGet()
+    {
+    Places = _context.Place.ToList();
+    }
+
+    // This method handles the form submission
+    public async Task<IActionResult>
+        OnPostAsync()
+        {
+        if (ModelState.IsValid)
+        {
+        // Ensure that the status is provided, and PlaceId is valid
+        if (NewHairdresser.Status == null)
+        {
+        ModelState.AddModelError("NewHairdresser.Status", "Status is required.");
+        return Page();
+        }
+
+        if (NewHairdresser.PlaceId == null || NewHairdresser.PlaceId <= 0)
+        {
+        ModelState.AddModelError("NewHairdresser.PlaceId", "Place is required.");
+        return Page();
+        }
+
+        // Add the new hairdresser to the context
+        _context.Hairdresser.Add(NewHairdresser);
+        await _context.SaveChangesAsync();
+
+        // Redirect to the employee management page
+        return RedirectToPage("/Admin/EmployeeManagement");
+        }
+
+        // If the model is not valid, re-load places for dropdown
+        Places = _context.Place.ToList();
+        return Page();
+        }
+        }
+        }

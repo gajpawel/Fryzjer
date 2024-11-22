@@ -1,0 +1,54 @@
+﻿@page
+@model Fryzjer.Pages.Admin.EditEmployeeModel
+
+@{
+    ViewData["Title"] = "Edit Employee";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form method="post">
+    <!-- Imię -->
+    <div class="form-group">
+        <label for="Name">First Name:</label>
+        <input type="text" class="form-control" id="Name" name="Hairdresser.Name" value="@Model.Hairdresser.Name" required />
+    </div>
+
+    <!-- Nazwisko -->
+    <div class="form-group">
+        <label for="Surname">Last Name:</label>
+        <input type="text" class="form-control" id="Surname" name="Hairdresser.Surname" value="@Model.Hairdresser.surname" required />
+    </div>
+
+    <!-- Login -->
+    <div class="form-group">
+        <label for="Login">Login:</label>
+        <input type="text" class="form-control" id="Login" name="Hairdresser.Login" value="@Model.Hairdresser.login" required />
+    </div>
+
+    <!-- Hasło -->
+    <div class="form-group">
+        <label for="Password">Password:</label>
+        <input type="password" class="form-control" id="Password" name="Hairdresser.Password" value="@Model.Hairdresser.password" required />
+    </div>
+
+    <!-- Lokal -->
+    <div class="form-group">
+        <label for="PlaceId">Place:</label>
+        <select class="form-control" id="PlaceId" name="Hairdresser.PlaceId" required>
+            <option value="">Select a Place</option>
+            @foreach (var place in Model.Places)
+            {
+                //<option value="@place.Id" @(place.Id == Model.Hairdresser.PlaceId ? "selected" : "")>@place.Name</option>
+                <li>@place.Name - @place.Id</li>
+                //to trzeba dokończyć jak sie lokale zrobi. odkomentować górną linijke i sprawdzić czy działa
+            }
+        </select>
+    </div>
+
+    <!-- Przycisk zapisu -->
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+
+    <!-- Przycisk anulowania -->
+    <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Cancel</a>
+</form>

@@ -1,0 +1,19 @@
+﻿@page
+@model Fryzjer.Pages.Admin.DetailsEmployeeModel
+
+@{
+    ViewData["Title"] = "Employee Details";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Name: @Model.Hairdresser.Name @Model.Hairdresser.surname</h5>
+        <p class="card-text">Login: @Model.Hairdresser.login</p>
+        <p class="card-text">Place: @(Model.Hairdresser.Place?.Name ?? "No place assigned")</p>
+        <p class="card-text">Photo Path: @Model.Hairdresser.photoPath</p>
+    </div>
+</div>
+
+<a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Back to List</a>
