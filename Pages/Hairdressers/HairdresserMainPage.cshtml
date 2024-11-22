@@ -75,15 +75,34 @@
                     </div>
                     <div class="mb-3">
                         <label for="clientName" class="form-label">Imię</label>
-                        <input type="text" class="form-control" id="clientName" placeholder="Imię klienta">
+                        <input type="text" class="form-control" id="clientName" placeholder="Imię klienta" required>
                     </div>
                     <div class="mb-3">
                         <label for="clientSurname" class="form-label">Nazwisko</label>
-                        <input type="text" class="form-control" id="clientSurname" placeholder="Nazwisko klienta">
+                        <input type="text" class="form-control" id="clientSurname" placeholder="Nazwisko klienta" required>
                     </div>
                     <div class="mb-3">
                         <label for="clientPhone" class="form-label">Numer telefonu</label>
-                        <input type="text" class="form-control" id="clientPhone" placeholder="Numer telefonu">
+                        <input type="text" class="form-control" id="clientPhone" placeholder="Numer telefonu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientGender" class="form-label">Płeć</label>
+                        <select class="form-control" id="clientGender" required>
+                            <option value="M">Mężczyzna</option>
+                            <option value="K">Kobieta</option>
+                            <option value="N">Inne</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="service" class="form-label">Usługa</label>
+                        <select class="form-control" id="service" required>
+                            @foreach (var service in Model.Services)
+                            {
+                                <option value="@service.Id" data-duration="@service.Duration">
+                                    @service.Name
+                                </option>
+                            }
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="reservationStart" class="form-label">Godzina rozpoczęcia</label>
@@ -91,7 +110,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="reservationEnd" class="form-label">Godzina zakończenia</label>
-                        <select class="form-control" id="reservationEnd"></select>
+                        <input type="text" class="form-control" id="reservationEnd" readonly>
+                        <button type="button" class="btn btn-link" id="changeTime">Zmień czas</button>
                     </div>
                     <input type="hidden" id="reservationDate">
                 </form>
@@ -113,98 +133,67 @@
             selectedDate = this.getAttribute('data-date');
             selectedHour = this.getAttribute('data-hour');
 
-            // Wypełniamy pola w formularzu
             document.getElementById('reservationDate').value = selectedDate;
             document.getElementById('reservationStart').value = selectedHour;
 
-            // Generujemy opcje zakończenia rezerwacji
-            const endTimeSelect = document.getElementById('reservationEnd');
-            endTimeSelect.innerHTML = ''; // Resetujemy poprzednie opcje
-            let startHour = parseInt(selectedHour.split(':')[0]);
-            let startMinute = parseInt(selectedHour.split(':')[1]);
+            // Automatyczne dostosowanie czasu zakończenia na podstawie usługi
+            const serviceSelect = document.getElementById('service');
+            const reservationEnd = document.getElementById('reservationEnd');
 
-            for (let i = 15; i <= 120; i += 15) {
-                let totalMinutes = startHour * 60 + startMinute + i;
-                let endHour = Math.floor(totalMinutes / 60);
-                let endMinute = totalMinutes % 60;
+            serviceSelect.addEventListener('change', () => {
+                const duration = parseInt(serviceSelect.options[serviceSelect.selectedIndex].dataset.duration);
+                const [startHour, startMinute] = selectedHour.split(':').map(Number);
+                const totalMinutes = startHour * 60 + startMinute + duration;
 
-                // Upewniamy się, że godzina zakończenia nie przekracza 18:00
-                if (endHour >= 18) break;
+                const endHour = Math.floor(totalMinutes / 60);
+                const endMinute = totalMinutes % 60;
+                reservationEnd.value = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+            });
 
-                let endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
-                let option = document.createElement('option');
-                option.value = endTime;
-                option.textContent = endTime;
-                endTimeSelect.appendChild(option);
-            }
+            serviceSelect.dispatchEvent(new Event('change')); // Inicjalizacja
         });
     });
 
-    // Automatyczne wypełnienie danych klienta
-    document.getElementById('clientLogin').addEventListener('blur', async () => {
-        const login = document.getElementById('clientLogin').value;
+    // Obsługa zmiany czasu zakończenia
+    document.getElementById('changeTime').addEventListener('click', () => {
+        const reservationEnd = document.getElementById('reservationEnd');
+        reservationEnd.removeAttribute('readonly');
+    });
 
-        if (!login) return;
+    // Obsługa rezerwacji
+    document.getElementById('saveReservation').addEventListener('click', async () => {
+        const clientLogin = document.getElementById('clientLogin').value;
+        const clientName = document.getElementById('clientName').value;
+        const clientSurname = document.getElementById('clientSurname').value;
+        const clientPhone = document.getElementById('clientPhone').value;
+        const clientGender = document.getElementById('clientGender').value;
+        const serviceId = document.getElementById('service').value;
+        const reservationStart = document.getElementById('reservationStart').value;
+        const reservationEnd = document.getElementById('reservationEnd').value;
 
-        const response = await fetch(`/api/client?login=${login}`);
+        const response = await fetch('/api/reservation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date: selectedDate,
+                hour: reservationStart,
+                client: {
+                    login: clientLogin || null,
+                    name: clientName,
+                    surname: clientSurname,
+                    phone: clientPhone,
+                    gender: clientGender
+                },
+                serviceId: serviceId,
+                endHour: reservationEnd
+            })
+        });
+
         if (response.ok) {
-            const data = await response.json();
-            document.getElementById('clientName').value = data.name;
-            document.getElementById('clientSurname').value = data.surname;
-            document.getElementById('clientPhone').value = data.phone;
+            alert('Rezerwacja została zapisana.');
+            location.reload();
         } else {
-            alert('Klient nie został znaleziony. Możesz wpisać dane ręcznie.');
-            document.getElementById('clientName').value = '';
-            document.getElementById('clientSurname').value = '';
-            document.getElementById('clientPhone').value = '';
+            alert('Wystąpił błąd przy tworzeniu rezerwacji.');
         }
     });
-
- // Obsługa rezerwacji
-document.getElementById('saveReservation').addEventListener('click', async () => {
-    const clientLogin = document.getElementById('clientLogin').value;
-    const clientName = document.getElementById('clientName').value;
-    const clientSurname = document.getElementById('clientSurname').value;
-    const clientPhone = document.getElementById('clientPhone').value;
-    const reservationStart = document.getElementById('reservationStart').value;
-    const reservationEnd = document.getElementById('reservationEnd').value;
-
-    // Wysyłamy dane do API
-    const response = await fetch('/api/reservation', { // Zmieniono endpoint na '/api/reservation'
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            date: selectedDate,
-            hour: reservationStart,
-            client: {
-                login: clientLogin || null,
-                name: clientName,
-                surname: clientSurname,
-                phone: clientPhone
-            },
-            // hairdresserId: 1, // Usunięto, ponieważ ID fryzjera jest pobierane na backendzie
-            // serviceId: 1, // Usunięto lub zakomentowane
-            endHour: reservationEnd // Możesz usunąć, jeśli nie jest używane
-        })
-    });
-
-    if (response.ok) {
-        // Zmieniamy kolor przycisku na czerwony i oznaczamy jako zarezerwowany
-        const button = document.querySelector(`.time-slot[data-hour="${reservationStart}"][data-date="${selectedDate}"]`);
-        button.classList.remove('btn-success');
-        button.classList.add('btn-danger');
-        button.textContent = `${reservationStart} (zarezerwowano)`;
-        button.disabled = true;
-
-        // Zamykamy modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-        modal.hide();
-    } else {
-        const errorText = await response.text();
-        alert('Wystąpił błąd podczas rezerwacji: ' + errorText);
-    }
-});
-
 </script>

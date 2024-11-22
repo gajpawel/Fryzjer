@@ -25,36 +25,34 @@ namespace Fryzjer.Pages.Hairdressers
         // Numer wyœwietlanego tygodnia (0 = bie¿¹cy, -1 = poprzedni, 1 = nastêpny)
         public int CurrentWeek { get; set; } = 0;
 
+        // Lista us³ug do wyœwietlenia w widoku
+        public List<Service> Services { get; set; } = new List<Service>();
+
         public void OnGet(int week = 0)
         {
-            // Zak³adamy, ¿e fryzjer jest zalogowany i jego ID jest dostêpne
-            // Jeœli nie masz mechanizmu logowania, musisz go zaimplementowaæ
-            // Tutaj przyk³adowo ustawiamy HairdresserId w sesji
-
-            // Pobieramy zalogowanego fryzjera (przyk³adowo z bazy)
-            // W praktyce powinieneœ pobraæ fryzjera na podstawie zalogowanego u¿ytkownika
-            var hairdresser = _context.Hairdresser.FirstOrDefault(); // Dostosuj to do swojej logiki
-            if (hairdresser != null)
+            // Pobieramy ID zalogowanego fryzjera z sesji
+            int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
+            if (hairdresserId == null)
             {
-                HttpContext.Session.SetInt32("HairdresserId", hairdresser.Id);
-            }
-            else
-            {
-                // Jeœli fryzjer nie jest zalogowany, przekieruj na stronê logowania
-                // Response.Redirect("/Hairdressers/Login");
+                // Jeœli fryzjer nie jest zalogowany, przekierowujemy na stronê logowania
+                Response.Redirect("/Login");
+                return;
             }
 
             CurrentWeek = week;
+
+            // Pobieramy dostêpne us³ugi z bazy danych
+            Services = _context.Service.ToList();
 
             // Obliczamy pierwszy dzieñ wybranego tygodnia (poniedzia³ek)
             var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
 
             // Przygotowujemy harmonogramy dla dwóch tygodni (poniedzia³ek-pi¹tek)
-            WeeklySchedule1 = GenerateSchedule(startDate);
-            WeeklySchedule2 = GenerateSchedule(startDate.AddDays(7));
+            WeeklySchedule1 = GenerateSchedule(startDate, hairdresserId.Value);
+            WeeklySchedule2 = GenerateSchedule(startDate.AddDays(7), hairdresserId.Value);
         }
 
-        private List<DailySchedule> GenerateSchedule(DateTime startDate)
+        private List<DailySchedule> GenerateSchedule(DateTime startDate, int hairdresserId)
         {
             var schedule = new List<DailySchedule>();
 
@@ -65,7 +63,7 @@ namespace Fryzjer.Pages.Hairdressers
 
                 if (date >= DateTime.Now.Date) // Generujemy godziny tylko dla przysz³ych dat
                 {
-                    dailyHours = GenerateDailyHours(date);
+                    dailyHours = GenerateDailyHours(date, hairdresserId);
                 }
 
                 schedule.Add(new DailySchedule
@@ -78,19 +76,11 @@ namespace Fryzjer.Pages.Hairdressers
             return schedule;
         }
 
-        private List<HourStatus> GenerateDailyHours(DateTime date)
+        private List<HourStatus> GenerateDailyHours(DateTime date, int hairdresserId)
         {
             var hours = new List<HourStatus>();
             var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
             var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
-
-            // Pobieramy ID fryzjera z sesji
-            int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
-            if (hairdresserId == null)
-            {
-                // Jeœli fryzjer nie jest zalogowany, zwracamy pust¹ listê
-                return hours;
-            }
 
             // Pobieramy istniej¹ce rezerwacje na dany dzieñ dla danego fryzjera
             var reservations = _context.Reservation
