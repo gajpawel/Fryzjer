@@ -42,7 +42,7 @@
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Hairdressers/HairdresserMainPage">Panel fryzjera</a>
                             </li>
                         }
-                        else if (Context.Session?.GetString("UserType") != "Client") // Zalogowany klient
+                        else if (Context.Session?.GetString("UserType") == "Client") // Zalogowany klient
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Index">Strona główna</a>
