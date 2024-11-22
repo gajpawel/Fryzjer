@@ -80,7 +80,7 @@
                         else if(Context.Session?.GetString("HairdresserId") != null) // Fryzjer zalogowany
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="Hairdressers/HairdresserProfile">Mój profil</a>
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Hairdressers/HairdresserProfile">Mój profil</a>
                             </li>
                             <li class="nav-item">
                                 <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
