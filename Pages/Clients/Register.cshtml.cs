@@ -33,17 +33,23 @@ namespace Fryzjer.Pages
                 return Page();
             }
 
-            // Walidacja loginu
+            // Walidacja loginu i has³a
             if (string.IsNullOrWhiteSpace(Client.Login))
             {
                 ModelState.AddModelError("Client.Login", "Login jest wymagany podczas rejestracji.");
                 return Page();
             }
 
+            if (string.IsNullOrWhiteSpace(Client.Password))
+            {
+                ModelState.AddModelError("Client.Password", "Has³o jest wymagane podczas rejestracji.");
+                return Page();
+            }
+
             // SprawdŸ, czy login ju¿ istnieje
             if (_context.Client.Any(c => c.Login == Client.Login))
             {
-                ErrorMessage = "Login zajêty, spróbuj inny.";
+                ModelState.AddModelError("Client.Login", "Ten login jest ju¿ zajêty.");
                 return Page();
             }
 
@@ -53,6 +59,7 @@ namespace Fryzjer.Pages
 
             try
             {
+                // Dodanie klienta do bazy danych
                 _context.Client.Add(Client);
                 await _context.SaveChangesAsync();
             }
@@ -62,9 +69,8 @@ namespace Fryzjer.Pages
                 return Page();
             }
 
-            // Ustaw komunikat i przekieruj na stronê logowania
-            TempData["SuccessMessage"] = "Konto zosta³o dodane.";
-
+            // Ustaw komunikat sukcesu i przekierowanie na stronê logowania
+            TempData["SuccessMessage"] = "Rejestracja zakoñczona sukcesem! Mo¿esz siê zalogowaæ.";
             return RedirectToPage("/Login", new { login = Client.Login });
         }
     }

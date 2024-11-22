@@ -38,13 +38,13 @@
 
     <div class="form-group">
         <label for="Client_Login">Login</label>
-        <input type="text" id="Client_Login" name="Client.Login" class="form-control" asp-for="Client.Login" />
+        <input type="text" id="Client_Login" name="Client.Login" class="form-control" asp-for="Client.Login" required />
         <span asp-validation-for="Client.Login" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label for="Client_Password">Hasło</label>
-        <input type="password" id="Client_Password" name="Client.Password" class="form-control" asp-for="Client.Password" />
+        <input type="password" id="Client_Password" name="Client.Password" class="form-control" asp-for="Client.Password" required />
         <span asp-validation-for="Client.Password" class="text-danger"></span>
     </div>
 
