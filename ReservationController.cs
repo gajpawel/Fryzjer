@@ -22,15 +22,18 @@ namespace Fryzjer.Controllers
         {
             public string date { get; set; }
             public string hour { get; set; }
+            public string endHour { get; set; }
             public ClientInfo client { get; set; }
+            public int serviceId { get; set; }
         }
 
         public class ClientInfo
         {
             public string? login { get; set; } // Opcjonalny login klienta
-            public string name { get; set; }  // Imię klienta
+            public string name { get; set; }   // Imię klienta
             public string surname { get; set; } // Nazwisko klienta
-            public string phone { get; set; } // Telefon klienta
+            public string phone { get; set; }   // Telefon klienta
+            public char gender { get; set; }    // Płeć klienta ('M', 'K', 'N')
         }
 
         // POST: api/Reservation
@@ -44,7 +47,7 @@ namespace Fryzjer.Controllers
                     return BadRequest("Nieprawidłowe dane rezerwacji.");
                 }
 
-                // Walidacja daty i godziny
+                // Walidacja daty i godziny rozpoczęcia
                 if (!DateTime.TryParse(request.date, out DateTime reservationDate))
                 {
                     return BadRequest("Nieprawidłowy format daty.");
@@ -53,6 +56,12 @@ namespace Fryzjer.Controllers
                 if (!TimeSpan.TryParse(request.hour, out TimeSpan startTime))
                 {
                     return BadRequest("Nieprawidłowy format godziny rozpoczęcia.");
+                }
+
+                // Walidacja godziny zakończenia
+                if (!TimeSpan.TryParse(request.endHour, out TimeSpan endTime))
+                {
+                    return BadRequest("Nieprawidłowy format godziny zakończenia.");
                 }
 
                 // Pobieramy ID fryzjera z sesji
@@ -69,6 +78,15 @@ namespace Fryzjer.Controllers
                     client = _context.Client.FirstOrDefault(c => c.Login == request.client.login);
                 }
 
+                // Sprawdzenie, czy klient już istnieje na podstawie imienia, nazwiska i telefonu
+                if (client == null)
+                {
+                    client = _context.Client.FirstOrDefault(c =>
+                        c.Name == request.client.name &&
+                        c.Surname == request.client.surname &&
+                        c.Phone == request.client.phone);
+                }
+
                 // Tworzenie klienta, jeśli nie istnieje
                 if (client == null)
                 {
@@ -77,24 +95,31 @@ namespace Fryzjer.Controllers
                         Name = request.client.name,
                         Surname = request.client.surname,
                         Phone = request.client.phone,
-                        Gender = 'N' // Domyślna wartość płci
+                        Gender = request.client.gender
                     };
 
                     _context.Client.Add(client);
                     _context.SaveChanges(); // Zapis nowego klienta
                 }
 
-                // Tworzenie obiektu rezerwacji
-                var reservation = new Reservation
+                // Tworzenie rezerwacji w ramach podanego zakresu czasowego (co 15 minut)
+                var currentTime = startTime;
+                while (currentTime < endTime)
                 {
-                    date = reservationDate,
-                    time = startTime,
-                    status = 'A', // Domyślnie zaakceptowana
-                    ClientId = client.Id,
-                    HairdresserId = hairdresserId.Value
-                };
+                    var reservation = new Reservation
+                    {
+                        date = reservationDate,
+                        time = currentTime,
+                        status = 'P', // Potwierdzona, ponieważ tworzy ją fryzjer
+                        ClientId = client.Id,
+                        HairdresserId = hairdresserId.Value,
+                        ServiceId = request.serviceId
+                    };
 
-                _context.Reservation.Add(reservation);
+                    _context.Reservation.Add(reservation);
+                    currentTime = currentTime.Add(new TimeSpan(0, 15, 0)); // Skok co 15 minut
+                }
+
                 _context.SaveChanges();
 
                 return Ok("Rezerwacja została utworzona.");
@@ -117,27 +142,36 @@ namespace Fryzjer.Controllers
                     r.time,
                     r.status,
                     ClientName = r.Client != null ? r.Client.Name + " " + r.Client.Surname : null,
-                    HairdresserName = r.Hairdresser != null ? r.Hairdresser.Name + " " + r.Hairdresser.surname : null
+                    ClientPhone = r.Client != null ? r.Client.Phone : null,
+                    HairdresserName = r.Hairdresser != null ? r.Hairdresser.Name + " " + r.Hairdresser.surname : null,
+                    ServiceName = r.Service != null ? r.Service.Name : null
                 })
                 .ToList();
 
             return Ok(reservations);
         }
 
-        // DELETE: api/Reservation/{id}
+        // DELETE: api/Reservation
         [HttpDelete("{id}")]
         public IActionResult DeleteReservation(int id)
         {
-            var reservation = _context.Reservation.Find(id);
-            if (reservation == null)
+            try
             {
-                return NotFound("Rezerwacja nie została znaleziona.");
+                var reservation = _context.Reservation.Find(id);
+                if (reservation == null)
+                {
+                    return NotFound("Rezerwacja nie została znaleziona.");
+                }
+
+                _context.Reservation.Remove(reservation);
+                _context.SaveChanges();
+
+                return Ok("Rezerwacja została usunięta.");
             }
-
-            _context.Reservation.Remove(reservation);
-            _context.SaveChanges();
-
-            return Ok("Rezerwacja została usunięta.");
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Wystąpił błąd podczas usuwania rezerwacji: " + ex.Message);
+            }
         }
     }
 }

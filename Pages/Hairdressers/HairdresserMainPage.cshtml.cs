@@ -89,13 +89,35 @@ namespace Fryzjer.Pages.Hairdressers
 
             while (startTime < endTime)
             {
-                var isReserved = reservations.Any(r => r.time == startTime);
-                hours.Add(new HourStatus
+                var existingReservation = reservations.FirstOrDefault(r => r.time == startTime);
+
+                if (existingReservation != null)
                 {
-                    Time = startTime.ToString(@"hh\:mm"),
-                    IsReserved = isReserved
-                });
-                startTime = startTime.Add(new TimeSpan(0, 15, 0)); // Skok co 15 minut
+                    string clientInfo = existingReservation.Client != null
+                        ? $"{existingReservation.Client.Name} {existingReservation.Client.Surname}, Tel: {existingReservation.Client.Phone}, Us³uga: {existingReservation.Service?.Name}"
+                        : "Brak danych klienta";
+
+                    hours.Add(new HourStatus
+                    {
+                        Time = startTime.ToString(@"hh\:mm"),
+                        IsReserved = true,
+                        ClientInfo = clientInfo,
+                        ReservationId = existingReservation.Id
+                    });
+
+                    // Zajmujemy kolejne bloki czasowe na podstawie czasu zakoñczenia rezerwacji
+                    startTime = startTime.Add(new TimeSpan(0, 15, 0)); // Skok co 15 minut
+                }
+                else
+                {
+                    hours.Add(new HourStatus
+                    {
+                        Time = startTime.ToString(@"hh\:mm"),
+                        IsReserved = false
+                    });
+
+                    startTime = startTime.Add(new TimeSpan(0, 15, 0)); // Skok co 15 minut
+                }
             }
 
             return hours;
@@ -114,5 +136,7 @@ namespace Fryzjer.Pages.Hairdressers
     {
         public string Time { get; set; } // Godzina w formacie hh:mm
         public bool IsReserved { get; set; } // Czy godzina jest zarezerwowana
+        public string? ClientInfo { get; set; } // Informacje o kliencie (jeœli godzina jest zarezerwowana)
+        public int? ReservationId { get; set; } // Identyfikator rezerwacji (jeœli istnieje)
     }
 }

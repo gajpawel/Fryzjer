@@ -35,8 +35,13 @@
                                 <li>
                                     @if (hour.IsReserved)
                                     {
-                                        <button class="btn btn-sm btn-danger mb-2" disabled>
+                                        <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
+                                                data-reservation-id="@hour.ReservationId"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteReservationModal">
                                             @hour.Time
+                                            <br />
+                                            @hour.ClientInfo
                                         </button>
                                     }
                                     else
@@ -124,8 +129,27 @@
     </div>
 </div>
 
+<!-- Modal do usuwania rezerwacji -->
+<div class="modal fade" id="deleteReservationModal" tabindex="-1" aria-labelledby="deleteReservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteReservationModalLabel">Usuń rezerwację</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz usunąć tę rezerwację?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-danger" id="deleteReservationConfirm">Usuń</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    let selectedDate, selectedHour;
+    let selectedDate, selectedHour, selectedReservationId;
 
     // Obsługa kliknięcia godziny
     document.querySelectorAll('.time-slot').forEach(button => {
@@ -154,10 +178,51 @@
         });
     });
 
+    // Automatyczne wypełnianie danych klienta
+    document.getElementById('clientLogin').addEventListener('blur', async () => {
+        const login = document.getElementById('clientLogin').value;
+
+        if (!login) return;
+
+        const response = await fetch(`/api/client?login=${login}`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('clientName').value = data.name;
+            document.getElementById('clientSurname').value = data.surname;
+            document.getElementById('clientPhone').value = data.phone;
+        } else {
+            alert('Klient nie został znaleziony. Możesz wpisać dane ręcznie.');
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientSurname').value = '';
+            document.getElementById('clientPhone').value = '';
+        }
+    });
+
     // Obsługa zmiany czasu zakończenia
     document.getElementById('changeTime').addEventListener('click', () => {
         const reservationEnd = document.getElementById('reservationEnd');
         reservationEnd.removeAttribute('readonly');
+    });
+
+    // Obsługa kliknięcia przycisku rezerwacji (usunięcie rezerwacji)
+    document.querySelectorAll('.reserved-time-slot').forEach(button => {
+        button.addEventListener('click', function () {
+            selectedReservationId = this.getAttribute('data-reservation-id');
+        });
+    });
+
+    // Obsługa usunięcia rezerwacji
+    document.getElementById('deleteReservationConfirm').addEventListener('click', async () => {
+        const response = await fetch(`/api/reservation/${selectedReservationId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('Rezerwacja została usunięta.');
+            location.reload();
+        } else {
+            alert('Wystąpił błąd podczas usuwania rezerwacji.');
+        }
     });
 
     // Obsługa rezerwacji
