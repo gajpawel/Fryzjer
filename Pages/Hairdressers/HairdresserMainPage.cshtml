@@ -30,31 +30,54 @@
                         }
                         else
                         {
-                            @foreach (var hour in day.AvailableHours)
+                            var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
+                            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
+
+                            foreach (var block in day.TimeBlocks)
                             {
-                                <li>
-                                    @if (hour.IsReserved)
-                                    {
-                                        <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
-                                                data-reservation-id="@hour.ReservationId"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteReservationModal">
-                                            @hour.Time
-                                            <br />
-                                            @hour.ClientInfo
-                                        </button>
-                                    }
-                                    else
-                                    {
+                                // Wyświetlanie wolnych godzin przed zarezerwowanym blokiem
+                                while (startTime < block.StartTime)
+                                {
+                                    <li>
                                         <button class="btn btn-sm btn-success time-slot mb-2"
-                                                data-hour="@hour.Time"
+                                                data-hour="@startTime.ToString(@"hh\:mm")"
                                                 data-date="@day.Date.ToString("yyyy-MM-dd")"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#reservationModal">
-                                            @hour.Time
+                                            @startTime.ToString(@"hh\:mm")
                                         </button>
-                                    }
+                                    </li>
+                                    startTime = startTime.Add(new TimeSpan(0, 15, 0));
+                                }
+
+                                // Wyświetlanie zarezerwowanego bloku
+                                <li>
+                                    <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
+                                            data-reservation-id="@block.ReservationId"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteReservationModal">
+                                        @block.TimeRange
+                                        <br />
+                                        @block.ClientInfo
+                                    </button>
                                 </li>
+
+                                startTime = block.EndTime;
+                            }
+
+                            // Wyświetlanie wolnych godzin po ostatnim zarezerwowanym bloku
+                            while (startTime < endTime)
+                            {
+                                <li>
+                                    <button class="btn btn-sm btn-success time-slot mb-2"
+                                            data-hour="@startTime.ToString(@"hh\:mm")"
+                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#reservationModal">
+                                        @startTime.ToString(@"hh\:mm")
+                                    </button>
+                                </li>
+                                startTime = startTime.Add(new TimeSpan(0, 15, 0));
                             }
                         }
                     </ul>

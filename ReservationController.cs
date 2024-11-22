@@ -3,6 +3,7 @@ using Fryzjer.Data;
 using Fryzjer.Models;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace Fryzjer.Controllers
 {
@@ -135,11 +136,14 @@ namespace Fryzjer.Controllers
         public IActionResult GetReservations()
         {
             var reservations = _context.Reservation
+                .ToList() // Pobierz wszystkie dane z bazy danych
+                .OrderBy(r => r.date) // Sortowanie po dacie
+                .ThenBy(r => r.time)  // Sortowanie po czasie (już w pamięci)
                 .Select(r => new
                 {
                     r.Id,
                     r.date,
-                    r.time,
+                    StartTime = r.time,
                     r.status,
                     ClientName = r.Client != null ? r.Client.Name + " " + r.Client.Surname : null,
                     ClientPhone = r.Client != null ? r.Client.Phone : null,
@@ -151,19 +155,31 @@ namespace Fryzjer.Controllers
             return Ok(reservations);
         }
 
-        // DELETE: api/Reservation
+        // DELETE: api/Reservation/{id}
         [HttpDelete("{id}")]
         public IActionResult DeleteReservation(int id)
         {
             try
             {
-                var reservation = _context.Reservation.Find(id);
-                if (reservation == null)
+                // Pobieramy ID fryzjera z sesji
+                int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
+                if (hairdresserId == null)
+                {
+                    return Unauthorized("Nie jesteś zalogowany jako fryzjer.");
+                }
+
+                // Pobranie wszystkich powiązanych rezerwacji z danym identyfikatorem
+                var reservations = _context.Reservation
+                    .Where(r => r.Id == id && r.HairdresserId == hairdresserId.Value)
+                    .ToList();
+
+                if (reservations == null || reservations.Count == 0)
                 {
                     return NotFound("Rezerwacja nie została znaleziona.");
                 }
 
-                _context.Reservation.Remove(reservation);
+                // Usunięcie wszystkich powiązanych rezerwacji
+                _context.Reservation.RemoveRange(reservations);
                 _context.SaveChanges();
 
                 return Ok("Rezerwacja została usunięta.");

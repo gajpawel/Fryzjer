@@ -4,6 +4,7 @@ using Fryzjer.Data;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace Fryzjer.Pages.Hairdressers
 {
@@ -59,68 +60,70 @@ namespace Fryzjer.Pages.Hairdressers
             for (int i = 0; i < 5; i++) // Tylko dni robocze (poniedzia³ek–pi¹tek)
             {
                 var date = startDate.AddDays(i);
-                var dailyHours = new List<HourStatus>();
+                var timeBlocks = new List<TimeBlock>();
 
                 if (date >= DateTime.Now.Date) // Generujemy godziny tylko dla przysz³ych dat
                 {
-                    dailyHours = GenerateDailyHours(date, hairdresserId);
+                    timeBlocks = GenerateDailyTimeBlocks(date, hairdresserId);
                 }
 
                 schedule.Add(new DailySchedule
                 {
                     Date = date,
-                    AvailableHours = dailyHours
+                    TimeBlocks = timeBlocks
                 });
             }
 
             return schedule;
         }
 
-        private List<HourStatus> GenerateDailyHours(DateTime date, int hairdresserId)
+        private List<TimeBlock> GenerateDailyTimeBlocks(DateTime date, int hairdresserId)
         {
-            var hours = new List<HourStatus>();
+            var blocks = new List<TimeBlock>();
             var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
             var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
 
             // Pobieramy istniej¹ce rezerwacje na dany dzieñ dla danego fryzjera
             var reservations = _context.Reservation
                 .Where(r => r.date == date && r.HairdresserId == hairdresserId)
+                .ToList() // Pobranie danych z bazy danych
+                .OrderBy(r => r.time) // Sortowanie w pamiêci
                 .ToList();
 
-            while (startTime < endTime)
+            TimeBlock currentBlock = null;
+
+            foreach (var reservation in reservations)
             {
-                var existingReservation = reservations.FirstOrDefault(r => r.time == startTime);
-
-                if (existingReservation != null)
+                if (currentBlock == null || reservation.time != currentBlock.EndTime)
                 {
-                    string clientInfo = existingReservation.Client != null
-                        ? $"{existingReservation.Client.Name} {existingReservation.Client.Surname}, Tel: {existingReservation.Client.Phone}, Us³uga: {existingReservation.Service?.Name}"
-                        : "Brak danych klienta";
-
-                    hours.Add(new HourStatus
+                    if (currentBlock != null)
                     {
-                        Time = startTime.ToString(@"hh\:mm"),
-                        IsReserved = true,
-                        ClientInfo = clientInfo,
-                        ReservationId = existingReservation.Id
-                    });
+                        blocks.Add(currentBlock);
+                    }
 
-                    // Zajmujemy kolejne bloki czasowe na podstawie czasu zakoñczenia rezerwacji
-                    startTime = startTime.Add(new TimeSpan(0, 15, 0)); // Skok co 15 minut
+                    currentBlock = new TimeBlock
+                    {
+                        StartTime = reservation.time,
+                        EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
+                        IsReserved = true,
+                        ReservationId = reservation.Id,
+                        ClientInfo = reservation.Client != null
+                            ? $"{reservation.Client.Name} {reservation.Client.Surname}, Tel: {reservation.Client.Phone}, Us³uga: {reservation.Service?.Name}"
+                            : "Brak danych klienta"
+                    };
                 }
                 else
                 {
-                    hours.Add(new HourStatus
-                    {
-                        Time = startTime.ToString(@"hh\:mm"),
-                        IsReserved = false
-                    });
-
-                    startTime = startTime.Add(new TimeSpan(0, 15, 0)); // Skok co 15 minut
+                    currentBlock.EndTime = currentBlock.EndTime.Add(new TimeSpan(0, 15, 0));
                 }
             }
 
-            return hours;
+            if (currentBlock != null)
+            {
+                blocks.Add(currentBlock);
+            }
+
+            return blocks;
         }
     }
 
@@ -128,14 +131,16 @@ namespace Fryzjer.Pages.Hairdressers
     public class DailySchedule
     {
         public DateTime Date { get; set; } // Data dnia
-        public List<HourStatus> AvailableHours { get; set; } = new List<HourStatus>(); // Lista godzin
+        public List<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>(); // Lista bloków czasowych
     }
 
-    // Klasa do reprezentowania pojedynczej godziny
-    public class HourStatus
+    // Klasa do reprezentowania bloku czasowego
+    public class TimeBlock
     {
-        public string Time { get; set; } // Godzina w formacie hh:mm
-        public bool IsReserved { get; set; } // Czy godzina jest zarezerwowana
+        public TimeSpan StartTime { get; set; } // Godzina rozpoczêcia
+        public TimeSpan EndTime { get; set; } // Godzina zakoñczenia
+        public bool IsReserved { get; set; } // Czy blok jest zarezerwowany
+        public string TimeRange => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}"; // Zakres czasowy jako string
         public string? ClientInfo { get; set; } // Informacje o kliencie (jeœli godzina jest zarezerwowana)
         public int? ReservationId { get; set; } // Identyfikator rezerwacji (jeœli istnieje)
     }
