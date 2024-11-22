@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Fryzjer.Data;
+using Fryzjer.Middleware;
+using Fryzjer.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +35,22 @@ app.UseStaticFiles();
 app.UseSession();
 app.UseRouting();
 app.UseAuthorization();
+
+//dodawnanie permisji wg folderu w którym znajduje siê strona
+var routePermissions = new Dictionary<string, PermissionController.UserTypes[]>
+{
+    { "/Clients", [PermissionController.UserTypes.Client, PermissionController.UserTypes.Admin] },
+    { "/Hairdressers", [PermissionController.UserTypes.Hairdresser, PermissionController.UserTypes.Admin] },
+    { "/Admin", [PermissionController.UserTypes.Admin] }
+};
+//rejestracja permisji wykorzystuj¹c middleware
+foreach (var routePermission in routePermissions)
+{
+    app.UseWhen(context => context.Request.Path.StartsWithSegments(routePermission.Key), appBuilder =>
+    {
+        appBuilder.UsePermission(routePermission.Value);
+    });
+}
 
 // Dodaj obs³ugê kontrolerów API
 app.MapControllers(); // To umo¿liwia obs³ugê endpointów kontrolerów API

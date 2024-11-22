@@ -24,6 +24,7 @@ namespace Fryzjer.Pages
             HttpContext.Session.Remove("UserLogin");
             _logger.LogInformation("U¿ytkownik zosta³ wylogowany."); // Informacja w logach
             HttpContext.Session.Remove("HairdresserId");
+            HttpContext.Session.Remove("UserType");
             return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹
         }
     }

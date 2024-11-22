@@ -47,6 +47,7 @@ namespace Fryzjer.Pages
             if (Login == "Admin" && Password == "Admin")
             {
                 HttpContext.Session.SetString("UserLogin", "Admin");
+                HttpContext.Session.SetString("UserType", "Admin");
                 return RedirectToPage("/Admin/AdminProfile"); // Przekierowanie na stronê admina
             }
 
@@ -60,6 +61,7 @@ namespace Fryzjer.Pages
                     // Zapisanie danych fryzjera w sesji
                     HttpContext.Session.SetString("UserLogin", hairdresser.login);
                     HttpContext.Session.SetInt32("HairdresserId", hairdresser.Id); // Kluczowe dla przekierowania na profil
+                    HttpContext.Session.SetString("UserType", "Hairdresser");
 
                     return RedirectToPage("/Hairdressers/HairdresserMainPage"); // Przekierowanie na panel fryzjera
                 }
@@ -82,6 +84,7 @@ namespace Fryzjer.Pages
                 {
                     // Zapisanie danych klienta w sesji
                     HttpContext.Session.SetString("UserLogin", client.Login);
+                    HttpContext.Session.SetString("UserType", "Client");
 
                     return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹ klienta
                 }
