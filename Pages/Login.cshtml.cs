@@ -25,11 +25,13 @@ namespace Fryzjer.Pages
 
         public void OnGet()
         {
+            // Obs³uga wiadomoœci po rejestracji
             if (TempData["SuccessMessage"] != null)
             {
                 ViewData["SuccessMessage"] = TempData["SuccessMessage"].ToString();
             }
 
+            // Przechwycenie loginu przekazanego w query string (np. po rejestracji)
             Login = Request.Query["login"];
         }
 
@@ -48,19 +50,18 @@ namespace Fryzjer.Pages
                 return RedirectToPage("/Admin/AdminProfile"); // Przekierowanie na stronê admina
             }
 
-            // Sprawdzenie w tabeli Fryzjerów (Hairdresser)
+            // Logowanie fryzjera
             var hairdresser = _context.Hairdresser.FirstOrDefault(h => h.login == Login);
 
             if (hairdresser != null)
             {
-                // Weryfikacja has³a fryzjera
-                var hasher = new PasswordHasher<string>();
-                var result = hasher.VerifyHashedPassword(null, hairdresser.password, Password);
-
-                if (result == PasswordVerificationResult.Success)
+                if (hairdresser.password == Password) // Upewnij siê, ¿e has³a s¹ w odpowiednim formacie (np. zahaszowane)
                 {
+                    // Zapisanie danych fryzjera w sesji
                     HttpContext.Session.SetString("UserLogin", hairdresser.login);
-                    return RedirectToPage("/Hairdressers/HairdresserMainPage"); // Przekierowanie na stronê g³ówn¹ fryzjera
+                    HttpContext.Session.SetInt32("HairdresserId", hairdresser.Id); // Kluczowe dla przekierowania na profil
+
+                    return RedirectToPage("/Hairdressers/HairdresserMainPage"); // Przekierowanie na panel fryzjera
                 }
                 else
                 {
@@ -69,18 +70,19 @@ namespace Fryzjer.Pages
                 }
             }
 
-            // Sprawdzenie w tabeli Klientów (Client)
+            // Logowanie klienta
             var client = _context.Client.FirstOrDefault(c => c.Login == Login);
 
             if (client != null)
             {
-                // Weryfikacja has³a klienta
                 var hasher = new PasswordHasher<string>();
                 var result = hasher.VerifyHashedPassword(null, client.Password, Password);
 
                 if (result == PasswordVerificationResult.Success)
                 {
+                    // Zapisanie danych klienta w sesji
                     HttpContext.Session.SetString("UserLogin", client.Login);
+
                     return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹ klienta
                 }
                 else
@@ -90,7 +92,7 @@ namespace Fryzjer.Pages
                 }
             }
 
-            // Je¿eli login nie istnieje w ¿adnej tabeli
+            // Gdy login nie zosta³ znaleziony
             ErrorMessage = "Nie znaleziono u¿ytkownika z takim loginem.";
             return Page();
         }

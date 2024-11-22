@@ -5,6 +5,12 @@ VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fryzjer", "Fryzjer.csproj", "{9DB13329-F7B6-4EB5-BE20-8CC3869C9860}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Controllers", "Controllers", "{4068534C-654A-4065-90C8-B2C7B8B75378}"
+	ProjectSection(SolutionItems) = preProject
+		ClientController.cs = ClientController.cs
+		ReservationController.cs = ReservationController.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

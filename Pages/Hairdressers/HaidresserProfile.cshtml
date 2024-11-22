@@ -1,17 +1,26 @@
 ﻿@page
 @model Fryzjer.Pages.Hairdressers.HairdresserProfileModel
 @{
-    ViewData["Title"] = "Mój Profil";
+    ViewData["Title"] = "Profil fryzjera";
 }
 
-<h1>Mój Profil</h1>
+<div class="container mt-4">
+    <h1>Witaj, @Model.Hairdresser.Name @Model.Hairdresser.surname!</h1>
+    <p>To jest Twój profil fryzjera. Możesz tutaj zarządzać swoimi danymi.</p>
 
-<div class="card mt-4">
-    <div class="card-body">
-        <h5 class="card-title">Imię i Nazwisko</h5>
-        <p class="card-text">Imię: @Model.Name</p>
-        <p class="card-text">Nazwisko: @Model.Surname</p>
-        <p class="card-text">Status: @Model.Status</p>
-        <a href="/Hairdressers/EditProfile" class="btn btn-primary">Edytuj Profil</a>
-    </div>
+    <dl class="row">
+        <dt class="col-sm-3">Imię</dt>
+        <dd class="col-sm-9">@Model.Hairdresser.Name</dd>
+
+        <dt class="col-sm-3">Nazwisko</dt>
+        <dd class="col-sm-9">@Model.Hairdresser.surname</dd>
+
+        <dt class="col-sm-3">Login</dt>
+        <dd class="col-sm-9">@Model.Hairdresser.login</dd>
+
+        <dt class="col-sm-3">Lokalizacja</dt>
+        <dd class="col-sm-9">@Model.Hairdresser.Place?.Name ?? "Brak przypisanego lokalu"</dd>
+    </dl>
+
+    <a asp-page="/Hairdressers/HairdresserMainPage" class="btn btn-primary">Przejdź do panelu głównego</a>
 </div>

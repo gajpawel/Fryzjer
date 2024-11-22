@@ -33,6 +33,13 @@ namespace Fryzjer.Pages
                 return Page();
             }
 
+            // Walidacja loginu
+            if (string.IsNullOrWhiteSpace(Client.Login))
+            {
+                ModelState.AddModelError("Client.Login", "Login jest wymagany podczas rejestracji.");
+                return Page();
+            }
+
             // SprawdŸ, czy login ju¿ istnieje
             if (_context.Client.Any(c => c.Login == Client.Login))
             {
@@ -58,8 +65,7 @@ namespace Fryzjer.Pages
             // Ustaw komunikat i przekieruj na stronê logowania
             TempData["SuccessMessage"] = "Konto zosta³o dodane.";
 
-            //Jakub Haberek - przekierowanie z zapisanym loginem
-            return RedirectToPage("/Login", new { login = Client.Login});
+            return RedirectToPage("/Login", new { login = Client.Login });
         }
     }
 }

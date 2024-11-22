@@ -1,66 +1,210 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Fryzjer.Data;
-using Fryzjer.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿@page
+@model Fryzjer.Pages.Hairdressers.HairdresserMainPageModel
+@{
+    ViewData["Title"] = "Panel fryzjera";
+    var today = DateTime.Now.Date;
+}
 
-namespace Fryzjer.Pages.Admin
-{
-    public class AddEmployeeModel : PageModel
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Harmonogram</h1>
+
+    <div class="d-flex justify-content-between mb-3">
+        <a href="?week=@(Model.CurrentWeek - 1)" class="btn btn-outline-primary">Poprzednia</a>
+        <a href="?week=@(Model.CurrentWeek + 1)" class="btn btn-outline-primary">Następna</a>
+    </div>
+
+    <!-- Harmonogram tygodnia -->
+    @for (int weekIndex = 0; weekIndex < 2; weekIndex++)
     {
-        private readonly FryzjerContext _context;
+        var weeklySchedule = weekIndex == 0 ? Model.WeeklySchedule1 : Model.WeeklySchedule2;
 
-        public AddEmployeeModel(FryzjerContext context)
-        {
-            _context = context;
-        }
-
-        // Property for binding the new Hairdresser data
-        [BindProperty]
-        public Hairdresser NewHairdresser { get; set; }
-
-        // List of available Places for the dropdown
-        public List<Place>
-    Places { get; set; }
-
-    // This method will load available places for the dropdown
-    public void OnGet()
-    {
-    Places = _context.Place.ToList();
+        <div class="row text-center mb-5">
+            @foreach (var day in weeklySchedule)
+            {
+                <div class="col-md-2 border bg-light mx-2 p-2">
+                    <h5>@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
+                    <ul class="list-unstyled">
+                        @if (day.Date < today)
+                        {
+                            <li>---</li>
+                        }
+                        else
+                        {
+                            @foreach (var hour in day.AvailableHours)
+                            {
+                                <li>
+                                    @if (hour.IsReserved)
+                                    {
+                                        <button class="btn btn-sm btn-danger mb-2" disabled>
+                                            @hour.Time
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-success time-slot mb-2"
+                                                data-hour="@hour.Time"
+                                                data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#reservationModal">
+                                            @hour.Time
+                                        </button>
+                                    }
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
     }
+</div>
 
-    // This method handles the form submission
-    public async Task<IActionResult>
-        OnPostAsync()
-        {
-        if (ModelState.IsValid)
-        {
-        // Ensure that the status is provided, and PlaceId is valid
-        if (NewHairdresser.Status == null)
-        {
-        ModelState.AddModelError("NewHairdresser.Status", "Status is required.");
-        return Page();
-        }
+<!-- Modal do rezerwacji -->
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reservationModalLabel">Rezerwacja godziny</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reservationForm">
+                    <div class="mb-3">
+                        <label for="clientLogin" class="form-label">Login klienta</label>
+                        <input type="text" class="form-control" id="clientLogin" placeholder="Opcjonalny login klienta">
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientName" class="form-label">Imię</label>
+                        <input type="text" class="form-control" id="clientName" placeholder="Imię klienta">
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientSurname" class="form-label">Nazwisko</label>
+                        <input type="text" class="form-control" id="clientSurname" placeholder="Nazwisko klienta">
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientPhone" class="form-label">Numer telefonu</label>
+                        <input type="text" class="form-control" id="clientPhone" placeholder="Numer telefonu">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reservationStart" class="form-label">Godzina rozpoczęcia</label>
+                        <input type="text" class="form-control" id="reservationStart" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reservationEnd" class="form-label">Godzina zakończenia</label>
+                        <select class="form-control" id="reservationEnd"></select>
+                    </div>
+                    <input type="hidden" id="reservationDate">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-primary" id="saveReservation">Zarezerwuj</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        if (NewHairdresser.PlaceId == null || NewHairdresser.PlaceId <= 0)
-        {
-        ModelState.AddModelError("NewHairdresser.PlaceId", "Place is required.");
-        return Page();
-        }
+<script>
+    let selectedDate, selectedHour;
 
-        // Add the new hairdresser to the context
-        _context.Hairdresser.Add(NewHairdresser);
-        await _context.SaveChangesAsync();
+    // Obsługa kliknięcia godziny
+    document.querySelectorAll('.time-slot').forEach(button => {
+        button.addEventListener('click', function () {
+            selectedDate = this.getAttribute('data-date');
+            selectedHour = this.getAttribute('data-hour');
 
-        // Redirect to the employee management page
-        return RedirectToPage("/Admin/EmployeeManagement");
-        }
+            // Wypełniamy pola w formularzu
+            document.getElementById('reservationDate').value = selectedDate;
+            document.getElementById('reservationStart').value = selectedHour;
 
-        // If the model is not valid, re-load places for dropdown
-        Places = _context.Place.ToList();
-        return Page();
+            // Generujemy opcje zakończenia rezerwacji
+            const endTimeSelect = document.getElementById('reservationEnd');
+            endTimeSelect.innerHTML = ''; // Resetujemy poprzednie opcje
+            let startHour = parseInt(selectedHour.split(':')[0]);
+            let startMinute = parseInt(selectedHour.split(':')[1]);
+
+            for (let i = 15; i <= 120; i += 15) {
+                let totalMinutes = startHour * 60 + startMinute + i;
+                let endHour = Math.floor(totalMinutes / 60);
+                let endMinute = totalMinutes % 60;
+
+                // Upewniamy się, że godzina zakończenia nie przekracza 18:00
+                if (endHour >= 18) break;
+
+                let endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+                let option = document.createElement('option');
+                option.value = endTime;
+                option.textContent = endTime;
+                endTimeSelect.appendChild(option);
+            }
+        });
+    });
+
+    // Automatyczne wypełnienie danych klienta
+    document.getElementById('clientLogin').addEventListener('blur', async () => {
+        const login = document.getElementById('clientLogin').value;
+
+        if (!login) return;
+
+        const response = await fetch(`/api/client?login=${login}`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('clientName').value = data.name;
+            document.getElementById('clientSurname').value = data.surname;
+            document.getElementById('clientPhone').value = data.phone;
+        } else {
+            alert('Klient nie został znaleziony. Możesz wpisać dane ręcznie.');
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientSurname').value = '';
+            document.getElementById('clientPhone').value = '';
         }
-        }
-        }
+    });
+
+ // Obsługa rezerwacji
+document.getElementById('saveReservation').addEventListener('click', async () => {
+    const clientLogin = document.getElementById('clientLogin').value;
+    const clientName = document.getElementById('clientName').value;
+    const clientSurname = document.getElementById('clientSurname').value;
+    const clientPhone = document.getElementById('clientPhone').value;
+    const reservationStart = document.getElementById('reservationStart').value;
+    const reservationEnd = document.getElementById('reservationEnd').value;
+
+    // Wysyłamy dane do API
+    const response = await fetch('/api/reservation', { // Zmieniono endpoint na '/api/reservation'
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            date: selectedDate,
+            hour: reservationStart,
+            client: {
+                login: clientLogin || null,
+                name: clientName,
+                surname: clientSurname,
+                phone: clientPhone
+            },
+            // hairdresserId: 1, // Usunięto, ponieważ ID fryzjera jest pobierane na backendzie
+            // serviceId: 1, // Usunięto lub zakomentowane
+            endHour: reservationEnd // Możesz usunąć, jeśli nie jest używane
+        })
+    });
+
+    if (response.ok) {
+        // Zmieniamy kolor przycisku na czerwony i oznaczamy jako zarezerwowany
+        const button = document.querySelector(`.time-slot[data-hour="${reservationStart}"][data-date="${selectedDate}"]`);
+        button.classList.remove('btn-success');
+        button.classList.add('btn-danger');
+        button.textContent = `${reservationStart} (zarezerwowano)`;
+        button.disabled = true;
+
+        // Zamykamy modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
+        modal.hide();
+    } else {
+        const errorText = await response.text();
+        alert('Wystąpił błąd podczas rezerwacji: ' + errorText);
+    }
+});
+
+</script>

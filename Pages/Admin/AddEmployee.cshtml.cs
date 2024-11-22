@@ -32,10 +32,15 @@ namespace Fryzjer.Pages.Admin
         {
             if (ModelState.IsValid)
             {
-                // Add the new hairdresser to the database
+                // Jeœli PlaceId jest puste, ustaw wartoœæ na null
+                if (string.IsNullOrEmpty(Request.Form["PlaceId"]))
+                {
+                    NewHairdresser.PlaceId = null;
+                }
+
                 _context.Hairdresser.Add(NewHairdresser);
                 await _context.SaveChangesAsync();
-                return RedirectToPage("/Admin/EmployeeManagement"); // Redirect to Employee Management page
+                return RedirectToPage("/Admin/EmployeeManagement");
             }
 
             // If the model is not valid, redisplay the page

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/Fryzjer.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <!-- Globalne powiadomienie tylko dla usunięcia konta -->
+    <!-- Globalne powiadomienie -->
     @if (TempData["AccountDeleted"] != null)
     {
         <div id="global-message" class="alert alert-success text-center" style="position: fixed; top: 0; left: 0; right: 0; z-index: 1050;">
@@ -27,15 +27,39 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Strona główna</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Clients/Index">Klienci</a>
-                        </li>
+                        @if (Context.Session?.GetString("UserLogin") == "Admin") // Zalogowany jako Admin
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Admin/AdminProfile">Panel admina</a>
+                            </li>
+                        }
+                        else if (Context.Session?.GetString("HairdresserId") != null) // Zalogowany fryzjer
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Hairdressers/HairdresserMainPage">Panel fryzjera</a>
+                            </li>
+                        }
+                        else if (Context.Session?.GetString("UserLogin") != null) // Zalogowany klient
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Index">Strona główna</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Clients/Index">Klienci</a>
+                            </li>
+                        }
+                        else // Niezalogowany użytkownik
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Index">Strona główna</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Clients/Index">Klienci</a>
+                            </li>
+                        }
                     </ul>
                     <ul class="navbar-nav">
-                        @if (Context.Session?.GetString("UserLogin") == "Admin") // Sprawdzenie, czy zalogowany jest admin
+                        @if (Context.Session?.GetString("UserLogin") == "Admin") // Admin zalogowany
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -43,7 +67,7 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                                     <li>
-                                        <a class="dropdown-item" asp-area="" asp-page="/Admin/AdminProfile">Strona główna admina</a>
+                                        <a class="dropdown-item" asp-area="" asp-page="/Admin/AdminProfile">Profil admina</a>
                                     </li>
                                     <li>
                                         <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
@@ -53,22 +77,27 @@
                                 </ul>
                             </li>
                         }
-                        else if (Context.Session?.GetString("UserLogin") != null) // Zwykły użytkownik zalogowany
+                        else if(Context.Session?.GetString("HairdresserId") != null) // Fryzjer zalogowany
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Mój profil
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                    <li>
-                                        <a class="dropdown-item" asp-area="" asp-page="/ClientProfile">Moje konto</a>
-                                    </li>
-                                    <li>
-                                        <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
-                                            <button type="submit" class="dropdown-item">Wyloguj</button>
-                                        </form>
-                                    </li>
-                                </ul>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="Hairdressers/HairdresserProfile">Mój profil</a>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
+                                    <button type="submit" class="btn btn-link nav-link text-dark">Wyloguj</button>
+                                </form>
+                            </li>
+                        }
+
+                        else if (Context.Session?.GetString("UserLogin") != null) // Klient zalogowany
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Clients/ClientProfile">Mój profil</a>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
+                                    <button type="submit" class="btn btn-link nav-link text-dark">Wyloguj</button>
+                                </form>
                             </li>
                         }
                         else // Niezalogowany użytkownik
@@ -80,7 +109,6 @@
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Clients/Register">Zarejestruj się</a>
                             </li>
                         }
-
                     </ul>
                 </div>
             </div>
