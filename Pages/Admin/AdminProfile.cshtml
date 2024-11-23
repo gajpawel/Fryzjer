@@ -8,7 +8,6 @@
     <h1 class="text-center mt-3">Witaj w panelu administracyjnym</h1>
     <p class="text-center text-muted">Zarządzaj wszystkimi funkcjami systemu w jednym miejscu.</p>
 
-
     <!-- Sekcja opcji -->
     <div class="card mt-4 shadow">
         <div class="card-header bg-primary text-white text-center">
@@ -34,7 +33,15 @@
                 <div class="col-md-6 mb-3">
                     <form method="post" asp-page-handler="EmployeeManagement">
                         <button type="submit" class="btn btn-lg btn-outline-primary w-100 shadow-sm">
-                            <i class="fas fa-users-cog"></i> Zarządzanie pracownikami
+                            <i class="fas fa-users-cog"></i> Pracownicy i Usługi
+                        </button>
+                    </form>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <form method="post" asp-page-handler="Services">
+                        <button type="submit" class="btn btn-lg btn-outline-primary w-100 shadow-sm">
+                            <i class="fas fa-concierge-bell"></i> Usługi
                         </button>
                     </form>
                 </div>

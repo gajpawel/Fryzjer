@@ -28,5 +28,11 @@ namespace Fryzjer.Pages.Admin
             // Po klikniêciu przycisku "Przegl¹d listy lokali"
             return RedirectToPage("/Admin/Salon");
         }
+
+        public IActionResult OnPostServices()
+        {
+            // Po klikniêciu przycisku "Zarz¹dzanie us³ugami"
+            return RedirectToPage("/Admin/Services");
+        }
     }
 }
