@@ -1,54 +1,57 @@
-﻿@page
+﻿@page "{id:int}"
 @model Fryzjer.Pages.Admin.EditEmployeeModel
-
 @{
-    ViewData["Title"] = "Edit Employee";
+    ViewData["Title"] = "Edytuj pracownika";
 }
-
 <h2>@ViewData["Title"]</h2>
-
 <form method="post">
+    <input type="hidden" name="Hairdresser.Id" value="@Model.Hairdresser.Id" />
+
     <!-- Imię -->
     <div class="form-group">
-        <label for="Name">First Name:</label>
+        <label for="Name">Imię:</label>
         <input type="text" class="form-control" id="Name" name="Hairdresser.Name" value="@Model.Hairdresser.Name" required />
+        <span class="text-danger" asp-validation-for="Hairdresser.Name"></span>
     </div>
 
     <!-- Nazwisko -->
     <div class="form-group">
-        <label for="Surname">Last Name:</label>
-        <input type="text" class="form-control" id="Surname" name="Hairdresser.Surname" value="@Model.Hairdresser.surname" required />
+        <label for="surname">Nazwisko:</label>
+        <input type="text" class="form-control" id="surname" name="Hairdresser.surname" value="@Model.Hairdresser.surname" required />
+        <span class="text-danger" asp-validation-for="Hairdresser.surname"></span>
     </div>
 
     <!-- Login -->
     <div class="form-group">
-        <label for="Login">Login:</label>
-        <input type="text" class="form-control" id="Login" name="Hairdresser.Login" value="@Model.Hairdresser.login" required />
+        <label for="login">Login:</label>
+        <input type="text" class="form-control" id="login" name="Hairdresser.login" value="@Model.Hairdresser.login" required />
+        <span class="text-danger" asp-validation-for="Hairdresser.login"></span>
     </div>
 
     <!-- Hasło -->
     <div class="form-group">
-        <label for="Password">Password:</label>
-        <input type="password" class="form-control" id="Password" name="Hairdresser.Password" value="@Model.Hairdresser.password" required />
+        <label for="password">Hasło:</label>
+        <input type="password" class="form-control" id="password" name="Hairdresser.password" />
+        <small class="form-text text-muted">Zostaw puste, jeśli nie chcesz zmieniać hasła. Hasło musi zawierać co najmniej jedną wielką i jedną małą literę.</small>
+        <span class="text-danger" asp-validation-for="Hairdresser.password"></span>
     </div>
 
     <!-- Lokal -->
     <div class="form-group">
-        <label for="PlaceId">Place:</label>
-        <select class="form-control" id="PlaceId" name="Hairdresser.PlaceId" required>
-            <option value="">Select a Place</option>
+        <label for="PlaceId">Salon fryzjerski</label>
+        <select id="PlaceId" name="Hairdresser.PlaceId" class="form-control">
+            <option value="">Wybierz lokal</option>
             @foreach (var place in Model.Places)
             {
-                //<option value="@place.Id" @(place.Id == Model.Hairdresser.PlaceId ? "selected" : "")>@place.Name</option>
-                <li>@place.Name - @place.Id</li>
-                //to trzeba dokończyć jak sie lokale zrobi. odkomentować górną linijke i sprawdzić czy działa
+                <option value="@place.Id" selected="@(place.Id == Model.Hairdresser.PlaceId)">
+                    @place.Name
+                </option>
             }
         </select>
     </div>
 
-    <!-- Przycisk zapisu -->
-    <button type="submit" class="btn btn-primary">Save Changes</button>
 
-    <!-- Przycisk anulowania -->
-    <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Cancel</a>
+    <!-- Przyciski -->
+    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+    <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Anuluj</a>
 </form>

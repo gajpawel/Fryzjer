@@ -12,7 +12,6 @@ namespace Fryzjer.Pages.Admin
     public class EditEmployeeModel : PageModel
     {
         private readonly FryzjerContext _context;
-
         public EditEmployeeModel(FryzjerContext context)
         {
             _context = context;
@@ -20,54 +19,61 @@ namespace Fryzjer.Pages.Admin
 
         [BindProperty]
         public Hairdresser Hairdresser { get; set; }
-
         public List<Place> Places { get; set; }
 
-        // OnGetAsync is for handling the request to edit a hairdresser
         public async Task<IActionResult> OnGetAsync(int id)
         {
             Hairdresser = await _context.Hairdresser
                 .FirstOrDefaultAsync(h => h.Id == id);
 
-            // If Hairdresser not found, return NotFound error
             if (Hairdresser == null)
             {
                 return NotFound();
             }
 
-            // Fetch all places for the dropdown
             Places = await _context.Place.ToListAsync();
-
             return Page();
         }
 
-        // OnPost method to save the updated hairdresser data
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
-                // If validation fails, reload the page with the same data
                 Places = await _context.Place.ToListAsync();
                 return Page();
             }
 
-            _context.Attach(Hairdresser).State = EntityState.Modified;
+            var existingHairdresser = await _context.Hairdresser
+                .FirstOrDefaultAsync(h => h.Id == Hairdresser.Id);
+
+            if (existingHairdresser == null)
+            {
+                return NotFound();
+            }
+
+            // Aktualizuj tylko zmienione pola
+            existingHairdresser.Name = Hairdresser.Name;
+            existingHairdresser.surname = Hairdresser.surname;
+            existingHairdresser.login = Hairdresser.login;
+            existingHairdresser.PlaceId = Hairdresser.PlaceId;
+
+            // Aktualizuj has³o tylko jeœli zosta³o podane nowe
+            if (!string.IsNullOrEmpty(Hairdresser.password))
+            {
+                existingHairdresser.password = Hairdresser.password;
+            }
 
             try
             {
-                // Save changes to the database
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!HairdresserExists(Hairdresser.Id))
                 {
-                    return NotFound();  // If the hairdresser is no longer available
+                    return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return RedirectToPage("/Admin/EmployeeManagement");
@@ -78,4 +84,5 @@ namespace Fryzjer.Pages.Admin
             return _context.Hairdresser.Any(h => h.Id == id);
         }
     }
+
 }

@@ -2,17 +2,18 @@
 @model Fryzjer.Pages.Admin.DeleteEmployeeModel
 
 @{
-    ViewData["Title"] = "Delete Employee";
+
+    ViewData["Title"] = "Usuń pracownika";
 }
 
 <h2>@ViewData["Title"]</h2>
 
-<div class="alert alert-warning" role="alert">
-    <p>Are you sure you want to delete this employee?</p>
+<div class="alert alert-warning" role="Alert">
+    <p>Na pewno chcesz usunąć tego pracownika?</p>
     <p><strong>@Model.Hairdresser.Name @Model.Hairdresser.surname</strong></p>
 </div>
 
 <form method="post">
-    <button type="submit" class="btn btn-danger">Delete</button>
-    <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-danger">Usuń</button>
+    <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Anuluj</a>
 </form>
