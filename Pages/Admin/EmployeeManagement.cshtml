@@ -3,16 +3,13 @@
 @{
     ViewData["Title"] = "Zarządzanie pracownikami";
 }
-
-
 <h2>@ViewData["Title"]</h2>
-
-<!-- Table for displaying hairdressers -->
 <table class="table">
     <thead>
         <tr>
             <th>Imię</th>
             <th>Nazwisko</th>
+            <th>Specjalizacje</th>
             <th>Działania</th>
         </tr>
     </thead>
@@ -25,7 +22,12 @@
                     <td>@hairdresser.Name</td>
                     <td>@hairdresser.Surname</td>
                     <td>
-                        <!-- Actions for Edit, Details, and Delete -->
+                        <a href="@Url.Page("/Admin/ManageSpecializations", new { hairdresserId = hairdresser.Id })"
+                           class="btn btn-primary btn-sm">
+                            Zarządzaj specjalizacjami
+                        </a>
+                    </td>
+                    <td>
                         <a href="@Url.Page("/Admin/EditEmployee", new { id = hairdresser.Id })" class="btn btn-warning btn-sm">Edytuj</a> |
                         <a href="@Url.Page("/Admin/DetailsEmployee", new { id = hairdresser.Id })" class="btn btn-info btn-sm">Szczegóły</a> |
                         <a href="@Url.Page("/Admin/DeleteEmployee", new { id = hairdresser.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Na pewno chcesz usunąć tego pracownika?')">Usuń</a>
@@ -36,11 +38,9 @@
         else
         {
             <tr>
-                <td colspan="3">Brak dostępnych pracowników.</td>
+                <td colspan="4">Brak dostępnych pracowników.</td>
             </tr>
         }
     </tbody>
 </table>
-
-<!-- Button for adding new hairdresser -->
 <a class="btn btn-primary" href="@Url.Page("/Admin/AddEmployee")">Dodaj nowego pracownika</a>

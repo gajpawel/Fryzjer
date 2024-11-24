@@ -1,0 +1,33 @@
+﻿@page
+@model Fryzjer.Pages.Admin.ManageSpecializationsModel
+@{
+    ViewData["Title"] = "Zarządzanie specjalizacjami";
+}
+
+<h2>Zarządzanie specjalizacjami - @Model.Hairdresser?.Name @Model.Hairdresser?.Surname</h2>
+
+<form method="post">
+    <input type="hidden" asp-for="HairdresserId" />
+
+    <div class="row mb-3">
+        <div class="col">
+            <h4>Dostępne usługi</h4>
+            @foreach (var service in Model.AvailableServices)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           name="SelectedServices" value="@service.Id"
+                    @(Model.CurrentSpecializations.Any(s => s.ServiceId == service.Id) ? "checked" : "") />
+                    <label class="form-check-label">
+                        @service.Name
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+        <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Powrót</a>
+    </div>
+</form>
