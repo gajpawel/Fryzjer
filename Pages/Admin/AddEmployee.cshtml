@@ -1,43 +1,44 @@
 ﻿@page
 @model Fryzjer.Pages.Admin.AddEmployeeModel
-
 <h2>Dodaj nowego pracownika</h2>
-
-
 <form method="post">
     <div class="form-group">
-        <label for="Login">Login:</label>
-        <input type="text" class="form-control" id="Login" name="login" required />
+        <label asp-for="NewHairdresser.login">Login:</label>
+        <input asp-for="NewHairdresser.login" class="form-control" required />
+        <span asp-validation-for="NewHairdresser.login" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label for="Name">Imię:</label>
-        <input type="text" class="form-control" id="Name" name="Name" required />
+        <label asp-for="NewHairdresser.Name">Imię:</label>
+        <input asp-for="NewHairdresser.Name" class="form-control" required />
+        <span asp-validation-for="NewHairdresser.Name" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label for="Surname">Nazwisko:</label>
-        <input type="text" class="form-control" id="Surname" name="surname" required />
+        <label asp-for="NewHairdresser.Surname">Nazwisko:</label>
+        <input asp-for="NewHairdresser.Surname" class="form-control" required />
+        <span asp-validation-for="NewHairdresser.Surname" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label for="Password">Hasło:</label>
-        <input type="password" class="form-control" id="Password" name="password" required />
+        <label asp-for="NewHairdresser.password">Hasło:</label>
+        <input asp-for="NewHairdresser.password" type="password" class="form-control" required />
+        <span asp-validation-for="NewHairdresser.password" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label for="PlaceId">Lokal:</label>
-        <select class="form-control" id="PlaceId" name="PlaceId">
+        <label asp-for="NewHairdresser.PlaceId">Lokal:</label>
+        <select asp-for="NewHairdresser.PlaceId" class="form-control">
             <option value="">Wybierz lokal</option>
             @foreach (var place in Model.Places)
             {
                 <option value="@place.Id">@place.Name</option>
             }
         </select>
+        <span asp-validation-for="NewHairdresser.PlaceId" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label for="Status">Status:</label>
-        <select class="form-control" id="Status" name="Status" required>
-            <option value="Active">Aktywny</option>
-            <option value="Inactive">Nieakywny</option>
-        </select>
-    </div>
-
     <button type="submit" class="btn btn-primary">Zapisz</button>
+    <a href="@Url.Page("/Admin/EmployeeManagement")" class="btn btn-secondary">Powrót</a>
 </form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

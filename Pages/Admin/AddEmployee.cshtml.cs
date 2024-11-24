@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Data;
 using Fryzjer.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Fryzjer.Pages.Admin
 {
@@ -17,35 +15,35 @@ namespace Fryzjer.Pages.Admin
         }
 
         [BindProperty]
-        public Hairdresser NewHairdresser { get; set; }
+        public Hairdresser NewHairdresser { get; set; } = new Hairdresser();
 
-        // To display the list of places (assuming you have a 'Place' model)
-        public List<Place> Places { get; set; }
+        public List<Place> Places { get; set; } = new List<Place>();
 
         public void OnGet()
         {
-            // Load all available places to populate the dropdown
             Places = _context.Place.ToList();
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Jeœli PlaceId jest puste, ustaw wartoœæ na null
-                if (string.IsNullOrEmpty(Request.Form["PlaceId"]))
-                {
-                    NewHairdresser.PlaceId = null;
-                }
+                Places = _context.Place.ToList();
+                return Page();
+            }
 
+            try
+            {
                 _context.Hairdresser.Add(NewHairdresser);
                 await _context.SaveChangesAsync();
                 return RedirectToPage("/Admin/EmployeeManagement");
             }
-
-            // If the model is not valid, redisplay the page
-            Places = _context.Place.ToList(); // Re-load places to show in the dropdown
-            return Page();
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Wyst¹pi³ b³¹d podczas zapisywania pracownika: " + ex.Message);
+                Places = _context.Place.ToList();
+                return Page();
+            }
         }
     }
 }
