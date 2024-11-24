@@ -68,7 +68,7 @@ namespace Fryzjer.Data
                 .HasOne(r => r.Place)
                 .WithMany()
                 .HasForeignKey(r => r.PlaceId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.SetNull);
             
             // Specialization - Hairdresser
             modelBuilder.Entity<Specialization>()
