@@ -2,12 +2,12 @@
 @model Fryzjer.Pages.Admin.DeleteSalonModel
 
 @{
-    ViewData["Title"] = "Usuń salon";
+    ViewData["Title"] = "Usuń lokal";
 }
 
 @if (Model.Place == null)
 {
-    <div class="alert alert-danger">Nie znaleziono salonu do usunięcia.</div>
+    <div class="alert alert-danger">Nie znaleziono lokalu do usunięcia.</div>
 }
 else
 {
@@ -15,7 +15,7 @@ else
 
 
 <div class="alert alert-warning" role="alert">
-    <p>Czy na pewno chcesz usunąć ten salon?</p>
+    <p>Czy na pewno chcesz usunąć ten lokal?</p>
     <p><strong>@Model.Place.Name</strong></p>
     <p>@Model.Place.address</p>
 </div>

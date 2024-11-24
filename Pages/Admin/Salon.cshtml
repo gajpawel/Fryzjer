@@ -2,13 +2,13 @@
 @model Fryzjer.Pages.Admin.SalonModel
 
 @{
-    ViewData["Title"] = "Lista Salonów";
+    ViewData["Title"] = "Lista lokali";
 }
 
 <h1>@ViewData["Title"]</h1>
 
 <p>
-    <a asp-page="AddSalon" class="btn btn-primary">Dodaj Nowy Salon</a>
+    <a asp-page="AddSalon" class="btn btn-primary">Dodaj nowy lokal</a>
 </p>
 
 @if (Model.Places == null || !Model.Places.Any())
@@ -20,9 +20,9 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Nazwa Salonu</th>
+                <th>Nazwa lokalu</th>
                 <th>Adres</th>
-                <th>Numer Telefonu</th>
+                <th>Numer telefonu</th>
                 <th>Akcje</th>
             </tr>
         </thead>
