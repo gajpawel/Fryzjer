@@ -1,4 +1,56 @@
 ﻿@page
 @model Fryzjer.Pages.Admin.ScheduleModel
 @{
+    ViewData["Title"] = "Lista Fryzjerów";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<!-- Formularz wyszukiwania -->
+<form method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" class="form-control" id="search" name="SearchQuery"
+               placeholder="Wyszukaj fryzjera..." value="@Model.SearchQuery" />
+        <button class="btn btn-primary" type="submit">Szukaj</button>
+    </div>
+</form>
+
+@if (Model.Hairdressers == null || !Model.Hairdressers.Any())
+{
+    <div class="alert alert-info">
+        <strong>Strona w budowie:</strong> Prosimy o cierpliwość, pracujemy nad jej uruchomieniem.
+    </div>
+
+}
+else
+{
+    <!-- Tabela z listą fryzjerów -->
+    <table class="table table-bordered table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th class="text-center">Imię</th>
+                <th class="text-center">Nazwisko</th>
+                <th class="text-center">Miejsce</th>
+                <th class="text-center">Wybierz harmonogram</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var hairdresser in Model.Hairdressers)
+            {
+                <tr>
+                    <td class="text-center">@hairdresser.Name</td>
+                    <td class="text-center">@hairdresser.Surname</td>
+                    <td class="text-center">@(hairdresser.Place != null ? hairdresser.Place.Name : "Brak miejsca")</td>
+                    <td class="text-center">
+                        <form method="post" asp-page="/Admin/HairdresserSchedule">
+                            <input type="hidden" name="hairdresserId" value="@hairdresser.Id" />
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-pencil-square"></i> Wybierz
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }

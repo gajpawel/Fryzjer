@@ -22,14 +22,6 @@
             </button>
         </li>
 
-        <!-- Rezerwacja -->
-        <li class="nav-item" role="presentation">
-            <a class="nav-link @(Model.ActiveTab == "reservations" ? "active" : "")" href="@Url.Page("/Clients/SalonList")" role="tab">
-                
-            </a>
-        </li>
-
-
         <!-- Ustawienia -->
         <li class="nav-item ms-auto" role="presentation">
             <button class="nav-link @(Model.ActiveTab == "settings" ? "active" : "")" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="@(Model.ActiveTab == "settings")">

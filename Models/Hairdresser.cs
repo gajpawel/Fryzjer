@@ -12,7 +12,7 @@ namespace Fryzjer.Models
         public string? Name { get; set; }
 
         [Required(ErrorMessage = "Nazwisko jest wymagane")]
-        public string? surname { get; set; }
+        public string? Surname { get; set; }
 
         [Required(ErrorMessage = "Login jest wymagany")]
         public string? login { get; set; }

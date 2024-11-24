@@ -99,7 +99,7 @@ namespace Fryzjer.Migrations
                     b.Property<string>("photoPath")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("surname")
+                    b.Property<string>("Surname")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

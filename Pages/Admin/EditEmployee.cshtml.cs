@@ -53,7 +53,7 @@ namespace Fryzjer.Pages.Admin
 
             // Aktualizuj tylko zmienione pola
             existingHairdresser.Name = Hairdresser.Name;
-            existingHairdresser.surname = Hairdresser.surname;
+            existingHairdresser.Surname = Hairdresser.Surname;
             existingHairdresser.login = Hairdresser.login;
             existingHairdresser.PlaceId = Hairdresser.PlaceId;
 

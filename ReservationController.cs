@@ -147,7 +147,7 @@ namespace Fryzjer.Controllers
                     r.status,
                     ClientName = r.Client != null ? r.Client.Name + " " + r.Client.Surname : null,
                     ClientPhone = r.Client != null ? r.Client.Phone : null,
-                    HairdresserName = r.Hairdresser != null ? r.Hairdresser.Name + " " + r.Hairdresser.surname : null,
+                    HairdresserName = r.Hairdresser != null ? r.Hairdresser.Name + " " + r.Hairdresser.Surname : null,
                     ServiceName = r.Service != null ? r.Service.Name : null
                 })
                 .ToList();

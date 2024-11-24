@@ -79,7 +79,7 @@ namespace Fryzjer.Migrations
                     b.Property<char>("status")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("surname")
+                    b.Property<string>("Surname")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
