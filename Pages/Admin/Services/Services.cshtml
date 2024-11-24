@@ -1,0 +1,88 @@
+﻿@page
+@model ServicesModel
+@{
+    ViewData["Title"] = "Zarządzanie usługami";
+}
+
+<div class="services-container">
+    <h1 class="text-center mt-3">Zarządzanie usługami</h1>
+    <p class="text-center text-muted">Tutaj możesz dodawać, edytować i usuwać usługi dostępne w systemie.</p>
+
+    <!-- Przycisk dodawania usługi -->
+    <div class="text-center mb-3">
+        <a asp-page="AddService" class="btn btn-success">
+            <i class="fas fa-plus"></i> Dodaj usługę
+        </a>
+    </div>
+
+    <!-- Sekcja wyświetlania listy usług -->
+    <div class="card mt-4 shadow">
+        <div class="card-header bg-primary text-white text-center">
+            <h3>Lista usług</h3>
+        </div>
+        <div class="card-body">
+            @if (Model.Services != null && Model.Services.Any())
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nazwa usługi</th>
+                            <th>Czas trwania</th>
+                            <th>Cena</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var service in Model.Services)
+                        {
+                            <tr>
+                                <td>@service.Name</td>
+                                <td>@service.Duration.ToString(@"hh\:mm\:ss")</td>
+                                <td>@service.price.ToString("C")</td> <!-- Formatowanie ceny -->
+                                <td>
+                                    <!-- Przycisk edycji -->
+                                    <!-- Przycisk edycji -->
+                                    <a asp-page="EditService" asp-route-id="@service.Id" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i> Edytuj
+                                    </a>
+
+
+                                    <!-- Przycisk usunięcia -->
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@service.Id" style="display:inline-block;">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i> Usuń
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-center text-muted">Brak usług dostępnych w bazie danych.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .services-container {
+        margin: 0 auto;
+        max-width: 900px;
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    .table {
+        margin-top: 15px;
+    }
+
+    .btn-success {
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+</style>

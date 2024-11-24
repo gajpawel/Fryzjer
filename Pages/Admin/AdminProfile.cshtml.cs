@@ -32,7 +32,7 @@ namespace Fryzjer.Pages.Admin
         public IActionResult OnPostServices()
         {
             // Po klikniêciu przycisku "Zarz¹dzanie us³ugami"
-            return RedirectToPage("/Admin/Services");
+            return RedirectToPage("/Admin/Services/Services");
         }
     }
 }

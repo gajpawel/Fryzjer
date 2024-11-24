@@ -1,0 +1,54 @@
+﻿@page
+@model Fryzjer.Pages.Admin.AddServiceModel
+@{
+    ViewData["Title"] = "Dodaj usługę";
+}
+
+<div class="add-service-container">
+    <h1 class="text-center mt-3">Dodaj nową usługę</h1>
+    <p class="text-center text-muted">Wypełnij poniższy formularz, aby dodać nową usługę do systemu.</p>
+
+    <!-- Formularz dodawania usługi -->
+    <form method="post">
+        <div class="form-group mb-3">
+            <label for="Name">Nazwa usługi</label>
+            <input type="text" class="form-control" id="Name" name="NewService.Name" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="Duration">Czas trwania (hh:mm:ss)</label>
+            <input type="text" class="form-control" id="Duration" name="NewService.Duration" placeholder="00:30:00" required />
+            <small class="form-text text-muted">Wprowadź czas w formacie hh:mm:ss, np. 01:30:00 dla 1 godziny i 30 minut.</small>
+        </div>
+
+
+        <div class="form-group mb-3">
+            <label for="Price">Cena (PLN)</label>
+            <input type="number" step="0.01" class="form-control" id="Price" name="NewService.Price" required />
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Zapisz
+            </button>
+            <a asp-page="/Admin/Services/Services" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Wróć
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .add-service-container {
+        margin: 0 auto;
+        max-width: 600px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        margin-right: 10px;
+    }
+</style>

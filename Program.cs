@@ -41,7 +41,8 @@ var routePermissions = new Dictionary<string, PermissionController.UserTypes[]>
 {
     { "/Clients", [PermissionController.UserTypes.Client, PermissionController.UserTypes.Admin] },
     { "/Hairdressers", [PermissionController.UserTypes.Hairdresser, PermissionController.UserTypes.Admin] },
-    { "/Admin", [PermissionController.UserTypes.Admin] }
+    { "/Admin", [PermissionController.UserTypes.Admin] },
+     { "/Admin/Services/AddService", new [] { PermissionController.UserTypes.Admin } }
 };
 //rejestracja permisji wykorzystuj¹c middleware
 foreach (var routePermission in routePermissions)

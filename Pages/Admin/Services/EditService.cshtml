@@ -1,0 +1,19 @@
+﻿@page
+@model Fryzjer.Pages.Admin.EditServiceModel
+@{
+    ViewData["Title"] = "Strona w budowie";
+}
+
+<div class="text-center">
+    <h1 class="mt-5">Strona w budowie</h1>
+    <p class="lead text-muted">Przepraszamy, ta strona jest w trakcie budowy. Prosimy spróbować ponownie później.</p>
+    <a asp-page="/Admin/Services/Services" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Wróć do listy usług
+    </a>
+</div>
+
+<style>
+    .text-center {
+        margin-top: 50px;
+    }
+</style>
