@@ -2,36 +2,43 @@
 @model Fryzjer.Pages.Admin.SalonModel
 
 @{
-    ViewData["Title"] = "Salon";
+    ViewData["Title"] = "Lista Salonów";
 }
 
 <h1>@ViewData["Title"]</h1>
 
 <p>
-    <a asp-page="AddSalon" class="btn btn-primary">Add Salon</a>
+    <a asp-page="AddSalon" class="btn btn-primary">Dodaj Nowy Salon</a>
 </p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Salon Name</th>
-            <th>Address</th>
-            <th>Telephone Number</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Places)
-        {
+@if (Model.Places == null || !Model.Places.Any())
+{
+    <p>Brak danych do wyświetlenia.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
             <tr>
-                <td>@item.Name</td>
-                <td>@item.address</td>
-                <td>@item.telephoneNumber</td>
-                <td>
-                    <a asp-page="EditPlace" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-page="DeletePlace" asp-route-id="@item.Id">Delete</a>
-                </td>
+                <th>Nazwa Salonu</th>
+                <th>Adres</th>
+                <th>Numer Telefonu</th>
+                <th>Akcje</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Places)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.address</td>
+                    <td>@item.telephoneNumber</td>
+                    <td>
+                        <a asp-page="EditPlace" asp-route-id="@item.Id" class="btn btn-secondary">Edytuj</a>
+                        <a asp-page="DeleteSalon" asp-route-id="@item.Id" class="btn btn-danger">Usuń</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

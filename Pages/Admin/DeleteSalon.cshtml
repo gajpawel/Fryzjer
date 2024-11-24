@@ -1,0 +1,27 @@
+﻿@page "{id:int}"
+@model Fryzjer.Pages.Admin.DeleteSalonModel
+
+@{
+    ViewData["Title"] = "Usuń salon";
+}
+
+@if (Model.Place == null)
+{
+    <div class="alert alert-danger">Nie znaleziono salonu do usunięcia.</div>
+}
+else
+{
+<h2>@ViewData["Title"]</h2>
+
+
+<div class="alert alert-warning" role="alert">
+    <p>Czy na pewno chcesz usunąć ten salon?</p>
+    <p><strong>@Model.Place.Name</strong></p>
+    <p>@Model.Place.address</p>
+</div>
+
+<form method="post">
+    <button type="submit" class="btn btn-danger">Usuń</button>
+    <a href="@Url.Page("/Admin/Salon")" class="btn btn-secondary">Anuluj</a>
+</form>
+}

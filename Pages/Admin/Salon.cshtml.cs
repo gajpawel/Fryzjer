@@ -2,23 +2,40 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Models;
 using Fryzjer.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace Fryzjer.Pages.Admin
 {
-    public class SalonModel(FryzjerContext context) : PageModel
+    public class SalonModel : PageModel
     {
-        private readonly FryzjerContext _context = context;
+        private readonly FryzjerContext _context;
 
         public required List<Place> Places { get; set; }
 
+        public SalonModel(FryzjerContext context)
+        {
+            _context = context;
+        }
+
+        // Metoda GET - ³adowanie listy salonów
         public void OnGet()
         {
             Places = _context.Place.ToList();
         }
-        public IActionResult OnGetAddSalon()
+
+        // Metoda POST - usuwanie salonu
+        public async Task<IActionResult> OnPostAsync(int id)
         {
-            return RedirectToPage("/Admin/AddSalon"); // Przekierowanie na stronê tworzenia nowego salonu
+            var place = await _context.Place.FindAsync(id);
+
+            if (place != null)
+            {
+                _context.Place.Remove(place);
+                await _context.SaveChangesAsync();
+            }
+
+            // Odœwie¿ stronê, aby odzwierciedliæ zmiany
+            return RedirectToPage();
         }
     }
 }
-
