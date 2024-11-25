@@ -16,6 +16,7 @@ namespace Fryzjer.Pages
         public string ActiveTab { get; private set; } = "reservations"; // Domyœlna aktywna zak³adka
 
         public string SuccessMessage { get; private set; } = string.Empty;
+        public string ErrorMessage { get; set; } = string.Empty;
 
         public ClientProfileModel(FryzjerContext context)
         {

@@ -44,11 +44,25 @@ namespace Fryzjer.Pages
             }
 
             // Logowanie jako admin
-            if (Login == "Admin" && Password == "Admin")
+            var administrator = _context.Administrator.FirstOrDefault(h => h.Login == Login);
+
+            if (administrator != null)
             {
-                HttpContext.Session.SetString("UserLogin", "Admin");
-                HttpContext.Session.SetString("UserType", "Admin");
-                return RedirectToPage("/Admin/AdminProfile"); // Przekierowanie na stronê admina
+                var hasher = new PasswordHasher<string>();
+                var result = hasher.VerifyHashedPassword(null, administrator.Password, Password);
+                if (result == PasswordVerificationResult.Success) // Upewnij siê, ¿e has³a s¹ w odpowiednim formacie (np. zahaszowane)
+                {
+                    // Zapisanie danych fryzjera w sesji
+                    HttpContext.Session.SetString("UserLogin", administrator.Login);
+                    HttpContext.Session.SetInt32("HairdresserId", administrator.Id); // Kluczowe dla przekierowania na profil
+                    HttpContext.Session.SetString("UserType", "Admin");
+                    return RedirectToPage("/Admin/AdminProfile"); // Przekierowanie na stronê admina
+                }
+                else
+                {
+                    ErrorMessage = "Nieprawid³owy login lub has³o.";
+                    return Page();
+                }
             }
 
             // Logowanie fryzjera

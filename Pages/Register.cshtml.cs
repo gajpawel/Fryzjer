@@ -52,6 +52,16 @@ namespace Fryzjer.Pages
                 ModelState.AddModelError("Client.Login", "Ten login jest ju¿ zajêty.");
                 return Page();
             }
+            if (_context.Hairdresser.Any(c => c.login == Client.Login))
+            {
+                ModelState.AddModelError("Client.Login", "Ten login jest ju¿ zajêty.");
+                return Page();
+            }
+            if (_context.Administrator.Any(c => c.Login == Client.Login))
+            {
+                ModelState.AddModelError("Client.Login", "Ten login jest ju¿ zajêty.");
+                return Page();
+            }
 
             // Haszowanie has³a
             var hasher = new PasswordHasher<string>();

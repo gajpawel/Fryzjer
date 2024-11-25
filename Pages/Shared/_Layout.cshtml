@@ -54,6 +54,9 @@
                     <ul class="navbar-nav">
                         @if (Context.Session?.GetString("UserType") == "Admin") // Admin zalogowany
                         {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark @(Context.Request.Path == "/Admin/AccessManagement" ? "active" : "")" asp-area="" asp-page="/Admin/AccessManagement">Dane logowania</a>
+                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Panel admina

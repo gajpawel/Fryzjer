@@ -1,0 +1,37 @@
+﻿@page
+@model Fryzjer.Pages.Admin.AccessManagementModel
+<h2>Zmień dane logowania jako @Model.UserName</h2>
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div id="success-message" class="alert alert-success">@Model.SuccessMessage</div>
+}
+@if (!ViewData.ModelState.IsValid)
+{
+    <div id="error-message" class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
+<form method="post" asp-page-handler="ChangePassword" class="mb-4">
+    <div class="form-group">
+        <label for="newLogin">Nowy login</label>
+        <input type="text" id="newLogin" name="newLogin" class="form-control"/>
+    </div>
+    <div class="form-group">
+        <label for="currentPassword">Obecne hasło</label>
+        <input type="password" id="currentPassword" name="CurrentPassword" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="newPassword">Nowe hasło</label>
+        <input type="password" id="newPassword" name="NewPassword" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-success mt-3">Zmień dane</button>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
