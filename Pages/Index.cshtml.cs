@@ -1,31 +1,43 @@
+using Fryzjer.Models;
+using Fryzjer.OtherClasses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Fryzjer.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
+        private readonly Fryzjer.Data.FryzjerContext _context;
+        private readonly FileChecker _fileChecker;
 
-        public IndexModel(ILogger<IndexModel> logger)
+        public IList<Place> Place { get; set; } = default!;
+
+        public IndexModel(Fryzjer.Data.FryzjerContext context, IWebHostEnvironment environment)
         {
-            _logger = logger;
+            _context = context;
+            _fileChecker = new FileChecker(environment);
         }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            // Mo¿esz tu wykorzystaæ logger, jeœli potrzeba
-            _logger.LogInformation("Odwiedzono stronê g³ówn¹.");
+            Place = await _context.Place.ToListAsync();
         }
 
         public IActionResult OnPostLogout()
         {
             // Usuñ sesjê u¿ytkownika
             HttpContext.Session.Remove("UserLogin");
-            _logger.LogInformation("U¿ytkownik zosta³ wylogowany."); // Informacja w logach
             HttpContext.Session.Remove("HairdresserId");
             HttpContext.Session.Remove("UserType");
             return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹
         }
+
+        public bool IsFileAvailable(string? logoPath)
+        {
+            return _fileChecker.DoesFileExist(logoPath);
+        }
+
     }
 }

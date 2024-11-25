@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Fryzjer.Data;
 using Fryzjer.Models;
 
-namespace Fryzjer.Pages.Clients
+namespace Fryzjer.Pages.Admin
 {
     public class IndexModel : PageModel
     {
