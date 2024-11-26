@@ -113,6 +113,7 @@ namespace Fryzjer.Pages
 
             // Wyloguj u¿ytkownika
             HttpContext.Session.Remove("UserLogin");
+            HttpContext.Session.Remove("UserType");
 
             // Ustaw komunikat w TempData (widoczny w Layout)
             TempData["AccountDeleted"] = "Twoje konto zosta³o usuniête.";
