@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Fryzjer.Data;
 using Fryzjer.Models;
 
@@ -26,8 +27,10 @@ namespace Fryzjer.Pages.Hairdressers
                 return RedirectToPage("/Index");
             }
 
-            // Pobranie danych fryzjera z bazy na podstawie ID
-            Hairdresser = _context.Hairdresser.FirstOrDefault(h => h.Id == hairdresserId.Value);
+            // Pobranie danych fryzjera z bazy na podstawie ID wraz z lokalem
+            Hairdresser = _context.Hairdresser
+                .Include(h => h.Place) // £adowanie powi¹zanej lokalizacji
+                .FirstOrDefault(h => h.Id == hairdresserId.Value);
 
             if (Hairdresser == null)
             {

@@ -6,6 +6,7 @@ using Fryzjer.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace Fryzjer.Pages.Admin
 {
@@ -23,8 +24,7 @@ namespace Fryzjer.Pages.Admin
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
-            Hairdresser = await _context.Hairdresser
-                .FirstOrDefaultAsync(h => h.Id == id);
+            Hairdresser = await _context.Hairdresser.FirstOrDefaultAsync(h => h.Id == id);
 
             if (Hairdresser == null)
             {
@@ -60,7 +60,8 @@ namespace Fryzjer.Pages.Admin
             // Aktualizuj has³o tylko jeœli zosta³o podane nowe
             if (!string.IsNullOrEmpty(Hairdresser.password))
             {
-                existingHairdresser.password = Hairdresser.password;
+                var hasher = new PasswordHasher<string>();
+                existingHairdresser.password = hasher.HashPassword(null, Hairdresser.password);
             }
 
             try

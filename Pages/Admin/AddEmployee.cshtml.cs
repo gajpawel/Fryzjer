@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Data;
 using Fryzjer.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Fryzjer.Pages.Admin
 {
@@ -32,8 +33,17 @@ namespace Fryzjer.Pages.Admin
                 return Page();
             }
 
+            if (string.IsNullOrWhiteSpace(NewHairdresser.password))
+            {
+                ModelState.AddModelError("NewHairdresser.password", "Has³o jest wymagane podczas rejestracji.");
+                return Page();
+            }
+
             try
             {
+                var hasher = new PasswordHasher<string>();
+                NewHairdresser.password = hasher.HashPassword(null, NewHairdresser.password);
+
                 _context.Hairdresser.Add(NewHairdresser);
                 await _context.SaveChangesAsync();
                 return RedirectToPage("/Admin/EmployeeManagement");

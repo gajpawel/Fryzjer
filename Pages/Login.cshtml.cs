@@ -70,7 +70,9 @@ namespace Fryzjer.Pages
 
             if (hairdresser != null)
             {
-                if (hairdresser.password == Password) // Upewnij siê, ¿e has³a s¹ w odpowiednim formacie (np. zahaszowane)
+                var hasher = new PasswordHasher<string>();
+                var result = hasher.VerifyHashedPassword(null, hairdresser.password, Password);
+                if (result == PasswordVerificationResult.Success) // Upewnij siê, ¿e has³a s¹ w odpowiednim formacie (np. zahaszowane)
                 {
                     // Zapisanie danych fryzjera w sesji
                     HttpContext.Session.SetString("UserLogin", hairdresser.login);
