@@ -46,7 +46,7 @@ namespace Fryzjer.Pages.Admin
 
                 _context.Hairdresser.Add(NewHairdresser);
                 await _context.SaveChangesAsync();
-                return RedirectToPage("/Admin/EmployeeManagement");
+                return RedirectToPage("/Admin/Employee/EmployeeManagement");
             }
             catch (Exception ex)
             {

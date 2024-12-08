@@ -35,7 +35,7 @@ namespace Fryzjer.Pages.Admin
             await _context.SaveChangesAsync(); // Zapisujemy zmiany w bazie
 
             // Po zapisaniu przekierowujemy u¿ytkownika na stronê z list¹ salonów
-            return RedirectToPage("/Admin/Salon");
+            return RedirectToPage("/Admin/Salon/Salon");
         }
     }
 }

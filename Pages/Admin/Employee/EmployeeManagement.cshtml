@@ -22,15 +22,15 @@
                     <td>@hairdresser.Name</td>
                     <td>@hairdresser.Surname</td>
                     <td>
-                        <a href="@Url.Page("/Admin/ManageSpecializations", new { hairdresserId = hairdresser.Id })"
+                        <a href="@Url.Page("/Admin/Employee/ManageSpecializations", new { hairdresserId = hairdresser.Id })"
                            class="btn btn-primary btn-sm">
                             Zarządzaj specjalizacjami
                         </a>
                     </td>
                     <td>
-                        <a href="@Url.Page("/Admin/EditEmployee", new { id = hairdresser.Id })" class="btn btn-warning btn-sm">Edytuj</a> |
-                        <a href="@Url.Page("/Admin/DetailsEmployee", new { id = hairdresser.Id })" class="btn btn-info btn-sm">Szczegóły</a> |
-                        <a href="@Url.Page("/Admin/DeleteEmployee", new { id = hairdresser.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Na pewno chcesz usunąć tego pracownika?')">Usuń</a>
+                        <a href="@Url.Page("/Admin/Employee/EditEmployee", new { id = hairdresser.Id })" class="btn btn-warning btn-sm">Edytuj</a> |
+                        <a href="@Url.Page("/Admin/Employee/DetailsEmployee", new { id = hairdresser.Id })" class="btn btn-info btn-sm">Szczegóły</a> |
+                        <a href="@Url.Page("/Admin/Employee/DeleteEmployee", new { id = hairdresser.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Na pewno chcesz usunąć tego pracownika?')">Usuń</a>
                     </td>
                 </tr>
             }
@@ -43,4 +43,4 @@
         }
     </tbody>
 </table>
-<a class="btn btn-primary" href="@Url.Page("/Admin/AddEmployee")">Dodaj nowego pracownika</a>
+<a class="btn btn-primary" href="@Url.Page("/Admin/Employee/AddEmployee")">Dodaj nowego pracownika</a>

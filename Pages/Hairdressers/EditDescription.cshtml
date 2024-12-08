@@ -1,0 +1,19 @@
+﻿@page
+@model Fryzjer.Pages.Hairdressers.EditDescriptionModel
+@{
+    ViewData["Title"] = "Edytuj wizytówkę";
+}
+
+<h1>Edytuj wizytówkę</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="Description">Opis</label>
+        <textarea id="Description" name="Description" class="form-control" rows="6">@Model.Description</textarea>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Zapisz</button>
+        <a asp-page="/Hairdressers/HairdresserProfile" class="btn btn-secondary">Powrót</a>
+    </div>
+</form>

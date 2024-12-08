@@ -1,18 +1,19 @@
 ﻿@page
-@model Fryzjer.Pages.Clients.CreateModel
+@model Fryzjer.Pages.Clients.EditModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
 }
 
-<h1>Create</h1>
+<h1>Edytuj</h1>
 
-<h4>Client</h4>
+<h4>Klient</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Client.Id" />
             <div class="form-group">
                 <label asp-for="Client.Name" class="control-label"></label>
                 <input asp-for="Client.Name" class="form-control" />
@@ -44,14 +45,14 @@
                 <span asp-validation-for="Client.Phone" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Zapisz" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-page="Index">Back to List</a>
+    <a asp-page="/Admin/Clients/ClientIndex">Powrót do listy</a>
 </div>
 
 @section Scripts {

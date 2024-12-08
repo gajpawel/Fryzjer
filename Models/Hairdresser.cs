@@ -20,6 +20,7 @@ namespace Fryzjer.Models
         public string? password { get; set; }
 
         public string? photoPath { get; set; }
+        public string? description { get; set; } //treść wizytówki
 
         [ForeignKey("Place")]
         public int? PlaceId { get; set; }

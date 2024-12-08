@@ -62,7 +62,7 @@ namespace Fryzjer.Pages.Admin
                 }
             }
 
-            return RedirectToPage("/Admin/Salon");
+            return RedirectToPage("/Admin/Salon/Salon");
         }
     }
 }

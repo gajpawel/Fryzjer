@@ -20,6 +20,6 @@
         <dt class="col-sm-3">Lokalizacja</dt>
         <dd class="col-sm-9">@(Model.Hairdresser.Place?.Name ?? "Brak przypisanego lokalu")</dd>
     </dl>
-
+    <a asp-page="/Hairdressers/EditDescription" class="btn btn-primary mt-3">Zarządzaj treścią wizytówki</a>
     <a asp-page="/Hairdressers/HairdresserMainPage" class="btn btn-primary mt-3">Przejdź do panelu głównego</a>
 </div>

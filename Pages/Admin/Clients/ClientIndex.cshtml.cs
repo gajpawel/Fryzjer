@@ -8,18 +8,18 @@ using Microsoft.EntityFrameworkCore;
 using Fryzjer.Data;
 using Fryzjer.Models;
 
-namespace Fryzjer.Pages.Admin
+namespace Fryzjer.Pages.Admin.Clients
 {
     public class IndexModel : PageModel
     {
-        private readonly Fryzjer.Data.FryzjerContext _context;
+        private readonly FryzjerContext _context;
 
-        public IndexModel(Fryzjer.Data.FryzjerContext context)
+        public IndexModel(FryzjerContext context)
         {
             _context = context;
         }
 
-        public IList<Client> Client { get;set; } = default!;
+        public IList<Client> Client { get; set; } = default!;
 
         public async Task OnGetAsync()
         {

@@ -20,13 +20,13 @@ namespace Fryzjer.Pages.Admin
         public IActionResult OnPostEmployeeManagement()
         {
             // Po klikniêciu przycisku "Zarz¹dzanie pracownikami"
-            return RedirectToPage("/Admin/EmployeeManagement");
+            return RedirectToPage("/Admin/Employee/EmployeeManagement");
         }
 
         public IActionResult OnPostSalon()
         {
             // Po klikniêciu przycisku "Przegl¹d listy lokali"
-            return RedirectToPage("/Admin/Salon");
+            return RedirectToPage("/Admin/Salon/Salon");
         }
 
         public IActionResult OnPostServices()

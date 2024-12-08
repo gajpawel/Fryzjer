@@ -1,14 +1,14 @@
 ﻿@page
-@model Fryzjer.Pages.Admin.IndexModel
+@model IndexModel
 
 @{
     ViewData["Title"] = "Client Index";
 }
 
-<h1>Index</h1>
+<h1>Zarejestrowani klienci</h1>
 
 <p>
-    <a asp-page="Create">Create New</a>
+    <a asp-page="/Admin/Clients/Create">Utwórz nowe konto</a>
 </p>
 <table class="table">
     <thead>
@@ -50,9 +50,9 @@
                 @Html.DisplayFor(modelItem => item.Phone)
             </td>
             <td>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-page="/Admin/Clients/Edit" asp-route-id="@item.Id">Edytuj</a> |
+                <a asp-page="/Admin/Clients/Details" asp-route-id="@item.Id">Szczegóły</a> |
+                <a asp-page="/Admin/Clients/Delete" asp-route-id="@item.Id">Usuń</a>
             </td>
         </tr>
 }

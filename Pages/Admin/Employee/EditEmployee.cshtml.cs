@@ -77,7 +77,7 @@ namespace Fryzjer.Pages.Admin
                 throw;
             }
 
-            return RedirectToPage("/Admin/EmployeeManagement");
+            return RedirectToPage("/Admin/Employee/EmployeeManagement");
         }
 
         private bool HairdresserExists(int id)

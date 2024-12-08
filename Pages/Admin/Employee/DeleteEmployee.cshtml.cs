@@ -48,7 +48,7 @@ namespace Fryzjer.Pages.Admin
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToPage("/Admin/EmployeeManagement");
+            return RedirectToPage("/Admin/Employee/EmployeeManagement");
         }
     }
 }

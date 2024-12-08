@@ -34,8 +34,8 @@ else
                     <td>@item.address</td>
                     <td>@item.telephoneNumber</td>
                     <td>
-                        <a asp-page="EditPlace" asp-route-id="@item.Id" class="btn btn-secondary">Edytuj</a>
-                        <a asp-page="DeleteSalon" asp-route-id="@item.Id" class="btn btn-danger">Usuń</a>
+                        <a asp-page="/Admin/Salon/EditPlace" asp-route-id="@item.Id" class="btn btn-secondary">Edytuj</a>
+                        <a asp-page="/Admin/Salon/DeleteSalon" asp-route-id="@item.Id" class="btn btn-danger">Usuń</a>
                     </td>
                 </tr>
             }
