@@ -1,15 +1,25 @@
 ﻿@page
 @model Fryzjer.Pages.Hairdressers.EditDescriptionModel
 @{
-    ViewData["Title"] = "Edytuj wizytówkę";
+    ViewData["Title"] = "Edytuj opis i zdjęcie";
 }
 
-<h1>Edytuj wizytówkę</h1>
+<h1>Edytuj opis i zdjęcie</h1>
 
-<form method="post">
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<form method="post" enctype="multipart/form-data">
     <div class="form-group">
         <label for="Description">Opis</label>
         <textarea id="Description" name="Description" class="form-control" rows="6">@Model.Description</textarea>
+    </div>
+
+    <div class="form-group mt-3">
+        <label for="ProfilePhoto">Zdjęcie profilowe</label>
+        <input type="file" id="ProfilePhoto" name="ProfilePhoto" class="form-control">
     </div>
 
     <div class="mt-3">

@@ -2,63 +2,93 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Data;
 using Fryzjer.Models;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace Fryzjer.Pages.Hairdressers
 {
-	public class EditDescriptionModel : PageModel
-	{
-		private readonly FryzjerContext _context;
+    public class EditDescriptionModel : PageModel
+    {
+        private readonly FryzjerContext _context;
 
-		[BindProperty]
-		public string? Description { get; set; }
+        [BindProperty]
+        public string? Description { get; set; }
 
-		public EditDescriptionModel(FryzjerContext context)
-		{
-			_context = context;
-		}
+        [BindProperty]
+        public IFormFile? ProfilePhoto { get; set; }
 
-		public IActionResult OnGet()
-		{
-			// Pobranie ID fryzjera z sesji
-			int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
-			if (hairdresserId == null)
-			{
-				return RedirectToPage("/Index"); // Jeœli brak ID w sesji, przekierowanie na stronê g³ówn¹
-			}
+        public string? ErrorMessage { get; set; } // Pole do przechowywania komunikatu o b³êdzie
 
-			// Pobranie fryzjera z bazy
-			var hairdresser = _context.Hairdresser.FirstOrDefault(h => h.Id == hairdresserId.Value);
-			if (hairdresser == null)
-			{
-				return RedirectToPage("/Index"); // Jeœli brak fryzjera, przekierowanie na stronê g³ówn¹
-			}
+        public EditDescriptionModel(FryzjerContext context)
+        {
+            _context = context;
+        }
 
-			// Przekazanie opisu do widoku
-			Description = hairdresser.description;
-			return Page();
-		}
+        public IActionResult OnGet()
+        {
+            int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
+            if (hairdresserId == null)
+            {
+                return RedirectToPage("/Index");
+            }
 
-		public IActionResult OnPost()
-		{
-			// Pobranie ID fryzjera z sesji
-			int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
-			if (hairdresserId == null)
-			{
-				return RedirectToPage("/Index"); // Jeœli brak ID w sesji, przekierowanie na stronê g³ówn¹
-			}
+            var hairdresser = _context.Hairdresser.FirstOrDefault(h => h.Id == hairdresserId.Value);
+            if (hairdresser == null)
+            {
+                return RedirectToPage("/Index");
+            }
 
-			// Pobranie fryzjera z bazy
-			var hairdresser = _context.Hairdresser.FirstOrDefault(h => h.Id == hairdresserId.Value);
-			if (hairdresser == null)
-			{
-				return RedirectToPage("/Index"); // Jeœli brak fryzjera, przekierowanie na stronê g³ówn¹
-			}
+            Description = hairdresser.description;
+            return Page();
+        }
 
-			// Aktualizacja opisu
-			hairdresser.description = Description;
-			_context.SaveChanges(); // Zapisanie zmian do bazy
+        public async Task<IActionResult> OnPostAsync()
+        {
+            int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
+            if (hairdresserId == null)
+            {
+                return RedirectToPage("/Index");
+            }
 
-			return RedirectToPage("/Hairdressers/HairdresserProfile"); // Przekierowanie po zapisaniu zmian
-		}
-	}
+            var hairdresser = _context.Hairdresser.FirstOrDefault(h => h.Id == hairdresserId.Value);
+            if (hairdresser == null)
+            {
+                return RedirectToPage("/Index");
+            }
+
+            hairdresser.description = Description;
+
+            // Walidacja zdjêcia
+            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                var fileExtension = Path.GetExtension(ProfilePhoto.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    ErrorMessage = "Dozwolone formaty plików to: .jpg, .jpeg, .png";
+                    return Page(); // Powrót do strony w przypadku b³êdu
+                }
+
+                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Hairdresser_Photos");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                string fileName = $"{hairdresser.login}{fileExtension}";
+                string filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ProfilePhoto.CopyToAsync(fileStream);
+                }
+
+                hairdresser.photoPath = Path.Combine("Hairdresser_Photos", fileName);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage("/Hairdressers/HairdresserProfile");
+        }
+    }
 }

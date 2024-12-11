@@ -7,6 +7,21 @@
     <h1 class="display-4">Witaj, @Model.Hairdresser.Name @Model.Hairdresser.Surname!</h1>
     <p class="lead">Zarządzaj swoim profilem fryzjera.</p>
 
+    <!-- Wyświetlanie zdjęcia profilowego -->
+    <div class="text-left my-4">
+        @if (!string.IsNullOrEmpty(Model.Hairdresser.photoPath))
+        {
+            <img src="@Url.Content($"~/{Model.Hairdresser.photoPath}")"
+                 alt="Zdjęcie profilowe"
+                 class="img-thumbnail"
+                 style="max-width: 200px; max-height: 200px;">
+        }
+        else
+        {
+            <p><em>Brak zdjęcia profilowego.</em></p>
+        }
+    </div>
+
     <dl class="row">
         <dt class="col-sm-3">Imię</dt>
         <dd class="col-sm-9">@Model.Hairdresser.Name</dd>
@@ -20,6 +35,7 @@
         <dt class="col-sm-3">Lokalizacja</dt>
         <dd class="col-sm-9">@(Model.Hairdresser.Place?.Name ?? "Brak przypisanego lokalu")</dd>
     </dl>
+
     <a asp-page="/Hairdressers/EditDescription" class="btn btn-primary mt-3">Zarządzaj treścią wizytówki</a>
     <a asp-page="/Hairdressers/HairdresserMainPage" class="btn btn-primary mt-3">Przejdź do panelu głównego</a>
 </div>
