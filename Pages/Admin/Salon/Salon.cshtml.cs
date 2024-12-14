@@ -35,7 +35,7 @@ namespace Fryzjer.Pages.Admin
             }
 
             // Odœwie¿ stronê, aby odzwierciedliæ zmiany
-            return RedirectToPage();
+            return RedirectToPage("/Admin/Salon/Salon");
         }
     }
 }
