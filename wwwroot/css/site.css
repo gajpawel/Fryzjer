@@ -83,6 +83,10 @@ body {
         right: 0;
     }
 
+.bg-bluegray {
+    background-color: rgb(141, 160, 168)
+}
+
 .bg-teal {
     background-color: Teal;
 }
