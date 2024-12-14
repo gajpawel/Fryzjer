@@ -18,15 +18,14 @@ namespace Fryzjer.Models
         [Required(ErrorMessage = "Płeć jest wymagana")]
         public char Gender { get; set; } // 'M' - mężczyzna, 'K' - kobieta, 'N' - inne
 
-        [Required(ErrorMessage = "Login jest wymagany")]
         [StringLength(50, ErrorMessage = "Login nie może przekraczać 50 znaków")]
         public string? Login { get; set; }
 
-        [Required(ErrorMessage = "Hasło jest wymagane")]
+        [StringLength(100)]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z]).{6,}$", ErrorMessage = "Hasło musi zawierać co najmniej jedną wielką literę, jedną małą literę i co najmniej 6 znaków.")]
         public string? Password { get; set; }
 
-        [Required(ErrorMessage = "Numer telefonu jest wymagany")]
+            [Required(ErrorMessage = "Numer telefonu jest wymagany")]
         [RegularExpression(@"^\d{9}$", ErrorMessage = "Numer telefonu musi składać się z dokładnie 9 cyfr.")]
         public string? Phone { get; set; }
     }

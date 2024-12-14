@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fryzjer.Pages.Hairdressers
 {
@@ -85,9 +86,11 @@ namespace Fryzjer.Pages.Hairdressers
 
             // Pobieramy istniej¹ce rezerwacje na dany dzieñ dla danego fryzjera
             var reservations = _context.Reservation
+                .Include(r => r.Client)
+                .Include(r => r.Service)
                 .Where(r => r.date == date && r.HairdresserId == hairdresserId)
-                .ToList() // Pobranie danych z bazy danych
-                .OrderBy(r => r.time) // Sortowanie w pamiêci
+                .ToList()                  // Najpierw pobieramy dane
+                .OrderBy(r => r.time)      // Potem sortujemy w pamiêci
                 .ToList();
 
             TimeBlock currentBlock = null;
@@ -107,9 +110,8 @@ namespace Fryzjer.Pages.Hairdressers
                         EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
                         IsReserved = true,
                         ReservationId = reservation.Id,
-                        ClientInfo = reservation.Client != null
-                            ? $"{reservation.Client.Name} {reservation.Client.Surname}, Tel: {reservation.Client.Phone}, Us³uga: {reservation.Service?.Name}"
-                            : "Brak danych klienta"
+                        ClientInfo = $"{reservation.Client?.Name} {reservation.Client?.Surname}\nTel: {reservation.Client?.Phone}",
+                        ServiceName = reservation.Service?.Name ?? "Brak us³ugi"
                     };
                 }
                 else
@@ -130,18 +132,19 @@ namespace Fryzjer.Pages.Hairdressers
     // Klasa do przechowywania harmonogramu jednego dnia
     public class DailySchedule
     {
-        public DateTime Date { get; set; } // Data dnia
-        public List<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>(); // Lista bloków czasowych
+        public DateTime Date { get; set; }
+        public List<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
     }
 
     // Klasa do reprezentowania bloku czasowego
     public class TimeBlock
     {
-        public TimeSpan StartTime { get; set; } // Godzina rozpoczêcia
-        public TimeSpan EndTime { get; set; } // Godzina zakoñczenia
-        public bool IsReserved { get; set; } // Czy blok jest zarezerwowany
-        public string TimeRange => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}"; // Zakres czasowy jako string
-        public string? ClientInfo { get; set; } // Informacje o kliencie (jeœli godzina jest zarezerwowana)
-        public int? ReservationId { get; set; } // Identyfikator rezerwacji (jeœli istnieje)
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public bool IsReserved { get; set; }
+        public string TimeRange => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}";
+        public string? ClientInfo { get; set; }
+        public int? ReservationId { get; set; }
+        public string? ServiceName { get; set; }
     }
 }

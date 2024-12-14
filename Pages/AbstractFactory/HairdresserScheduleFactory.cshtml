@@ -1,36 +1,66 @@
 ﻿@page
 @model Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel
 
-<h1>Harmonogram Fryzjera</h1>
+<h1 class="text-center">Harmonogram Fryzjera</h1>
 
-<div>
-    <h2>Tydzień: @Model.CurrentWeek</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Dzień</th>
-                <th>Godziny</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var day in Model.WeeklySchedule)
-            {
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Tydzień: @Model.CurrentWeek</h2>
+
+    <div class="table-responsive">
+        <table class="table schedule-table">
+            <thead>
                 <tr>
-                    <td>@day.Date.ToString("dddd, dd-MM-yyyy")</td>
-                    <td>
-                        @foreach (var block in day.TimeBlocks)
-                        {
-                            <div>
-                                @block.TimeRange
-                                @if (block.IsReserved)
-                                {
-                                    <span>(Zarezerwowane: @block.ClientInfo)</span>
-                                }
-                            </div>
-                        }
-                    </td>
+                    <th>Godzina</th>
+                    @foreach (var day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday))
+                    {
+                        <th>@day.ToString("dddd")</th>
+                    }
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var time in Model.ScheduleTable.Keys.OrderBy(t => t))
+                {
+                    <tr>
+                        <td class="time-column">@time.ToString(@"hh\:mm")</td> <!-- Kolumna z godzinami -->
+                        @foreach (var day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday))
+                        {
+                            if (Model.ScheduleTable[time].TryGetValue(day, out var block))
+                            {
+                                var cellClass = block.IsReserved
+                                ? $"reserved service-{block.ServiceId}" // Klasa dla zarezerwowanych
+                                : "available"; // Klasa dla dostępnych
+                                <td class="@cellClass">
+                                    @if (block.IsReserved)
+                                    {
+                                        <div>
+                                            <strong>@block.ClientInfo</strong> <!-- Informacje o kliencie -->
+                                            <span>@block.ServiceName</span> <!-- Nazwa usługi -->
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" onclick="bookTimeSlot('@day', '@time.ToString(@"hh\:mm")')">Rezerwuj</button>
+                                    }
+                                </td>
+                            }
+                            else
+                            {
+                                <td class="available">
+                                    <button class="btn btn-sm btn-outline-success" onclick="bookTimeSlot('@day', '@time.ToString(@"hh\:mm")')">Rezerwuj</button>
+                                </td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<script>
+    // Skrypt odpowiedzialny za obsługę interakcji w harmonogramie
+    function bookTimeSlot(day, time) {
+        alert(`Rezerwacja na dzień: ${day}, godzina: ${time}`);
+        // Tutaj można dodać logikę obsługi rezerwacji np. otwieranie modala lub wysyłanie zapytania AJAX
+    }
+</script>

@@ -10,101 +10,83 @@ namespace Fryzjer.Pages.AbstractFactory
     {
         private readonly FryzjerContext _context;
 
+        // NOWA W£AŒCIWOŒÆ ScheduleTable
+        public Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>> ScheduleTable { get; set; }
+
         public HairdresserScheduleFactoryModel(FryzjerContext context)
         {
             _context = context;
+            ScheduleTable = new Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>>();
         }
 
         public override void GenerateSchedule(int week)
         {
-            // Pobieramy ID zalogowanego fryzjera
+            // Pobieranie ID zalogowanego fryzjera
             int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
             if (hairdresserId == null)
             {
-                // Jeœli fryzjer nie jest zalogowany, przekierowujemy na stronê logowania
                 Response.Redirect("/Login");
                 return;
             }
 
             CurrentWeek = week;
 
-            // Obliczamy pierwszy dzieñ tygodnia (poniedzia³ek)
+            // Oblicz pierwszy dzieñ tygodnia (poniedzia³ek)
             var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
 
-            // Generujemy harmonogram tygodniowy (poniedzia³ek–pi¹tek)
-            WeeklySchedule = GenerateWeeklySchedule(startDate, hairdresserId.Value);
+            // Generowanie harmonogramu dla fryzjera
+            ScheduleTable = GenerateSchedule(startDate, hairdresserId.Value);
         }
 
-        private List<DailySchedule> GenerateWeeklySchedule(DateTime startDate, int hairdresserId)
+        private Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>> GenerateSchedule(DateTime startDate, int hairdresserId)
         {
-            var schedule = new List<DailySchedule>();
+            // Tworzenie pustej tabeli z czasami (co 15 minut) i dniami tygodnia (poniedzia³ek-pi¹tek)
+            var schedule = new Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>>();
+            var startTime = new TimeSpan(8, 0, 0); // Start o 8:00
+            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
 
-            for (int i = 0; i < 5; i++) // Tylko dni robocze (poniedzia³ek–pi¹tek)
+            // Inicjalizuj puste bloki dla ka¿dego przedzia³u czasu
+            for (var time = startTime; time < endTime; time = time.Add(new TimeSpan(0, 15, 0)))
             {
-                var date = startDate.AddDays(i);
-                var timeBlocks = new List<TimeBlock>();
+                schedule[time] = Enum.GetValues(typeof(DayOfWeek))
+                    .Cast<DayOfWeek>()
+                    .Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday)
+                    .ToDictionary(d => d, d => new TimeBlock
+                    {
+                        StartTime = time,
+                        EndTime = time.Add(new TimeSpan(0, 15, 0)),
+                        IsReserved = false
+                    });
+            }
 
-                if (date >= DateTime.Now.Date) // Generujemy godziny tylko dla przysz³ych dat
+            // Pobieranie istniej¹cych rezerwacji dla fryzjera w danym tygodniu
+            var reservations = _context.Reservation
+                .Where(r => r.date >= startDate && r.date < startDate.AddDays(7) && r.HairdresserId == hairdresserId)
+                .OrderBy(r => r.date)
+                .ThenBy(r => r.time)
+                .ToList();
+
+            // Mapowanie rezerwacji na odpowiednie pola w tabeli
+            foreach (var reservation in reservations)
+            {
+                var day = reservation.date.DayOfWeek;
+                var time = reservation.time;
+
+                if (schedule.ContainsKey(time) && schedule[time].ContainsKey(day))
                 {
-                    timeBlocks = GenerateDailyTimeBlocks(date, hairdresserId);
+                    schedule[time][day] = new TimeBlock
+                    {
+                        StartTime = time,
+                        EndTime = time.Add(new TimeSpan(0, 15, 0)),
+                        IsReserved = true,
+                        ClientInfo = $"{reservation.Client?.Name} {reservation.Client?.Surname}",
+                        ServiceName = reservation.Service?.Name,
+                        ServiceId = reservation.ServiceId
+                    };
                 }
-
-                schedule.Add(new DailySchedule
-                {
-                    Date = date,
-                    TimeBlocks = timeBlocks
-                });
             }
 
             return schedule;
-        }
-
-        private List<TimeBlock> GenerateDailyTimeBlocks(DateTime date, int hairdresserId)
-        {
-            var blocks = new List<TimeBlock>();
-            var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
-            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
-
-            // Pobieramy istniej¹ce rezerwacje
-            var reservations = _context.Reservation
-                .Where(r => r.date == date && r.HairdresserId == hairdresserId)
-                .OrderBy(r => r.time) // Sortowanie rezerwacji
-                .ToList();
-
-            TimeBlock currentBlock = null;
-
-            foreach (var reservation in reservations)
-            {
-                if (currentBlock == null || reservation.time != currentBlock.EndTime)
-                {
-                    if (currentBlock != null)
-                    {
-                        blocks.Add(currentBlock);
-                    }
-
-                    currentBlock = new TimeBlock
-                    {
-                        StartTime = reservation.time,
-                        EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
-                        IsReserved = true,
-                        ReservationId = reservation.Id,
-                        ClientInfo = reservation.Client != null
-                            ? $"{reservation.Client.Name} {reservation.Client.Surname}, Tel: {reservation.Client.Phone}, Us³uga: {reservation.Service?.Name}"
-                            : "Brak danych klienta"
-                    };
-                }
-                else
-                {
-                    currentBlock.EndTime = currentBlock.EndTime.Add(new TimeSpan(0, 15, 0));
-                }
-            }
-
-            if (currentBlock != null)
-            {
-                blocks.Add(currentBlock);
-            }
-
-            return blocks;
         }
     }
 }

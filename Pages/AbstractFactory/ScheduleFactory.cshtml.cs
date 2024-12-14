@@ -29,5 +29,9 @@ namespace Fryzjer.Pages.AbstractFactory
         public string TimeRange => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}"; // Zakres czasowy
         public string? ClientInfo { get; set; } // Informacje o kliencie (jeœli godzina jest zarezerwowana)
         public int? ReservationId { get; set; } // Identyfikator rezerwacji (jeœli istnieje)
+
+        public int? ServiceId { get; set; } // Identyfikator us³ugi
+        public string? ServiceName { get; set; } // Nazwa us³ugi
     }
+
 }

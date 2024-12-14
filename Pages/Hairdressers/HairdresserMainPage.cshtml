@@ -18,15 +18,15 @@
     {
         var weeklySchedule = weekIndex == 0 ? Model.WeeklySchedule1 : Model.WeeklySchedule2;
 
-        <div class="row text-center mb-5">
+            <div class="row text-center mb-5">
             @foreach (var day in weeklySchedule)
             {
-                <div class="col-md-2 border bg-light mx-2 p-2">
-                    <h5>@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
-                    <ul class="list-unstyled">
+                        <div class="col-md-2 border bg-light mx-2 p-2">
+                            <h5>@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
+                            <ul class="list-unstyled">
                         @if (day.Date < today)
                         {
-                            <li>---</li>
+                                        <li>---</li>
                         }
                         else
                         {
@@ -38,29 +38,29 @@
                                 // Wyświetlanie wolnych godzin przed zarezerwowanym blokiem
                                 while (startTime < block.StartTime)
                                 {
-                                    <li>
-                                        <button class="btn btn-sm btn-success time-slot mb-2"
-                                                data-hour="@startTime.ToString(@"hh\:mm")"
-                                                data-date="@day.Date.ToString("yyyy-MM-dd")"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#reservationModal">
+                                                        <li>
+                                                            <button class="btn btn-sm btn-success time-slot mb-2"
+                                                                    data-hour="@startTime.ToString(@"hh\:mm")"
+                                                                    data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#reservationModal">
                                             @startTime.ToString(@"hh\:mm")
-                                        </button>
-                                    </li>
+                                                            </button>
+                                                        </li>
                                     startTime = startTime.Add(new TimeSpan(0, 15, 0));
                                 }
 
                                 // Wyświetlanie zarezerwowanego bloku
-                                <li>
-                                    <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
-                                            data-reservation-id="@block.ReservationId"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteReservationModal">
-                                        @block.TimeRange
-                                        <br />
-                                        @block.ClientInfo
-                                    </button>
-                                </li>
+                                                <li>
+                                                    <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
+                                                            data-reservation-id="@block.ReservationId"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteReservationModal">
+                                        @block.TimeRange<br />
+                                        @Html.Raw(block.ClientInfo.Replace("\n", "<br />"))<br />
+                                        @block.ServiceName
+                                                    </button>
+                                                </li>
 
                                 startTime = block.EndTime;
                             }
@@ -68,22 +68,22 @@
                             // Wyświetlanie wolnych godzin po ostatnim zarezerwowanym bloku
                             while (startTime < endTime)
                             {
-                                <li>
-                                    <button class="btn btn-sm btn-success time-slot mb-2"
-                                            data-hour="@startTime.ToString(@"hh\:mm")"
-                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#reservationModal">
+                                                <li>
+                                                    <button class="btn btn-sm btn-success time-slot mb-2"
+                                                            data-hour="@startTime.ToString(@"hh\:mm")"
+                                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#reservationModal">
                                         @startTime.ToString(@"hh\:mm")
-                                    </button>
-                                </li>
+                                                    </button>
+                                                </li>
                                 startTime = startTime.Add(new TimeSpan(0, 15, 0));
                             }
                         }
-                    </ul>
-                </div>
+                            </ul>
+                        </div>
             }
-        </div>
+            </div>
     }
 </div>
 
@@ -126,9 +126,9 @@
                         <select class="form-control" id="service" required>
                             @foreach (var service in Model.Services)
                             {
-                                <option value="@service.Id" data-duration="@service.Duration">
+                                    <option value="@service.Id" data-duration="@service.Duration">
                                     @service.Name
-                                </option>
+                                    </option>
                             }
                         </select>
                     </div>
