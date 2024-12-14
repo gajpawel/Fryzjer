@@ -1,0 +1,36 @@
+﻿@page
+@model Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel
+
+<h1>Harmonogram Fryzjera</h1>
+
+<div>
+    <h2>Tydzień: @Model.CurrentWeek</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Dzień</th>
+                <th>Godziny</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var day in Model.WeeklySchedule)
+            {
+                <tr>
+                    <td>@day.Date.ToString("dddd, dd-MM-yyyy")</td>
+                    <td>
+                        @foreach (var block in day.TimeBlocks)
+                        {
+                            <div>
+                                @block.TimeRange
+                                @if (block.IsReserved)
+                                {
+                                    <span>(Zarezerwowane: @block.ClientInfo)</span>
+                                }
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
