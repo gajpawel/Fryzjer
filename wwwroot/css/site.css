@@ -82,3 +82,36 @@ body {
         left: 0;
         right: 0;
     }
+
+.bg-teal {
+    background-color: Teal;
+}
+
+.bg-lblue {
+    background-color: lightblue;
+}
+
+.content-padding {
+    padding: 10px;
+    padding-bottom: 40px;
+}
+
+.hover_div {
+    background-color: rgb(248, 249, 250);
+}
+
+    .hover_div:hover {
+        background-color: Teal;
+        color: white;
+        cursor: pointer;
+    }
+
+#form_button {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+a.invisible_link {
+    color: inherit;
+    text-decoration: none;
+}

@@ -102,7 +102,7 @@
                         else if (Context.Session?.GetString("UserType") == "Client") // Klient zalogowany
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark @(Context.Request.Path == "/ClientProfile" ? "active" : "")" asp-area="" asp-page="/ClientProfile">Mój profil</a>
+                                <a class="nav-link text-dark @(Context.Request.Path == "/Clients/ClientProfile" ? "active" : "")" asp-area="" asp-page="/Clients/ClientProfile">Mój profil</a>
                             </li>
                             <li class="nav-item">
                                 <form method="post" asp-page="/Index" asp-page-handler="Logout" style="display: inline;">
