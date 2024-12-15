@@ -200,7 +200,7 @@ namespace Fryzjer.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<double>("price")
+                    b.Property<double>("Price")
                         .HasColumnType("REAL");
 
                     b.HasKey("Id");

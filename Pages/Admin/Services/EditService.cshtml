@@ -1,19 +1,63 @@
 ﻿@page
 @model Fryzjer.Pages.Admin.EditServiceModel
 @{
-    ViewData["Title"] = "Strona w budowie";
+    ViewData["Title"] = "Edytuj usługę";
 }
 
-<div class="text-center">
-    <h1 class="mt-5">Strona w budowie</h1>
-    <p class="lead text-muted">Przepraszamy, ta strona jest w trakcie budowy. Prosimy spróbować ponownie później.</p>
-    <a asp-page="/Admin/Services/Services" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Wróć do listy usług
-    </a>
+<div class="edit-service-container">
+    <h1 class="text-center mt-3">Edytuj usługę</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <form method="post">
+        <div class="form-group mb-3">
+            <label for="Name">Nazwa usługi</label>
+            <input type="text" class="form-control" id="Name" name="EditService.Name" value="@Model.EditService.Name" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="Duration">Czas trwania (hh:mm:ss)</label>
+            <input type="text" class="form-control" id="Duration" name="EditService.Duration" value="@Model.EditService.Duration.ToString(@"hh\:mm\:ss")" required />
+            <small class="form-text text-muted">Wprowadź czas w formacie hh:mm:ss, np. 01:30:00 dla 1 godziny i 30 minut.</small>
+        </div>
+        <div class="form-group mb-3">
+            <label for="Price">Cena (PLN)</label>
+            <input type="number" step="5.00" class="form-control" id="Price" name="EditService.Price" value="@Model.EditService.Price.ToString("0")" required />
+            @if (ModelState.ContainsKey("EditService.Price"))
+            {
+                <span class="text-danger">@ModelState["EditService.Price"].Errors.FirstOrDefault()?.ErrorMessage</span>
+            }
+        </div>
+
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Zapisz
+            </button>
+            <a asp-page="/Admin/Services/Services" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Wróć
+            </a>
+        </div>
+    </form>
+
 </div>
 
 <style>
-    .text-center {
-        margin-top: 50px;
+    .edit-service-container {
+        margin: 0 auto;
+        max-width: 600px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        margin-right: 10px;
     }
 </style>

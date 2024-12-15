@@ -38,9 +38,9 @@
                             <tr>
                                 <td>@service.Name</td>
                                 <td>@service.Duration.ToString(@"hh\:mm\:ss")</td>
-                                <td>@service.price.ToString("C")</td> <!-- Formatowanie ceny -->
+                                <td>@service.Price.ToString("C")</td> <!-- Formatowanie ceny -->
                                 <td>
-                                    <!-- Przycisk edycji -->
+                     
                                     <!-- Przycisk edycji -->
                                     <a asp-page="EditService" asp-route-id="@service.Id" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit"></i> Edytuj
@@ -86,3 +86,5 @@
         padding: 10px 20px;
     }
 </style>
+
+
