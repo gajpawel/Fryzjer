@@ -9,8 +9,8 @@ namespace Fryzjer.Models
         public int Id { get; set; }
         public DateTime date { get; set; }
         public TimeSpan time { get; set; }
-        public char status { get; set; } // O - oczekuje na akceptacje, A - zaakceptowana, X - odrzucona
-       
+        public char status { get; set; } // O - oczekuje na akceptację, P - potwierdzona, Z - zakończona A - anulowana
+
         [ForeignKey("Client")]
         public int ClientId { get; set; }
         public Client? Client { get; set; }

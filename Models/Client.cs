@@ -16,7 +16,7 @@ namespace Fryzjer.Models
         public string? Surname { get; set; }
 
         [Required(ErrorMessage = "Płeć jest wymagana")]
-        public char Gender { get; set; } // 'M' - mężczyzna, 'K' - kobieta, 'N' - inne
+        public char? Gender { get; set; } // 'M' - mężczyzna, 'K' - kobieta, 'N' - inne
 
         [StringLength(50, ErrorMessage = "Login nie może przekraczać 50 znaków")]
         public string? Login { get; set; }
