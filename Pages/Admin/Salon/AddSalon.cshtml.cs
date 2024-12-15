@@ -2,39 +2,59 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Models;
 using Fryzjer.Data;
-using System.Threading.Tasks;
+using System.IO;
 
-namespace Fryzjer.Pages.Admin
+namespace Fryzjer.Pages
 {
     public class AddSalonModel : PageModel
     {
         private readonly FryzjerContext _context;
-
-        [BindProperty]
-        public Place NewPlace { get; set; }
 
         public AddSalonModel(FryzjerContext context)
         {
             _context = context;
         }
 
-        // Metoda OnGet() do wyœwietlenia formularza
+        [BindProperty]
+        public Place Place { get; set; }
+
+        [BindProperty]
+        public IFormFile? LogoFile { get; set; } // Plik z logiem
+
         public void OnGet()
         {
         }
 
-        // Metoda OnPost() do zapisania nowego salonu w bazie danych
-        public async Task<IActionResult> OnPostAsync()
+        public IActionResult OnPost()
         {
             if (!ModelState.IsValid)
             {
-                return Page(); // Jeœli dane s¹ niepoprawne, wróæ na stronê z formularzem
+                return Page();
             }
 
-            _context.Place.Add(NewPlace); // Dodajemy salon do bazy danych
-            await _context.SaveChangesAsync(); // Zapisujemy zmiany w bazie
+            if (LogoFile != null)
+            {
+                // Tworzenie œcie¿ki do zapisu pliku
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                Directory.CreateDirectory(uploadsFolder); // Upewnij siê, ¿e folder istnieje
 
-            // Po zapisaniu przekierowujemy u¿ytkownika na stronê z list¹ salonów
+                var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(LogoFile.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Zapis pliku na serwerze
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    LogoFile.CopyTo(fileStream);
+                }
+
+                // Zapis œcie¿ki do loga
+                Place.logoPath = $"/images/{uniqueFileName}";
+            }
+
+            // Zapis do bazy danych
+            _context.Place.Add(Place);
+            _context.SaveChanges();
+
             return RedirectToPage("/Admin/Salon/Salon");
         }
     }

@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Fryzjer.Models;
 using Fryzjer.Data;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using Fryzjer.Models;
+using System.IO;
 
-namespace Fryzjer.Pages.Admin
+namespace Fryzjer.Pages
 {
     public class DeleteSalonModel : PageModel
     {
@@ -16,17 +15,12 @@ namespace Fryzjer.Pages.Admin
             _context = context;
         }
 
-        public Place Place { get; set; } = default!;
+        [BindProperty]
+        public Place Place { get; set; }
 
-        // Wyœwietlanie strony potwierdzenia
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            Place = await _context.Place.FindAsync(id);
+            Place = _context.Place.FirstOrDefault(p => p.Id == id);
 
             if (Place == null)
             {
@@ -36,31 +30,28 @@ namespace Fryzjer.Pages.Admin
             return Page();
         }
 
-        // Obs³uga ¿¹dania POST (usuwanie salonu)
-        public async Task<IActionResult> OnPostAsync(int? id)
+        public IActionResult OnPost()
         {
-            if (id == null)
+            var placeToDelete = _context.Place.FirstOrDefault(p => p.Id == Place.Id);
+
+            if (placeToDelete == null)
             {
                 return NotFound();
             }
 
-            var place = await _context.Place.FindAsync(id);
-
-            if (place != null)
+            // Usuniêcie pliku loga, jeœli istnieje
+            if (!string.IsNullOrEmpty(placeToDelete.logoPath))
             {
-                _context.Place.Remove(place);
-
-                try
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", placeToDelete.logoPath.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
                 {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateException ex)
-                {
-                    // Obs³uga b³êdu zwi¹zana z ograniczeniami kluczy obcych
-                    ModelState.AddModelError(string.Empty, "Nie mo¿na usun¹æ salonu, poniewa¿ jest on powi¹zany z innymi danymi.");
-                    return Page(); // Ponowne wyœwietlenie strony
+                    System.IO.File.Delete(filePath);
                 }
             }
+
+            // Usuniêcie rekordu z bazy danych
+            _context.Place.Remove(placeToDelete);
+            _context.SaveChanges();
 
             return RedirectToPage("/Admin/Salon/Salon");
         }

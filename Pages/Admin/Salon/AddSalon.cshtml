@@ -1,24 +1,31 @@
 ﻿@page
-@model Fryzjer.Pages.Admin.AddSalonModel
-
+@model Fryzjer.Pages.AddSalonModel
 @{
-    ViewData["Title"] = "Dodaj lokal";
+    ViewData["Title"] = "Dodaj nowy lokal";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h2>Dodaj nowy lokal</h2>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <div class="form-group">
         <label for="Name">Nazwa lokalu</label>
-        <input type="text" class="form-control" id="Name" name="Name" required />
+        <input asp-for="Place.Name" class="form-control" />
     </div>
+
     <div class="form-group">
         <label for="Address">Adres</label>
-        <input type="text" class="form-control" id="Address" name="Address" required />
+        <input asp-for="Place.address" class="form-control" />
     </div>
+
     <div class="form-group">
         <label for="TelephoneNumber">Numer telefonu</label>
-        <input type="text" class="form-control" id="TelephoneNumber" name="TelephoneNumber" />
+        <input asp-for="Place.telephoneNumber" class="form-control" />
     </div>
-    <button type="submit" class="btn btn-primary">Dodaj lokal</button>
+
+    <div class="form-group">
+        <label for="LogoFile">Logo lokalu</label>
+        <input type="file" asp-for="LogoFile" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Zapisz</button>
 </form>
