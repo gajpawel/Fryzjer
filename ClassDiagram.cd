@@ -22,7 +22,7 @@
   <Class Name="Fryzjer.Models.Hairdresser">
     <Position X="6" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAQCAAAAAAAAAAAAAAAEAAQAAAAAAAAAAEAAAgAAFAA=</HashCode>
+      <HashCode>AAACAAAAAAAAAAAAIAAEAAQABAAAAAAAAEAAAgAAFAA=</HashCode>
       <FileName>Models\Hairdresser.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -32,7 +32,7 @@
   <Class Name="Fryzjer.Models.Place">
     <Position X="9.25" Y="1" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAAAAAAAAAAAAIAQAAAIAEAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAACAAAAAAAAAAAAIAAEIAQAAAIAEAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\Place.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -48,14 +48,14 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="Fryzjer.Models.Service">
-    <Position X="1.5" Y="5.25" Width="1.5" />
+    <Position X="1.5" Y="5.25" Width="2.75" />
     <TypeIdentifier>
-      <HashCode>AAADAAAAAAACAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAADAAAAAQACAAAAAAAAAAQAAAAAAACAAAAAgAAAAAA=</HashCode>
       <FileName>Models\Service.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Fryzjer.Models.ServiceStation">
-    <Position X="2.25" Y="7.75" Width="1.5" />
+    <Position X="2" Y="8.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAACACAAAAAAAAAIAAAAAAAAAAAAQAAAAAIAAAAAAAA=</HashCode>
       <FileName>Models\ServiceStation.cs</FileName>
@@ -68,7 +68,7 @@
   <Class Name="Fryzjer.Models.Specialization">
     <Position X="1" Y="1.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACACAAAAAAAAAAAAAAAAAAAAAAQAAAEQAAAAAAAAA=</HashCode>
+      <HashCode>AAACACAAAAAAAAAAAAAAAAQAAAAAQAAAEQAAAAAAAAA=</HashCode>
       <FileName>Models\Specialization.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -90,7 +90,7 @@
   <Class Name="Fryzjer.Models.StationType">
     <Position X="5.75" Y="8" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAACAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\StationType.cs</FileName>
     </TypeIdentifier>
   </Class>

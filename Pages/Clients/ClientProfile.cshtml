@@ -31,18 +31,51 @@
         </li>
     </ul>
 
-    <div class="tab-content" id="profileTabsContent">
-        <!-- Sekcja: Aktualne rezerwacje -->
-        <div class="tab-pane fade @(Model.ActiveTab == "reservations" ? "show active" : "")" id="current-reservations" role="tabpanel" aria-labelledby="current-reservations-tab">
-            <h3>Aktualne rezerwacje</h3>
+    <div class="tab-pane fade @(Model.ActiveTab == "reservations" ? "show active" : "")" id="current-reservations" role="tabpanel" aria-labelledby="current-reservations-tab">
+
+        @if (Model.CurrentReservations.Count > 0)
+        {
+            <ul class="list-group">
+                @foreach (var reservation in Model.CurrentReservations)
+                {
+                    <li class="list-group-item">
+                        <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
+                        <strong>Usługa:</strong> @reservation.Service?.Name<br />
+                        <strong>Fryzjer:</strong> @reservation.Hairdresser?.Name @reservation.Hairdresser?.Surname<br />
+                        <strong>Status:</strong> @(reservation.status == 'O' ? "Oczekuje na akceptację" : reservation.status == 'P' ? "Potwierdzona" : "Zakończona")
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
             <p>Nie masz jeszcze żadnych aktualnych rezerwacji.</p>
-        </div>
+        }
+    </div>
+
 
         <!-- Sekcja: Historia rezerwacji -->
-        <div class="tab-pane fade @(Model.ActiveTab == "history" ? "show active" : "")" id="reservation-history" role="tabpanel" aria-labelledby="reservation-history-tab">
-            <h3>Historia rezerwacji</h3>
-            <p>Tu znajdziesz swoje przeszłe rezerwacje.</p>
-        </div>
+    <div class="tab-pane fade @(Model.ActiveTab == "history" ? "show active" : "")" id="reservation-history" role="tabpanel" aria-labelledby="reservation-history-tab">
+        @if (Model.PastReservations.Count > 0)
+        {
+            <ul class="list-group">
+                @foreach (var reservation in Model.PastReservations)
+                {
+                    <li class="list-group-item">
+                        <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
+                        <strong>Usługa:</strong> @reservation.Service?.Name<br />
+                        <strong>Fryzjer:</strong> @reservation.Hairdresser?.Name @reservation.Hairdresser?.Surname<br />
+                        <strong>Status:</strong> @(reservation.status == 'Z' ? "Zakończona" : "Anulowana")
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>Brak przeszłych rezerwacji.</p>
+        }
+    </div>
+
 
         <!-- Sekcja: Ustawienia -->
         <div class="tab-pane fade @(Model.ActiveTab == "settings" ? "show active" : "")" id="settings" role="tabpanel" aria-labelledby="settings-tab">

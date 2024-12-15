@@ -3,6 +3,7 @@ using Fryzjer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace Fryzjer.Pages.Clients
@@ -17,16 +18,63 @@ namespace Fryzjer.Pages.Clients
 
         public string SuccessMessage { get; private set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
+		public List<Reservation> CurrentReservations { get; set; } = new();
+		public List<Reservation> PastReservations { get; set; } = new();
 
-        public ClientProfileModel(FryzjerContext context)
+
+		public ClientProfileModel(FryzjerContext context)
         {
             _context = context;
         }
 
-        public void OnGet()
+        public string GetReservationStatusClass(char status)
         {
-            LoadUserData();
+            return status switch
+            {
+                'Z' => "bg-danger",   // Zakoñczona - czerwony
+                'A' => "bg-warning",  // Anulowana - pomarañczowy
+                'O' => "bg-warning",  // Oczekuj¹ca - pomarañczowy
+                'P' => "bg-success",  // Potwierdzona - zielony
+                _ => "bg-light"        // Domyœlny kolor
+            };
         }
+
+
+        public void OnGet()
+		{
+			LoadUserData();
+
+			// Pobierz login klienta z sesji
+			var userLogin = HttpContext.Session.GetString("UserLogin");
+			if (string.IsNullOrEmpty(userLogin)) return;
+
+			// Pobierz klienta z bazy danych
+			var client = _context.Client.FirstOrDefault(c => c.Login == userLogin);
+			if (client == null) return;
+
+			// Pobierz rezerwacje
+			var now = DateTime.Now;
+
+            // Pobierz dane bez sortowania
+            CurrentReservations = _context.Reservation
+                .Include(r => r.Hairdresser)
+                .Include(r => r.Service)
+                .Where(r => r.ClientId == client.Id && r.date >= now.Date && (r.status == 'O' || r.status == 'P'))
+                .AsEnumerable() // Prze³¹czenie na LINQ to Objects
+                .OrderBy(r => r.date)
+                .ThenBy(r => r.time)
+                .ToList();
+
+            PastReservations = _context.Reservation
+                .Include(r => r.Hairdresser)
+                .Include(r => r.Service)
+                .Where(r => r.ClientId == client.Id && (r.date < now.Date || (r.status == 'Z' || r.status == 'A')))
+                .AsEnumerable() // Prze³¹czenie na LINQ to Objects
+                .OrderByDescending(r => r.date)
+                .ThenByDescending(r => r.time)
+                .ToList();
+        }
+
 
         public IActionResult OnPostChangePassword(string CurrentPassword, string NewPassword)
         {
