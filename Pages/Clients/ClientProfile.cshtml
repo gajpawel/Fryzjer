@@ -31,8 +31,9 @@
         </li>
     </ul>
 
-    <div class="tab-pane fade @(Model.ActiveTab == "reservations" ? "show active" : "")" id="current-reservations" role="tabpanel" aria-labelledby="current-reservations-tab">
-
+    <div class="tab-content" id="profileTabsContent">
+        <!-- Sekcja: Aktualne rezerwacje -->
+        <div class="tab-pane fade @(Model.ActiveTab == "reservations" ? "show active" : "")" id="current-reservations" role="tabpanel" aria-labelledby="current-reservations-tab">
         @if (Model.CurrentReservations.Count > 0)
         {
             <ul class="list-group">
@@ -42,7 +43,18 @@
                         <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
                         <strong>Usługa:</strong> @reservation.Service?.Name<br />
                         <strong>Fryzjer:</strong> @reservation.Hairdresser?.Name @reservation.Hairdresser?.Surname<br />
-                        <strong>Status:</strong> @(reservation.status == 'O' ? "Oczekuje na akceptację" : reservation.status == 'P' ? "Potwierdzona" : "Zakończona")
+                        <strong>Status:</strong>
+                        @(reservation.status == 'O' ? "Oczekuje na akceptację" :
+                            reservation.status == 'P' ? "Potwierdzona" : "Zakończona")
+
+                        @if (reservation.status == 'O' || reservation.status == 'P') // Tylko dla oczekujących lub potwierdzonych
+                        {
+                            <!-- Przyciski do otwarcia modala -->
+                            <br />
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelReservationModal" data-reservation-id="@reservation.Id">
+                                Anuluj
+                            </button>
+                        }
                     </li>
                 }
             </ul>
@@ -53,6 +65,28 @@
         }
     </div>
 
+    <!-- Modal do potwierdzenia anulowania rezerwacji -->
+    <div class="modal fade" id="cancelReservationModal" tabindex="-1" aria-labelledby="cancelReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelReservationModalLabel">Potwierdź anulowanie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Czy na pewno chcesz anulować tę rezerwację?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                    <!-- Formularz do anulowania rezerwacji -->
+                    <form method="post" asp-page-handler="CancelReservation" id="cancelReservationForm" style="display:inline;">
+                        <input type="hidden" name="reservationId" id="reservationId" />
+                        <button type="submit" class="btn btn-danger">Tak</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
         <!-- Sekcja: Historia rezerwacji -->
     <div class="tab-pane fade @(Model.ActiveTab == "history" ? "show active" : "")" id="reservation-history" role="tabpanel" aria-labelledby="reservation-history-tab">
@@ -118,7 +152,6 @@
             </form>
         </div>
     </div>
-</div>
 
 <!-- JavaScript do automatycznego ukrywania powiadomień -->
 <script>
@@ -136,4 +169,18 @@
             errorMessage.style.display = "none";
         }, 2500); // 2,5 sekundy
     }
+</script>
+
+<script>
+    // Skrypt do ustawienia ID rezerwacji w formularzu
+    document.addEventListener("DOMContentLoaded", function () {
+        const cancelButtons = document.querySelectorAll('button[data-bs-toggle="modal"]');
+
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const reservationId = this.getAttribute('data-reservation-id');
+                document.getElementById('reservationId').value = reservationId;
+            });
+        });
+    });
 </script>

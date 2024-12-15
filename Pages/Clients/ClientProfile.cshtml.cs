@@ -27,18 +27,6 @@ namespace Fryzjer.Pages.Clients
             _context = context;
         }
 
-        public string GetReservationStatusClass(char status)
-        {
-            return status switch
-            {
-                'Z' => "bg-danger",   // Zakoñczona - czerwony
-                'A' => "bg-warning",  // Anulowana - pomarañczowy
-                'O' => "bg-warning",  // Oczekuj¹ca - pomarañczowy
-                'P' => "bg-success",  // Potwierdzona - zielony
-                _ => "bg-light"        // Domyœlny kolor
-            };
-        }
-
 
         public void OnGet()
 		{
@@ -201,6 +189,19 @@ namespace Fryzjer.Pages.Clients
             }
 
             return results;
+        }
+        public IActionResult OnPostCancelReservation(int reservationId)
+        {
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+
+            if (reservation != null && (reservation.status == 'O' || reservation.status == 'P')) // Tylko oczekuj¹ce lub potwierdzone
+            {
+                reservation.status = 'A'; // Zmieniamy status na 'A' (anulowana)
+                _context.SaveChanges(); // Zapisujemy zmiany w bazie danych
+            }
+
+            // Po anulowaniu, prze³adowujemy stronê, aby zaktualizowaæ widok
+            return RedirectToPage();
         }
     }
 }
