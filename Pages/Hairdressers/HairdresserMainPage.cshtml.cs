@@ -6,6 +6,8 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Fryzjer.Pages.Hairdressers
 {
@@ -29,6 +31,27 @@ namespace Fryzjer.Pages.Hairdressers
 
         // Lista us³ug do wyœwietlenia w widoku
         public List<Service> Services { get; set; } = new List<Service>();
+        
+        [HttpPost]
+        [Route("api/reservation/{id}/confirm")]
+        public IActionResult ConfirmReservation(int id)
+        {
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == id);
+            if (reservation == null)
+            {
+                return NotFound("Rezerwacja nie zosta³a znaleziona.");
+            }
+
+            if (reservation.status == 'P') // Zak³adamy, ¿e 'P' oznacza Potwierdzone
+            {
+                return BadRequest("Rezerwacja jest ju¿ potwierdzona.");
+            }
+
+            // Aktualizacja statusu rezerwacji
+            reservation.status = 'P';
+            _context.SaveChanges();
+            return new JsonResult(new { success = true, message = "Rezerwacja zosta³a potwierdzona." });
+        }
 
         public void OnGet(int week = 0)
         {
@@ -103,7 +126,10 @@ namespace Fryzjer.Pages.Hairdressers
                     {
                         blocks.Add(currentBlock);
                     }
-
+                    string modal;
+                    if(reservation.status=='O')
+                        modal = "#manageReservationModal";
+                    else modal = "#deleteReservationModal";
                     currentBlock = new TimeBlock
                     {
                         StartTime = reservation.time,
@@ -111,7 +137,8 @@ namespace Fryzjer.Pages.Hairdressers
                         IsReserved = true,
                         ReservationId = reservation.Id,
                         ClientInfo = $"{reservation.Client?.Name} {reservation.Client?.Surname}\nTel: {reservation.Client?.Phone}",
-                        ServiceName = reservation.Service?.Name ?? "Brak us³ugi"
+                        ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
+                        Modal=modal,
                     };
                 }
                 else
@@ -127,7 +154,9 @@ namespace Fryzjer.Pages.Hairdressers
 
             return blocks;
         }
+
     }
+
 
     // Klasa do przechowywania harmonogramu jednego dnia
     public class DailySchedule
@@ -146,5 +175,6 @@ namespace Fryzjer.Pages.Hairdressers
         public string? ClientInfo { get; set; }
         public int? ReservationId { get; set; }
         public string? ServiceName { get; set; }
+        public string? Modal { get; set; }
     }
 }

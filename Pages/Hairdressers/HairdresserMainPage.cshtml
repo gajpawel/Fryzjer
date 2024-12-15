@@ -52,14 +52,18 @@
 
                                 // Wyświetlanie zarezerwowanego bloku
                                                 <li>
-                                                    <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
+                                    <button class="btn btn-sm btn-danger mb-2 reserved-time-slot"
                                                             data-reservation-id="@block.ReservationId"
                                                             data-bs-toggle="modal"
-                                                            data-bs-target="#deleteReservationModal">
+                                                            data-bs-target=@block.Modal>
                                         @block.TimeRange<br />
                                         @Html.Raw(block.ClientInfo.Replace("\n", "<br />"))<br />
-                                        @block.ServiceName
-                                                    </button>
+                                        @block.ServiceName<br />
+                                        @if (block.Modal == "#manageReservationModal")
+                                        {
+                                            <b>Oczekuje na akceptację</b>
+                                        }
+                                    </button>
                                                 </li>
 
                                 startTime = block.EndTime;
@@ -151,6 +155,28 @@
         </div>
     </div>
 </div>
+<!-- Modal do zarządzania rezerwacją -->
+<div class="modal fade" id="manageReservationModal" tabindex="-1" aria-labelledby="manageReservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageReservationModalLabel">Co chcesz zrobić z rezerwacją?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Wybierz jedną z opcji poniżej, aby kontynuować:</p>
+            </div>
+            <div class="modal-footer">
+                <!-- Przycisk Powrót - Anulowanie czynności -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
+                <!-- Przycisk Potwierdź rezerwację -->
+                <button type="button" class="btn btn-success" id="confirmReservationBtn">Potwierdź rezerwację</button>
+                <!-- Przycisk Anuluj rezerwację -->
+                <button type="button" class="btn btn-danger" id="deleteReservationConfirmManage">Anuluj rezerwację</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal do usuwania rezerwacji -->
 <div class="modal fade" id="deleteReservationModal" tabindex="-1" aria-labelledby="deleteReservationModalLabel" aria-hidden="true">
@@ -234,6 +260,31 @@
         });
     });
 
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.reserved-time-slot').forEach(button => {
+            button.addEventListener('click', function () {
+                selectedReservationId = this.getAttribute('data-reservation-id');
+            });
+        });
+    });
+
+
+        // Obsługa przycisku "Potwierdź rezerwację"
+        document.getElementById('confirmReservationBtn').addEventListener('click', async () => {
+            if (selectedReservationId) {
+                const response = await fetch(`/api/reservation/${selectedReservationId}/confirm`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert('Rezerwacja została potwierdzona.');
+                    location.reload();
+                } else {
+                    alert('Wystąpił błąd podczas potwierdzania rezerwacji.');
+                }
+            }
+        });
+
     // Obsługa usunięcia rezerwacji
     document.getElementById('deleteReservationConfirm').addEventListener('click', async () => {
         const response = await fetch(`/api/reservation/${selectedReservationId}`, {
@@ -247,6 +298,20 @@
             alert('Wystąpił błąd podczas usuwania rezerwacji.');
         }
     });
+
+    document.getElementById('deleteReservationConfirmManage').addEventListener('click', async () => {
+        const response = await fetch(`/api/reservation/${selectedReservationId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('Rezerwacja została anulowana.');
+            location.reload();
+        } else {
+            alert('Wystąpił błąd podczas anulowania rezerwacji.');
+        }
+    });
+
 
     // Obsługa rezerwacji
     document.getElementById('saveReservation').addEventListener('click', async () => {
