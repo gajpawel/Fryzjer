@@ -114,7 +114,12 @@ namespace Fryzjer.Pages.Hairdressers
                     {
                         blocks.Add(currentBlock);
                     }
-                    string modal = reservation.status == 'O' ? "#manageReservationModal" : "#deleteReservationModal";
+                    string modal;
+                    if (reservation.status == 'O' && reservation.ServiceId!=4)
+                    {
+                        modal = "#manageReservationModal";
+                    }
+                    else modal = "#deleteReservationModal";
                     currentBlock = new TimeBlock
                     {
                         StartTime = reservation.time,
@@ -124,6 +129,7 @@ namespace Fryzjer.Pages.Hairdressers
                         ClientInfo = $"{reservation.Client?.Name} {reservation.Client?.Surname}\nTel: {reservation.Client?.Phone}",
                         ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
                         Modal = modal,
+                        Status= reservation.status
                     };
                 }
                 else
@@ -163,5 +169,6 @@ namespace Fryzjer.Pages.Hairdressers
         public int? ReservationId { get; set; }
         public string? ServiceName { get; set; }
         public string? Modal { get; set; }
+        public char? Status { get; set; }
     }
 }
