@@ -5,7 +5,6 @@
 @{
 }
 
-<!-- DODAĆ SPRAWDZENIE BANNERA JAK BĘDZIE JUŻ DODANE W BAZIE-->
 @if (Model.Place != null)
 {
 	@if (Model.IsFileAvailable(Model.Place.photoPath))
@@ -15,11 +14,11 @@
 				<div class="col-3">
 					@if (Model.IsFileAvailable(Model.Place.logoPath))
 					{
-						<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail">
+						<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail logo">
 					}
 					else
 					{
-						<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail">
+						<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail logo">
 					}
 				</div>
 			</div>
@@ -27,16 +26,16 @@
 	}
 	else
 	{
-		<div class="container rounded bannerpic" style="background-image: url(../images/salon_stock.jpg)">
+		<div class="container rounded bannerpic" style="background-color: teal">
 			<div class="row">
 				<div class="col-3">
 					@if (Model.IsFileAvailable(Model.Place.logoPath))
 					{
-						<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail">
+						<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail logo">
 					}
 					else
 					{
-						<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail">
+						<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail logo">
 					}
 				</div>
 			</div>
