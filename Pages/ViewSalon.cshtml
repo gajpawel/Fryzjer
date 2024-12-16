@@ -8,20 +8,40 @@
 <!-- DODAĆ SPRAWDZENIE BANNERA JAK BĘDZIE JUŻ DODANE W BAZIE-->
 @if (Model.Place != null)
 {
-	<div class="container rounded" style="background-image: url(../images/salon_stock.jpg); padding-top: 12px; padding-bottom: 12px">
-		<div class="row">
-			<div class="col-3">
-				@if (Model.IsFileAvailable(Model.Place.logoPath))
-				{
-					<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail">
-				}
-				else
-				{
-					<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail">
-				}
+	@if (Model.IsFileAvailable(Model.Place.photoPath))
+	{
+		<div class="container round bannerpic" style="background-image: url(@Model.Place.photoPath)">
+			<div class="row">
+				<div class="col-3">
+					@if (Model.IsFileAvailable(Model.Place.logoPath))
+					{
+						<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail">
+					}
+					else
+					{
+						<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail">
+					}
+				</div>
 			</div>
 		</div>
-	</div>
+	}
+	else
+	{
+		<div class="container rounded bannerpic" style="background-image: url(../images/salon_stock.jpg)">
+			<div class="row">
+				<div class="col-3">
+					@if (Model.IsFileAvailable(Model.Place.logoPath))
+					{
+						<img src="@Model.Place.logoPath" alt="Logo Salonu" class="rounded img-thumbnail">
+					}
+					else
+					{
+						<img src="~/images/default_logo.jpg" alt="Domyślne Logo" class="rounded img-thumbnail">
+					}
+				</div>
+			</div>
+		</div>
+	}
 	<div>
 		<div class="card shadow">
 			<div class="container" style="padding: 10px">
@@ -55,37 +75,40 @@
 				<h3>Oferowane Usługi</h3>
 			</div>
 			<div class="container content-padding">
-				<table class="table table-striped table-borderless">
-					<thead class="bg-lgray" style="color: black">
-						<tr>
-							<th class="col-8" scope="col">Usługa</th>
-							<th class="col-2" scope=" col">Cena</th>
-							@if (Model.CheckClientSession())
-							{
-								<th scope="col"></th>
-							}
-						</tr>
-					</thead>
-					@foreach (var serv in Model.Services)
-					{
-						<tr>
-							<th scope="col">
-								@Html.DisplayFor(modelItem => serv.Name)
-							</th>
-							<th scope="col">
-								@Html.DisplayFor(modelItem => serv.Price)zł
-							</th>
-							@if (Model.CheckClientSession())
-							{
-								<th>
-									<a href="@Url.Page("/Clients/ServiceSelectForm", new { id = Model.SalonId, srv = serv.Id })" class="btn btn-dark mx-auto d-block">
-										Zamów Usługę
-									</a>
+				@if (Model.Services.Count > 0)
+				{
+					<table class="table table-striped table-borderless">
+						<thead class="bg-lgray" style="color: black">
+							<tr>
+								<th class="col-8" scope="col">Usługa</th>
+								<th class="col-2" scope=" col">Cena</th>
+								@if (Model.CheckClientSession())
+								{
+									<th scope="col"></th>
+								}
+							</tr>
+						</thead>
+						@foreach (var serv in Model.Services)
+						{
+							<tr>
+								<th scope="col">
+									@Html.DisplayFor(modelItem => serv.Name)
 								</th>
-							}
-						</tr>
-					}
-				</table>
+								<th scope="col">
+									@Html.DisplayFor(modelItem => serv.Price)zł
+								</th>
+								@if (Model.CheckClientSession())
+								{
+									<th>
+										<a href="@Url.Page("/Clients/ServiceSelectForm", new { id = Model.SalonId, srv = serv.Id })" class="btn btn-dark mx-auto d-block">
+											Zamów Usługę
+										</a>
+									</th>
+								}
+							</tr>
+						}
+					</table>
+				}
 			</div>
 
 			<div class="card-header bg-teal text-center">

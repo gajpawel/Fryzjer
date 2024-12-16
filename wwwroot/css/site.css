@@ -120,6 +120,14 @@ a.invisible_link {
     text-decoration: none;
 }
 
+.bannerpic {
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-top: 12px;
+    padding-bottom: 12px
+}
+
 /* Ustawienie kontenera na flexbox */
 .tab-content {
     display: flex;

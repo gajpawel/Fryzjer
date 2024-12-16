@@ -14,6 +14,8 @@
             if (string.IsNullOrEmpty(relativePath))
                 return false;
 
+            relativePath = relativePath.TrimStart('/');
+
             var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
             return File.Exists(fullPath);
         }
