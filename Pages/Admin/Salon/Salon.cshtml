@@ -11,45 +11,74 @@
     <a asp-page="AddSalon" class="btn btn-primary">Dodaj nowy lokal</a>
 </p>
 
-@if (Model.Places == null || !Model.Places.Any())
-{
-    <p>Brak danych do wyświetlenia.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nazwa Salonu</th>
+            <th>Logo</th>
+            <th>Zdjęcie Lokalu</th>
+            <th>Adres</th>
+            <th>Numer Telefonu</th>
+            <th>Opis</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Places)
+        {
             <tr>
-                <th>Nazwa lokalu</th>
-                <th>Adres</th>
-                <th>Numer telefonu</th>
-                <th>Logo</th>
-                <th>Akcje</th>
+
+                <!-- Nazwa Salonu -->
+                <td>@item.Name</td>
+
+                <!-- Logo Salonu -->
+                <td>
+                    @if (!string.IsNullOrEmpty(item.logoPath))
+                    {
+                        <img src="@item.logoPath" alt="Logo Salonu" style="max-height: 50px;" />
+                    }
+                    else
+                    {
+                        <span>Brak loga</span>
+                    }
+                </td>
+
+                <!-- Zdjęcie Lokalu -->
+                <td>
+                    @if (!string.IsNullOrEmpty(item.photoPath))
+                    {
+                        <img src="@item.photoPath" alt="Zdjęcie Lokalu" style="max-height: 50px;" />
+                    }
+                    else
+                    {
+                        <span>Brak zdjęcia</span>
+                    }
+                </td>
+
+                <!-- Adres Salonu -->
+                <td>@item.address</td>
+
+                <!-- Numer Telefonu -->
+                <td>@item.telephoneNumber</td>
+
+                <!-- Opis Salonu -->
+                <td>
+                    @if (!string.IsNullOrEmpty(item.description))
+                    {
+                        <span>@item.description</span>
+                    }
+                    else
+                    {
+                        <span>Brak opisu</span>
+                    }
+                </td>
+
+                <!-- Akcje -->
+                <td>
+                    <a asp-page="EditSalon" asp-route-id="@item.Id" class="btn btn-warning">Edytuj</a>
+                    <a asp-page="DeleteSalon" asp-route-id="@item.Id" class="btn btn-danger">Usuń</a>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.Places)
-            {
-                <tr>
-                    <td>@item.Name</td>
-                    <td>@item.address</td>
-                    <td>@item.telephoneNumber</td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(item.logoPath))
-                        {
-                            <img src="@item.logoPath" alt="Logo" width="100" height="100" />
-                        }
-                        else
-                        {
-                            <span>Brak loga</span>
-                        }
-                    </td>
-                    <td>
-                        <a asp-page="EditSalon" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edytuj</a>
-                        <a asp-page="DeleteSalon" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Usuń</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+        }
+    </tbody>
+</table>

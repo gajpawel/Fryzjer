@@ -1,61 +1,81 @@
+using Fryzjer.Data;
+using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Fryzjer.Models;
-using Fryzjer.Data;
-using System.IO;
 
-namespace Fryzjer.Pages
+namespace Fryzjer.Pages.Admin
 {
     public class AddSalonModel : PageModel
     {
         private readonly FryzjerContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public AddSalonModel(FryzjerContext context)
+        public AddSalonModel(FryzjerContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [BindProperty]
-        public Place Place { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [BindProperty]
-        public IFormFile? LogoFile { get; set; } // Plik z logiem
+        public string Address { get; set; } = string.Empty;
 
-        public void OnGet()
-        {
-        }
+        [BindProperty]
+        public string TelephoneNumber { get; set; } = string.Empty;
 
-        public IActionResult OnPost()
+        [BindProperty]
+        public IFormFile? LogoFile { get; set; }
+
+        [BindProperty]
+        public IFormFile? PhotoFile { get; set; }
+
+        [BindProperty]
+        public string? Description { get; set; }
+
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
+            var newSalon = new Place
+            {
+                Name = Name,
+                address = Address,
+                telephoneNumber = TelephoneNumber,
+                description = Description
+            };
+
             if (LogoFile != null)
             {
-                // Tworzenie œcie¿ki do zapisu pliku
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
-                Directory.CreateDirectory(uploadsFolder); // Upewnij siê, ¿e folder istnieje
-
-                var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(LogoFile.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                // Zapis pliku na serwerze
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                var logoFileName = $"{Guid.NewGuid()}{Path.GetExtension(LogoFile.FileName)}";
+                var logoPath = Path.Combine(_environment.WebRootPath, "images", logoFileName);
+                using (var fileStream = new FileStream(logoPath, FileMode.Create))
                 {
-                    LogoFile.CopyTo(fileStream);
+                    await LogoFile.CopyToAsync(fileStream);
                 }
-
-                // Zapis œcie¿ki do loga
-                Place.logoPath = $"/images/{uniqueFileName}";
+                newSalon.logoPath = $"/images/{logoFileName}";
             }
 
-            // Zapis do bazy danych
-            _context.Place.Add(Place);
-            _context.SaveChanges();
+            if (PhotoFile != null)
+            {
+                var photoFileName = $"{Guid.NewGuid()}{Path.GetExtension(PhotoFile.FileName)}";
+                var photoPath = Path.Combine(_environment.WebRootPath, "images", photoFileName);
+                using (var fileStream = new FileStream(photoPath, FileMode.Create))
+                {
+                    await PhotoFile.CopyToAsync(fileStream);
+                }
+                newSalon.photoPath = $"/images/{photoFileName}";
+            }
+
+            _context.Place.Add(newSalon);
+            await _context.SaveChangesAsync();
 
             return RedirectToPage("/Admin/Salon/Salon");
         }
     }
 }
+

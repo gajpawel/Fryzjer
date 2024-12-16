@@ -1,57 +1,82 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Data;
 using Fryzjer.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using System.IO;
 
-namespace Fryzjer.Pages
+namespace Fryzjer.Pages.Admin
 {
     public class DeleteSalonModel : PageModel
     {
         private readonly FryzjerContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public DeleteSalonModel(FryzjerContext context)
+        public DeleteSalonModel(FryzjerContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [BindProperty]
-        public Place Place { get; set; }
+        public int Id { get; set; }
 
-        public IActionResult OnGet(int id)
+        public string Name { get; set; }
+        public string Address { get; set; }
+        public string TelephoneNumber { get; set; }
+        public string? Description { get; set; }
+        public string? LogoPath { get; set; }
+        public string? PhotoPath { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(int id)
         {
-            Place = _context.Place.FirstOrDefault(p => p.Id == id);
-
-            if (Place == null)
+            var salon = await _context.Place.FindAsync(id);
+            if (salon == null)
             {
                 return NotFound();
             }
+
+            Name = salon.Name;
+            Address = salon.address;
+            TelephoneNumber = salon.telephoneNumber;
+            Description = salon.description;
+            LogoPath = salon.logoPath;
+            PhotoPath = salon.photoPath;
 
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync(int id)
         {
-            var placeToDelete = _context.Place.FirstOrDefault(p => p.Id == Place.Id);
-
-            if (placeToDelete == null)
+            var salon = await _context.Place.FindAsync(id);
+            if (salon == null)
             {
                 return NotFound();
             }
 
-            // Usuniêcie pliku loga, jeœli istnieje
-            if (!string.IsNullOrEmpty(placeToDelete.logoPath))
+            // Usuñ logo (jeœli istnieje)
+            if (!string.IsNullOrEmpty(salon.logoPath))
             {
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", placeToDelete.logoPath.TrimStart('/'));
-                if (System.IO.File.Exists(filePath))
+                var logoPath = Path.Combine(_environment.WebRootPath, salon.logoPath.TrimStart('/'));
+                if (System.IO.File.Exists(logoPath))
                 {
-                    System.IO.File.Delete(filePath);
+                    System.IO.File.Delete(logoPath);
                 }
             }
 
-            // Usuniêcie rekordu z bazy danych
-            _context.Place.Remove(placeToDelete);
-            _context.SaveChanges();
+            // Usuñ zdjêcie lokalu (jeœli istnieje)
+            if (!string.IsNullOrEmpty(salon.photoPath))
+            {
+                var photoPath = Path.Combine(_environment.WebRootPath, salon.photoPath.TrimStart('/'));
+                if (System.IO.File.Exists(photoPath))
+                {
+                    System.IO.File.Delete(photoPath);
+                }
+            }
+
+            // Usuñ salon z bazy
+            _context.Place.Remove(salon);
+            await _context.SaveChangesAsync();
 
             return RedirectToPage("/Admin/Salon/Salon");
         }

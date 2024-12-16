@@ -1,34 +1,59 @@
 ﻿@page
-@model DeleteSalonModel
+@model Fryzjer.Pages.Admin.DeleteSalonModel
+
 @{
-    ViewData["Title"] = "Usuń lokal";
+    ViewData["Title"] = "Usuń Salon";
 }
 
-<h2>Usuń lokal</h2>
+<h1>@ViewData["Title"]</h1>
 
-<h3>Czy na pewno chcesz usunąć ten lokal?</h3>
-<div>
-    <h4>@Model.Place.Name</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">Adres:</dt>
-        <dd class="col-sm-10">@Model.Place.address</dd>
+<form method="post">
+    <input type="hidden" asp-for="Id" />
 
-        <dt class="col-sm-2">Numer telefonu:</dt>
-        <dd class="col-sm-10">@Model.Place.telephoneNumber</dd>
+    <div class="form-group">
+        <label for="Name">Nazwa Salonu</label>
+        <input type="text" class="form-control" value="@Model.Name" readonly />
+    </div>
 
-        @if (!string.IsNullOrEmpty(Model.Place.logoPath))
+    <div class="form-group">
+        <label for="Address">Adres</label>
+        <input type="text" class="form-control" value="@Model.Address" readonly />
+    </div>
+
+    <div class="form-group">
+        <label for="TelephoneNumber">Numer Telefonu</label>
+        <input type="text" class="form-control" value="@Model.TelephoneNumber" readonly />
+    </div>
+
+    <div class="form-group">
+        <label for="Description">Opis</label>
+        <textarea class="form-control" readonly>@Model.Description</textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Logo</label><br />
+        @if (!string.IsNullOrEmpty(Model.LogoPath))
         {
-            <dt class="col-sm-2">Logo:</dt>
-            <dd class="col-sm-10">
-                <img src="@Model.Place.logoPath" alt="Logo" width="150" height="150" />
-            </dd>
+            <img src="@Model.LogoPath" alt="Logo Salonu" style="max-height: 100px;" />
         }
-    </dl>
+        else
+        {
+            <span>Brak logo</span>
+        }
+    </div>
 
-    <form method="post">
-        <input type="hidden" asp-for="Place.Id" />
-        <button type="submit" class="btn btn-danger">Usuń</button>
-        <a asp-page="SalonList" class="btn btn-secondary">Anuluj</a>
-    </form>
-</div>
+    <div class="form-group">
+        <label>Zdjęcie Lokalu</label><br />
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <img src="@Model.PhotoPath" alt="Zdjęcie Lokalu" style="max-height: 100px;" />
+        }
+        else
+        {
+            <span>Brak zdjęcia</span>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-danger">Usuń</button>
+    <a asp-page="Salon" class="btn btn-secondary">Anuluj</a>
+</form>

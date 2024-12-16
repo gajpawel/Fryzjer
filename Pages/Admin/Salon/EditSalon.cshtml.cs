@@ -1,86 +1,101 @@
+using Fryzjer.Data;
+using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Fryzjer.Models;
-using Fryzjer.Data;
-using System.IO;
 
-namespace Fryzjer.Pages
+namespace Fryzjer.Pages.Admin
 {
     public class EditSalonModel : PageModel
     {
         private readonly FryzjerContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public EditSalonModel(FryzjerContext context)
+        public EditSalonModel(FryzjerContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [BindProperty]
-        public Place Place { get; set; }
+        public int Id { get; set; }
+
+        [BindProperty]
+        public string Name { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string Address { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string TelephoneNumber { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string? Description { get; set; }
 
         [BindProperty]
         public IFormFile? LogoFile { get; set; }
 
-        public IActionResult OnGet(int id)
-        {
-            Place = _context.Place.FirstOrDefault(p => p.Id == id);
+        [BindProperty]
+        public IFormFile? PhotoFile { get; set; }
 
-            if (Place == null)
+        public async Task<IActionResult> OnGetAsync(int id)
+        {
+            var salon = await _context.Place.FindAsync(id);
+            if (salon == null)
             {
                 return NotFound();
             }
 
+            Id = salon.Id;
+            Name = salon.Name ?? string.Empty;
+            Address = salon.address ?? string.Empty;
+            TelephoneNumber = salon.telephoneNumber ?? string.Empty;
+            Description = salon.description;
+
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            var placeToUpdate = _context.Place.FirstOrDefault(p => p.Id == Place.Id);
-
-            if (placeToUpdate == null)
+            var salon = await _context.Place.FindAsync(Id);
+            if (salon == null)
             {
                 return NotFound();
             }
 
-            // Aktualizacja loga, jeœli u¿ytkownik przes³a³ nowy plik
+            salon.Name = Name;
+            salon.address = Address;
+            salon.telephoneNumber = TelephoneNumber;
+            salon.description = Description;
+
             if (LogoFile != null)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(LogoFile.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                // Usuniêcie starego pliku
-                if (!string.IsNullOrEmpty(placeToUpdate.logoPath))
+                var logoFileName = $"{Guid.NewGuid()}{Path.GetExtension(LogoFile.FileName)}";
+                var logoPath = Path.Combine(_environment.WebRootPath, "images", logoFileName);
+                using (var fileStream = new FileStream(logoPath, FileMode.Create))
                 {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", placeToUpdate.logoPath.TrimStart('/'));
-                    if (System.IO.File.Exists(oldFilePath))
-                    {
-                        System.IO.File.Delete(oldFilePath);
-                    }
+                    await LogoFile.CopyToAsync(fileStream);
                 }
-
-                // Zapis nowego pliku
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    LogoFile.CopyTo(fileStream);
-                }
-
-                placeToUpdate.logoPath = $"/images/{uniqueFileName}";
+                salon.logoPath = $"/images/{logoFileName}";
             }
 
-            // Aktualizacja pozosta³ych pól
-            placeToUpdate.Name = Place.Name;
-            placeToUpdate.address = Place.address;
-            placeToUpdate.telephoneNumber = Place.telephoneNumber;
+            if (PhotoFile != null)
+            {
+                var photoFileName = $"{Guid.NewGuid()}{Path.GetExtension(PhotoFile.FileName)}";
+                var photoPath = Path.Combine(_environment.WebRootPath, "images", photoFileName);
+                using (var fileStream = new FileStream(photoPath, FileMode.Create))
+                {
+                    await PhotoFile.CopyToAsync(fileStream);
+                }
+                salon.photoPath = $"/images/{photoFileName}";
+            }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
             return RedirectToPage("/Admin/Salon/Salon");
         }
     }
