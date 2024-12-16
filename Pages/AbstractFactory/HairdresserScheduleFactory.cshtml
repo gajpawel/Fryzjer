@@ -1,10 +1,22 @@
 ﻿@page
 @model Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel
-
-<h1 class="text-center">Harmonogram Fryzjera</h1>
+@{
+    ViewData["Title"] = "Harmonogram Fryzjera";
+}
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Tydzień: @Model.CurrentWeek</h2>
+    <h1 class="text-center">Harmonogram</h1>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="?week=@(Model.CurrentWeek - 1)" class="btn btn-outline-primary">Poprzednia</a>
+
+        <!-- Przycisk do składania wniosku urlopowego -->
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#vacationModal">
+            Wniosek o urlop
+        </button>
+
+        <a href="?week=@(Model.CurrentWeek + 1)" class="btn btn-outline-primary">Następna</a>
+    </div>
 
     <div class="table-responsive">
         <table class="table schedule-table">
@@ -21,32 +33,41 @@
                 @foreach (var time in Model.ScheduleTable.Keys.OrderBy(t => t))
                 {
                     <tr>
-                        <td class="time-column">@time.ToString(@"hh\:mm")</td> <!-- Kolumna z godzinami -->
+                        <td class="time-column">@time.ToString(@"HH\:mm")</td>
                         @foreach (var day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday))
                         {
                             if (Model.ScheduleTable[time].TryGetValue(day, out var block))
                             {
-                                var cellClass = block.IsReserved
-                                ? $"reserved service-{block.ServiceId}" // Klasa dla zarezerwowanych
-                                : "available"; // Klasa dla dostępnych
-                                <td class="@cellClass">
+                                <td class="@block.BlockClass">
                                     @if (block.IsReserved)
                                     {
-                                        <div>
-                                            <strong>@block.ClientInfo</strong> <!-- Informacje o kliencie -->
-                                            <span>@block.ServiceName</span> <!-- Nazwa usługi -->
+                                        <div class="reservation-info">
+                                            @if (block.ServiceName?.ToLower() == "urlop")
+                                            {
+                                                var statusClass = block.Status switch
+                                                {
+                                                    'O' => "text-warning",
+                                                    'P' => "text-success",
+                                                    'A' => "text-danger",
+                                                    _ => ""
+                                                };
+                                                <span class="@statusClass">@block.ClientInfo</span>
+                                            }
+                                            else
+                                            {
+                                                <strong>@Html.Raw(block.ClientInfo?.Replace("\n", "<br />"))</strong>
+
+                                                <br />
+                                                <span>@block.ServiceName</span>
+                                            }
                                         </div>
                                     }
                                     else
                                     {
-                                        <button class="btn btn-sm btn-outline-success" onclick="bookTimeSlot('@day', '@time.ToString(@"hh\:mm")')">Rezerwuj</button>
+                                        <button class="btn btn-sm btn-outline-success w-100" data-bs-toggle="modal" data-bs-target="#reservationModal">
+                                            Wolne
+                                        </button>
                                     }
-                                </td>
-                            }
-                            else
-                            {
-                                <td class="available">
-                                    <button class="btn btn-sm btn-outline-success" onclick="bookTimeSlot('@day', '@time.ToString(@"hh\:mm")')">Rezerwuj</button>
                                 </td>
                             }
                         }
@@ -57,10 +78,125 @@
     </div>
 </div>
 
-<script>
-    // Skrypt odpowiedzialny za obsługę interakcji w harmonogramie
-    function bookTimeSlot(day, time) {
-        alert(`Rezerwacja na dzień: ${day}, godzina: ${time}`);
-        // Tutaj można dodać logikę obsługi rezerwacji np. otwieranie modala lub wysyłanie zapytania AJAX
+<!-- Modal do składania wniosku o urlop -->
+<div class="modal fade" id="vacationModal" tabindex="-1" aria-labelledby="vacationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vacationModalLabel">Wniosek o urlop</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-page-handler="VacationRequest" id="vacationForm">
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="date" name="date" required
+                               min="@DateTime.Now.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="mb-3">
+                        <label for="startTime" class="form-label">Godzina rozpoczęcia</label>
+                        <select class="form-control" id="startTime" name="startTime" required>
+                            <option value="">Wybierz godzinę</option>
+                            @for (var time = new TimeSpan(8, 0, 0); time < new TimeSpan(18, 0, 0); time = time.Add(new TimeSpan(0, 15, 0)))
+                            {
+                                <option value="@time.ToString()">@time.ToString(@"HH\:mm")</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endTime" class="form-label">Godzina zakończenia</label>
+                        <select class="form-control" id="endTime" name="endTime" required>
+                            <option value="">Wybierz godzinę</option>
+                            @for (var time = new TimeSpan(8, 0, 0); time <= new TimeSpan(18, 0, 0); time = time.Add(new TimeSpan(0, 15, 0)))
+                            {
+                                <option value="@time.ToString()">@time.ToString(@"HH\:mm")</option>
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" form="vacationForm" class="btn btn-primary">Złóż wniosek</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<style>
+    .time-column {
+        width: 100px;
+        font-weight: bold;
     }
+
+    .schedule-table td {
+        padding: 5px;
+        vertical-align: middle;
+        height: 60px;
+    }
+
+    .reservation-info {
+        font-size: 0.9em;
+        text-align: center;
+    }
+
+    .vacation-o { /* Oczekujący */
+        background-color: #fff3cd;
+    }
+
+    .vacation-p { /* Potwierdzony */
+        background-color: #d4edda;
+    }
+
+    .vacation-a { /* Anulowany */
+        background-color: #f8d7da;
+    }
+
+    .reserved {
+        background-color: #e9ecef;
+    }
+</style>
+
+<script>
+    // Walidacja godzin w formularzu urlopu
+    document.getElementById('startTime')?.addEventListener('change', function () {
+        const startTime = this.value;
+        const endTimeSelect = document.getElementById('endTime');
+        const endTimeOptions = endTimeSelect.options;
+
+        for (let i = 0; i < endTimeOptions.length; i++) {
+            endTimeOptions[i].disabled = endTimeOptions[i].value <= startTime && endTimeOptions[i].value !== "";
+        }
+
+        if (endTimeSelect.value <= startTime) {
+            endTimeSelect.value = "";
+        }
+    });
+
+    // Walidacja formularza przed wysłaniem
+    document.getElementById('vacationForm')?.addEventListener('submit', function (e) {
+        const date = document.getElementById('date').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+
+        if (!date || !startTime || !endTime) {
+            e.preventDefault();
+            alert('Wypełnij wszystkie pola!');
+            return;
+        }
+
+        if (startTime >= endTime) {
+            e.preventDefault();
+            alert('Godzina zakończenia musi być późniejsza niż godzina rozpoczęcia!');
+            return;
+        }
+    });
 </script>
