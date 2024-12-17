@@ -117,7 +117,7 @@
 				@foreach (var person in Model.Hairdressers)
 				{
 					<div class="col-6 col-lg-4" style="margin-top: 15px">
-						<div class="p-3 border">
+						<div class="p-3 border employee-card">
 							<div class="row">
 								<div class="col-3">
 									<div class="ratio ratio-1x1">
@@ -139,11 +139,35 @@
 											@Html.DisplayFor(modelItem => person.Surname)
 										</h5>
 									</div>
+									<div class="row">
+										<p>
+											@Html.DisplayFor(modelItem => person.description)
+											<br />
+											<b>Oferuję usługi:</b>
+											<br />
+											@{
+												var specializations = Model.Specializations
+												.Where(specialization => specialization.HairdresserId == person.Id)
+												.Select(specialization => specialization.Service!.Name)
+												.ToList();
+
+												var specializationText = string.Join(", ", specializations);
+											}
+
+											@if (!string.IsNullOrEmpty(specializationText))
+											{
+												<span>@specializationText</span>
+											}
+
+										</p>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				}
+
+
 			</div>
 
 
@@ -151,5 +175,21 @@
 	</div>
 
 }
+
+<style>
+	.row {
+		display: flex;
+		flex-wrap: wrap; /* Pozwala zawijać elementy */
+	}
+
+	.employee-card {
+		flex: 1 1 auto; /* Pozwala dostosować się do przestrzeni */
+		display: flex;
+		flex-direction: column; /* Elementy wewnątrz w kolumnie */
+		justify-content: space-between; /* Rozkłada elementy równomiernie */
+		height: 100%; /* Dostosuj do największego elementu w wierszu */
+	}
+</style>
+
 
 

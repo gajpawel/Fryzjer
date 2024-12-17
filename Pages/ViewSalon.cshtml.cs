@@ -26,6 +26,7 @@ namespace Fryzjer.Pages
 		public List<Hairdresser> Hairdressers { get; set; } = [];
 
 		public List<Service?> Services { get; set; } = [];
+		public List<Specialization> Specializations { get; set; } = [];
 
 		public async Task<IActionResult> OnGetAsync(int id)
 		{
@@ -49,6 +50,9 @@ namespace Fryzjer.Pages
 				.Where(s => s.Hairdresser.PlaceId == id)
 				.Select(s => s.Service)
 				.Distinct()
+				.ToListAsync();
+
+			Specializations = await _context.Specialization
 				.ToListAsync();
 
 			return Page();

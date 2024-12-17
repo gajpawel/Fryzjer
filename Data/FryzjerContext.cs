@@ -19,12 +19,8 @@ namespace Fryzjer.Data
         public DbSet<Fryzjer.Models.Reservation> Reservation { get; set; } = default!;
         public DbSet<Fryzjer.Models.Hairdresser> Hairdresser { get; set; } = default!;
         public DbSet<Fryzjer.Models.Place> Place { get; set; } = default!;
-        public DbSet<Fryzjer.Models.ReservedStation> ReservedStation { get; set; } = default!;
         public DbSet<Fryzjer.Models.Service> Service { get; set; } = default!;
-        public DbSet<Fryzjer.Models.ServiceStation> ServiceStation { get; set; } = default!;
         public DbSet<Fryzjer.Models.Specialization> Specialization { get; set; } = default!;
-        public DbSet<Fryzjer.Models.Station> Station { get; set; } = default!;
-        public DbSet<Fryzjer.Models.StationType> StationType { get; set; } = default!;
         public DbSet<Fryzjer.Models.Administrator> Administrator { get; set; } = default!;
 
 
@@ -61,7 +57,6 @@ namespace Fryzjer.Data
                 .WithMany()
                 .HasForeignKey(r => r.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
 
             // Hairdresser - Place
             modelBuilder.Entity<Hairdresser>()
@@ -83,49 +78,6 @@ namespace Fryzjer.Data
                 .WithMany()
                 .HasForeignKey(r => r.ServiceId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // ServiceStation - Service
-            modelBuilder.Entity<ServiceStation>()
-                .HasOne(r => r.Service)
-                .WithMany()
-                .HasForeignKey(r => r.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ServiceStation - StationType
-            modelBuilder.Entity<ServiceStation>()
-                .HasOne(r => r.StationType)
-                .WithMany()
-                .HasForeignKey(r => r.StationTypeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Station - StationType
-            modelBuilder.Entity<Station>()
-                .HasOne(r => r.StationType)
-                .WithMany()
-                .HasForeignKey(r => r.StationTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Station - Place
-            modelBuilder.Entity<Station>()
-                .HasOne(r => r.Place)
-                .WithMany()
-                .HasForeignKey(r => r.PlaceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ReservedStation - Reservation
-            modelBuilder.Entity<ReservedStation>()
-                .HasOne(r => r.Reservation)
-                .WithMany()
-                .HasForeignKey(r => r.ReservationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ReservedStation - Station
-            modelBuilder.Entity<ReservedStation>()
-                .HasOne(r => r.Station)
-                .WithMany()
-                .HasForeignKey(r => r.StationId)
-                .OnDelete(DeleteBehavior.Restrict);
-            
         }
     }
 }

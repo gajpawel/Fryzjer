@@ -8,7 +8,7 @@ namespace Fryzjer.Pages.Admin
         public IActionResult OnPostSchedule()
         {
             // Po klikniêciu przycisku "Przegl¹d harmonogramów"
-            return RedirectToPage("/Admin/Schedule");
+            return RedirectToPage("/Privacy");
         }
 
         public IActionResult OnPostRequests()
@@ -33,6 +33,11 @@ namespace Fryzjer.Pages.Admin
         {
             // Po klikniêciu przycisku "Zarz¹dzanie us³ugami"
             return RedirectToPage("/Admin/Services/Services");
+        }
+        public IActionResult OnPostAccessManagement()
+        {
+            // Po klikniêciu przycisku "Dane logowania"
+            return RedirectToPage("/Admin/AccessManagement");
         }
     }
 }
