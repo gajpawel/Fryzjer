@@ -127,13 +127,13 @@ namespace Fryzjer.Migrations
                     b.Property<int>("ServiceId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("TEXT");
 
                     b.Property<char>("status")
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeSpan>("time")
+                    b.Property<TimeSpan>("Time")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

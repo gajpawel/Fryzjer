@@ -4,64 +4,121 @@
 @inject IWebHostEnvironment Environment
 
 @{
-    ViewData["Title"] = "Wybór fryzjera i usługi";
+    ViewData["Title"] = "Wybór fryzjera i usług";
 }
 
-<h2>Wybór fryzjera dla salonu @Model.PlaceName</h2>
+<h2 class="mb-4">Wybór fryzjera i usług dla salonu @Model.PlaceName</h2>
 
 @if (Model.HairdresserNames != null && Model.HairdresserNames.Any())
 {
-    <form method="post">
-        <div class="form-group">
-            <label for="HairdresserId">Wybierz fryzjera:</label>
-            <select id="HairdresserId" name="Appointment.HairdresserId" class="form-control">
-                <option value="">Wybierz fryzjera</option>
-                @foreach (var name in Model.HairdresserNames)
+    <form method="post" class="shadow p-4 bg-white rounded">
+        <div class="form-group mb-3">
+            <label for="HairdresserId" class="form-label">Wybierz fryzjera:</label>
+            <select id="HairdresserId" asp-for="SelectedHairdresserName" class="form-control">
+                <option value="" disabled selected>-- Wybierz fryzjera --</option>
+                @foreach (var hairdresser in Model.HairdresserNames)
                 {
-                    <option value="@name">@name</option>
+                    <option value="@hairdresser">@hairdresser</option>
                 }
             </select>
         </div>
 
-        <div class="form-group">
-            <label for="Service">Wybierz usługę:</label>
-            <select id="Service" name="Appointment.Service" class="form-control">
-                <option value="">Wybierz usługę</option>
-                @foreach (var service in Model.Services)
-                {
-                    <option value="@service.Id">@service.Name</option>
-                }
-            </select>
-        </div>
+        <button type="submit" class="btn btn-primary w-100">Zatwierdź</button>
 
-        <div class="form-group">
-            <label for="Date">Wybierz datę:</label>
-            <input type="date" id="Date" name="Appointment.Date" class="form-control" required />
-        </div>
 
-        <div class="form-group">
-            <label for="Time">Wybierz godzinę:</label>
-            <select id="Time" name="Appointment.Time" class="form-control" required>
-                <option value="">Wybierz godzinę</option>
-                @foreach (var time in Model.GetTimeSlots())
-                {
-                    <option value="@time">@time</option>
-                }
-            </select>
-        </div>
 
-        <button type="submit" class="btn btn-primary">Zarezerwuj</button>
-        <button id="anuluj" class="btn btn-secondary">Anuluj</button>
+
     </form>
+
+
 }
 else
 {
-    <p>@ViewData["Message"]</p>
+    <p class="text-muted">@ViewData["Message"]</p>
 }
 
 
-<script>
-    document.getElementById('anuluj').addEventListener('click', function() {
-        window.history.back(); // Powrót do poprzedniej strony
-    });
-</script>
+
+<hr class="my-4" />
+
+<!-- Harmonogram tygodnia -->
+<h3 class="mb-3">Harmonogram tygodnia</h3>
+<div>
+    @for (int weekIndex = 0; weekIndex < 2; weekIndex++)
+    {
+        var weeklySchedule = weekIndex == 0 ? Model.WeeklySchedule1 : Model.WeeklySchedule2;
+
+        <div class="row text-center mb-5">
+            @foreach (var day in weeklySchedule)
+            {
+                <div class="col-md-2 border bg-light mx-2 p-3 rounded">
+                    <h5 class="mb-2">@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
+                    <ul class="list-unstyled mb-0">
+                        @if (day.Date < DateTime.Now.Date)
+                        {
+                            <li class="text-muted">Brak dostępnych terminów</li>
+                        }
+                        else
+                        {
+                            var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
+                            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
+
+                            foreach (var block in day.TimeBlocks)
+                            {
+                                // Wyświetlanie wolnych godzin przed zarezerwowanym blokiem
+                                while (startTime < block.StartTime)
+                                {
+                                    <li>
+                                        <button class="btn btn-sm btn-success time-slot mb-2 w-100"
+                                                data-hour="@startTime.ToString(@"hh\:mm")"
+                                                data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#reservationModal">
+                                            @startTime.ToString(@"hh\:mm")
+                                        </button>
+                                    </li>
+                                    startTime = startTime.Add(new TimeSpan(0, 15, 0));
+                                }
+
+                                // Wyświetlanie zarezerwowanego bloku
+                                <li>
+                                    <button class="btn btn-sm btn-danger mb-2 w-100 reserved-time-slot"
+                                            data-reservation-id="@block.ReservationId"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteReservationModal">
+                                        @block.TimeRange<br />
+                                        @Html.Raw(block.ClientInfo.Replace("\n", "<br />"))<br />
+                                        @block.ServiceName
+                                    </button>
+                                </li>
+
+                                startTime = block.EndTime;
+                            }
+
+                            // Wyświetlanie wolnych godzin po ostatnim zarezerwowanym bloku
+                            while (startTime < endTime)
+                            {
+                                <li>
+                                    <button class="btn btn-sm btn-success time-slot mb-2 w-100"
+                                            data-hour="@startTime.ToString(@"hh\:mm")"
+                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#reservationModal">
+                                        @startTime.ToString(@"hh\:mm")
+                                    </button>
+                                </li>
+                                startTime = startTime.Add(new TimeSpan(0, 15, 0));
+                            }
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+
+@*
+<p>Wybrany fryzjer: @ViewData["SelectedHairdresserName"]</p>
+<p>Szczegóły fryzjera: @ViewData["HairdresserDetails"]</p>
+*@
