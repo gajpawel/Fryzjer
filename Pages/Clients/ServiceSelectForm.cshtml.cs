@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Fryzjer.Pages.Clients
@@ -30,12 +31,29 @@ namespace Fryzjer.Pages.Clients
         public int PlaceId { get; set; }
 
         [BindProperty]
+        public int ServiceId { get; set; }
+
+        [BindProperty]
         public String? SelectedHairdresserName { get; set; }
+
+        public string SelectedServiceName { get; set; } // Nazwa wybranej us³ugi
 
 
         public string PlaceName { get; set; }
         public List<string> HairdresserNames { get; set; } = new List<string>();
         public List<Service> Services { get; set; } = new List<Service>();
+
+
+
+        [BindProperty]
+        public string Date { get; set; }
+
+        [BindProperty]
+        public string Time { get; set; }
+
+        [BindProperty]
+        public string HairdresserName { get; set; }
+        public string? ServiceName { get; private set; }
 
         public List<string> GetTimeSlots()
         {
@@ -52,13 +70,24 @@ namespace Fryzjer.Pages.Clients
 
 
 
-
-
-        public async Task<IActionResult> OnGetAsync(int id, int week = 0, int? srv = null)
-
+        public async Task<IActionResult> OnGetAsync(int id, int week = 0, int srv = 0)
         {
             PlaceId = id;
+            ServiceId = srv;
 
+            // Przypisanie ServiceId do ViewData
+            ViewData["ServiceId"] = ServiceId;
+
+            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == ServiceId);
+            if (service != null)
+            {
+                ServiceName = service.Name; // Przypisanie nazwy us³ugi do zmiennej
+                ViewData["ServiceName"] = ServiceName; // Przekazanie do ViewData
+            }
+            else
+            {
+                ServiceName = "Nie znaleziono nazwy us³ugi."; // W przypadku, gdy nie uda³o siê znaleŸæ nazwy us³ugi
+            }
 
             var place = await _context.Place.FirstOrDefaultAsync(p => p.Id == id);
             if (place != null)
@@ -90,23 +119,31 @@ namespace Fryzjer.Pages.Clients
 
             CurrentWeek = week; // Correctly assign week here
 
-
             ViewData["SelectedHairdresserName"] = SelectedHairdresserName ?? "Nie wybrano fryzjera.";
-
-
-            // Calculate the start date based on the current day of the week
-            var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1); // +1 to adjust for Monday as the start
-
-            // Generate schedules for the current and next week
-            WeeklySchedule1 = await GenerateScheduleAsync(startDate, id); // Current week
-            WeeklySchedule2 = await GenerateScheduleAsync(startDate.AddDays(7), id); // Next week
 
             return Page();
         }
 
 
-        public async Task<IActionResult> OnPostAsync()
-        {
+
+
+        public async Task<IActionResult> OnPostAsync(int id, int week = 0, int srv = 0) {
+
+            ServiceId = srv;
+
+            ViewData["ServiceId"] = ServiceId;
+
+            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == ServiceId);
+             SelectedServiceName = service?.Name ?? "Nie wybrano us³ugi";
+
+
+            var place = await _context.Place.FirstOrDefaultAsync(p => p.Id == id);
+            if (place != null)
+            {
+                PlaceName = place.Name;
+            }
+
+
             if (!string.IsNullOrEmpty(SelectedHairdresserName))
             {
                 ViewData["SelectedHairdresserName"] = SelectedHairdresserName; // Zachowujemy wybór fryzjera
@@ -118,12 +155,16 @@ namespace Fryzjer.Pages.Clients
                 var hairdresser = await _context.Hairdresser
                     .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == SelectedHairdresserName);
 
+
+                CurrentWeek = week; // Correctly assign week here
+
+
                 if (hairdresser != null)
                 {
                     ViewData["HairdresserDetails"] = $"Wybrano fryzjera: {hairdresser.Name} {hairdresser.Surname}";
 
                     // Generowanie harmonogramu dla wybranego fryzjera
-                    var startDate = DateTime.Now.Date; // Start od dzisiejszego dnia
+                    var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1); // +1 to adjust for Monday as the start
                     WeeklySchedule1 = await GenerateScheduleAsync(startDate, hairdresser.Id); // Bie¿¹cy tydzieñ
                     WeeklySchedule2 = await GenerateScheduleAsync(startDate.AddDays(7), hairdresser.Id); // Kolejny tydzieñ
                 }
@@ -134,6 +175,41 @@ namespace Fryzjer.Pages.Clients
             }
 
             return Page(); // Powrót do widoku
+        }
+
+
+
+        public async Task<IActionResult> OnPostReserveAsync()
+        {
+            // Pobranie aktualnego u¿ytkownika (przyk³ad dla Identity)
+            var clientId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Zak³adamy, ¿e NameIdentifier to ClientId
+
+            if (string.IsNullOrEmpty(clientId))
+            {
+                TempData["Error"] = "Nie znaleziono zalogowanego u¿ytkownika.";
+                return RedirectToPage("/Clients/ClientProfile");
+            }
+
+            // SprawdŸ, czy wybrano wszystkie dane
+            if (string.IsNullOrEmpty(Date) || string.IsNullOrEmpty(Time) || ServiceId == 0 || HairdresserName == null)
+            {
+                TempData["Error"] = "Proszê uzupe³niæ wszystkie dane rezerwacji.";
+                return Page();
+            }
+
+            // ZnajdŸ fryzjera na podstawie imienia i nazwiska
+            var hairdresser = await _context.Hairdresser
+                .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == HairdresserName);
+
+            if (hairdresser == null)
+            {
+                TempData["Error"] = "Nie znaleziono wybranego fryzjera.";
+                return Page();
+            }
+
+            // Przekierowanie bez zapisu do bazy
+            TempData["Success"] = "Rezerwacja zosta³a zapisana.";
+            return RedirectToPage("/Clients/ClientProfile");
         }
 
 
@@ -231,4 +307,5 @@ namespace Fryzjer.Pages.Clients
         public int? ReservationId { get; set; }
         public string? ServiceName { get; set; }
     }
+
 }

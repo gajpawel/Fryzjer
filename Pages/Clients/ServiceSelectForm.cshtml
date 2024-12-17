@@ -7,7 +7,7 @@
     ViewData["Title"] = "Wybór fryzjera i usług";
 }
 
-<h2 class="mb-4">Wybór fryzjera i usług dla salonu @Model.PlaceName</h2>
+<h2 class="mb-4">Rezerwacja wizyty w salonie @Model.PlaceName</h2>
 
 @if (Model.HairdresserNames != null && Model.HairdresserNames.Any())
 {
@@ -23,50 +23,85 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">Zatwierdź</button>
+
+        <div class="form-group mb-3">
+            <label for="ServiceId" class="form-label">Wybrana usługa:</label>
+            <div class="border p-3 bg-light rounded">
+                <p class="mb-0">Usługa: <strong>@ViewData["ServiceName"]</strong></p>
+            </div>
+        </div>
 
 
-
-
+        <button type="submit" class="btn btn-primary w-100">Wybierz fryzjera</button>
     </form>
-
-
 }
 else
 {
     <p class="text-muted">@ViewData["Message"]</p>
 }
 
+@if (!string.IsNullOrEmpty(Model.SelectedHairdresserName))
+{
+    <hr class="my-4" />
 
+    <!-- Harmonogram tygodnia -->
 
-<hr class="my-4" />
+    <h3 class="mb-3">Harmonogram tygodnia dla fryzjera: @ViewData["SelectedHairdresserName"]</h3>
 
-<!-- Harmonogram tygodnia -->
-<h3 class="mb-3">Harmonogram tygodnia</h3>
-<div>
-    @for (int weekIndex = 0; weekIndex < 2; weekIndex++)
-    {
-        var weeklySchedule = weekIndex == 0 ? Model.WeeklySchedule1 : Model.WeeklySchedule2;
+    <div>
+        @for (int weekIndex = 0; weekIndex < 2; weekIndex++)
+        {
+            var weeklySchedule = weekIndex == 0 ? Model.WeeklySchedule1 : Model.WeeklySchedule2;
 
-        <div class="row text-center mb-5">
-            @foreach (var day in weeklySchedule)
-            {
-                <div class="col-md-2 border bg-light mx-2 p-3 rounded">
-                    <h5 class="mb-2">@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
-                    <ul class="list-unstyled mb-0">
-                        @if (day.Date < DateTime.Now.Date)
-                        {
-                            <li class="text-muted">Brak dostępnych terminów</li>
-                        }
-                        else
-                        {
-                            var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
-                            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
-
-                            foreach (var block in day.TimeBlocks)
+            <div class="row text-center mb-5">
+                @foreach (var day in weeklySchedule)
+                {
+                    <div class="col-md-2 border bg-light mx-2 p-3 rounded">
+                        <h5 class="mb-2">@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
+                        <ul class="list-unstyled mb-0">
+                            @if (day.Date < DateTime.Now.Date)
                             {
-                                // Wyświetlanie wolnych godzin przed zarezerwowanym blokiem
-                                while (startTime < block.StartTime)
+                                <li class="text-muted">Brak dostępnych terminów</li>
+                            }
+                            else
+                            {
+                                var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
+                                var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
+
+                                foreach (var block in day.TimeBlocks)
+                                {
+                                    // Wyświetlanie wolnych godzin przed zarezerwowanym blokiem
+                                    while (startTime < block.StartTime)
+                                    {
+                                        <li>
+                                            <button class="btn btn-sm btn-success time-slot mb-2 w-100"
+                                                    data-hour="@startTime.ToString(@"hh\:mm")"
+                                                    data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#reservationModal">
+                                                @startTime.ToString(@"hh\:mm")
+                                            </button>
+                                        </li>
+                                        startTime = startTime.Add(new TimeSpan(0, 15, 0));
+                                    }
+
+                                    // Wyświetlanie zarezerwowanego bloku
+                                    <li>
+                                        <button class="btn btn-sm btn-danger mb-2 w-100 reserved-time-slot"
+                                                data-reservation-id="@block.ReservationId"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteReservationModal">
+                                            @block.TimeRange<br />
+                                            @Html.Raw(block.ClientInfo.Replace("\n", "<br />"))<br />
+                                            @block.ServiceName
+                                        </button>
+                                    </li>
+
+                                    startTime = block.EndTime;
+                                }
+
+                                // Wyświetlanie wolnych godzin po ostatnim zarezerwowanym bloku
+                                while (startTime < endTime)
                                 {
                                     <li>
                                         <button class="btn btn-sm btn-success time-slot mb-2 w-100"
@@ -79,46 +114,54 @@ else
                                     </li>
                                     startTime = startTime.Add(new TimeSpan(0, 15, 0));
                                 }
-
-                                // Wyświetlanie zarezerwowanego bloku
-                                <li>
-                                    <button class="btn btn-sm btn-danger mb-2 w-100 reserved-time-slot"
-                                            data-reservation-id="@block.ReservationId"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteReservationModal">
-                                        @block.TimeRange<br />
-                                        @Html.Raw(block.ClientInfo.Replace("\n", "<br />"))<br />
-                                        @block.ServiceName
-                                    </button>
-                                </li>
-
-                                startTime = block.EndTime;
                             }
+                        </ul>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
 
-                            // Wyświetlanie wolnych godzin po ostatnim zarezerwowanym bloku
-                            while (startTime < endTime)
-                            {
-                                <li>
-                                    <button class="btn btn-sm btn-success time-slot mb-2 w-100"
-                                            data-hour="@startTime.ToString(@"hh\:mm")"
-                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#reservationModal">
-                                        @startTime.ToString(@"hh\:mm")
-                                    </button>
-                                </li>
-                                startTime = startTime.Add(new TimeSpan(0, 15, 0));
-                            }
-                        }
-                    </ul>
-                </div>
-            }
+
+<!-- Modal do potwierdzenia rezerwacji -->
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reservationModalLabel">Potwierdzenie rezerwacji</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz zarezerwować godzinę <strong id="modalHour"></strong> w dniu <strong id="modalDate"></strong>?</p>
+                <form id="reservationForm" method="post" asp-page-handler="Reserve">
+                    <input type="hidden" name="Date" id="inputDate" />
+                    <input type="hidden" name="Time" id="inputTime" />
+                    <input type="hidden" name="HairdresserName" value="@ViewData["SelectedHairdresserName"]" />
+                    <button type="submit" class="btn btn-primary">Tak, zarezerwuj</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                </form>
+            </div>
         </div>
-    }
+    </div>
 </div>
 
 
-@*
-<p>Wybrany fryzjer: @ViewData["SelectedHairdresserName"]</p>
-<p>Szczegóły fryzjera: @ViewData["HairdresserDetails"]</p>
-*@
+
+<script>
+    document.querySelectorAll('.time-slot').forEach(button => {
+        button.addEventListener('click', function () {
+            // Ustawienie danych godziny i daty
+            const selectedHour = this.getAttribute('data-hour');
+            const selectedDate = this.getAttribute('data-date');
+
+            document.getElementById('modalHour').textContent = selectedHour || ''; // Ustaw wartość modalHour
+            document.getElementById('modalDate').textContent = selectedDate || ''; // Ustaw wartość modalDate
+
+            // Ustawienie wartości ukrytych inputów
+            document.getElementById('inputDate').value = selectedDate;
+            document.getElementById('inputTime').value = selectedHour;
+        });
+    });
+
+</script>
