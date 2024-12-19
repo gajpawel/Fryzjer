@@ -206,30 +206,63 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="historyModalLabel">Historia Rezerwacji</h5>
+                <h5 class="modal-title" id="historyModalLabel">Historia</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Data</th>
-                            <th scope="col">Imię i nazwisko klienta</th>
-                            <th scope="col">Usługa</th>
-                            <th scope="col">Godzina</th>
-                            <th scope="col">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <!-- Zakładki -->
+                <ul class="nav nav-tabs mb-3" id="historyTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="reservations-tab" data-bs-toggle="tab"
+                                data-bs-target="#reservations" type="button" role="tab">
+                            Rezerwacje
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="vacation-tab" data-bs-toggle="tab"
+                                data-bs-target="#vacation" type="button" role="tab">
+                            Wnioski urlopowe
+                        </button>
+                    </li>
+                </ul>
 
-                        {
-                            <tr>
-                              //nie dziala to gowno na razie
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <!-- Zawartość zakładek -->
+                <div class="tab-content" id="historyTabContent">
+                    <!-- Zakładka rezerwacji -->
+                    <div class="tab-pane fade show active" id="reservations" role="tabpanel">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Imię i nazwisko klienta</th>
+                                    <th>Usługa</th>
+                                    <th>Godzina</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservationsTableBody">
+                                <!-- Dane rezerwacji będą wstawiane przez JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Zakładka urlopów -->
+                    <div class="tab-pane fade" id="vacation" role="tabpanel">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Godziny</th>
+                                    <th>Status</th>
+                                    <th>Komentarz</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vacationTableBody">
+                                <!-- Dane urlopów będą wstawiane przez JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
@@ -237,6 +270,98 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Funkcja do ładowania historii rezerwacji
+        async function loadReservationsHistory() {
+            try {
+                const response = await fetch('/api/reservation/history');
+                if (response.ok) {
+                    const data = await response.json();
+                    const tbody = document.getElementById('reservationsTableBody');
+                    tbody.innerHTML = '';
+
+                    data.forEach(reservation => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(reservation.date).toLocaleDateString()}</td>
+                            <td>${reservation.clientName} ${reservation.clientSurname}</td>
+                            <td>${reservation.serviceName}</td>
+                            <td>${reservation.startTime} - ${reservation.endTime}</td>
+                            <td>${getReservationStatus(reservation.status)}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Błąd podczas ładowania historii rezerwacji:', error);
+            }
+        }
+
+        // Funkcja do ładowania historii urlopów
+        async function loadVacationHistory() {
+            try {
+                const response = await fetch('/api/vacation/history');
+                if (response.ok) {
+                    const data = await response.json();
+                    const tbody = document.getElementById('vacationTableBody');
+                    tbody.innerHTML = '';
+
+                    data.forEach(vacation => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(vacation.date).toLocaleDateString()}</td>
+                            <td>${vacation.startTime} - ${vacation.endTime}</td>
+                            <td>${getVacationStatus(vacation.status)}</td>
+                            <td>${vacation.comment || '-'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Błąd podczas ładowania historii urlopów:', error);
+            }
+        }
+
+        // Funkcja pomocnicza do wyświetlania statusu rezerwacji
+        function getReservationStatus(status) {
+            const statusMap = {
+                'P': '<span class="badge bg-success">Potwierdzona</span>',
+                'O': '<span class="badge bg-warning">Oczekująca</span>',
+                'A': '<span class="badge bg-danger">Anulowana</span>'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Funkcja pomocnicza do wyświetlania statusu urlopu
+        function getVacationStatus(status) {
+            const statusMap = {
+                'P': '<span class="badge bg-success">Zatwierdzony</span>',
+                'O': '<span class="badge bg-warning">Oczekuje</span>',
+                'A': '<span class="badge bg-danger">Odrzucony</span>'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Ładowanie danych przy otwieraniu modalu
+        document.getElementById('historyModal').addEventListener('show.bs.modal', function () {
+            loadReservationsHistory();
+            loadVacationHistory();
+        });
+
+        // Odświeżanie danych przy zmianie zakładki
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
+            button.addEventListener('shown.bs.tab', function (event) {
+                if (event.target.id === 'reservations-tab') {
+                    loadReservationsHistory();
+                } else if (event.target.id === 'vacation-tab') {
+                    loadVacationHistory();
+                }
+            });
+        });
+    });
+</script>
 
 
 <!-- Modal do wniosku urlopowego -->
