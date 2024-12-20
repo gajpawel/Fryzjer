@@ -36,6 +36,54 @@ namespace Fryzjer.Pages.Hairdressers
             return $"{hours:00}:{minutes:00}";
         }
 
+        [HttpGet]
+        [Route("/api/vacation/history")]
+        public JsonResult OnGetVacationHistory()
+        {
+            var hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
+            if (hairdresserId == null)
+            {
+                return new JsonResult(new { error = "Nie jesteœ zalogowany jako fryzjer." })
+                {
+                    StatusCode = 401
+                };
+            }
+
+            try
+            {
+                var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
+                if (vacationService == null)
+                {
+                    return new JsonResult(new { error = "Nie znaleziono us³ugi typu urlop w systemie." })
+                    {
+                        StatusCode = 404
+                    };
+                }
+
+                var vacationRequests = _context.Reservation
+                    .Where(r => r.HairdresserId == hairdresserId && r.ServiceId == vacationService.Id)
+                    .GroupBy(r => new { r.date, r.status })
+                    .Select(group => new
+                    {
+                        date = group.Key.date,
+                        startTime = group.Min(r => r.time).ToString(@"hh\:mm"),
+                        endTime = group.Max(r => r.time).Add(TimeSpan.FromMinutes(15)).ToString(@"hh\:mm"),
+                        status = group.Key.status
+                    })
+                    .OrderByDescending(r => r.date)
+                    .ToList();
+
+                return new JsonResult(vacationRequests);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { error = $"B³¹d podczas pobierania historii urlopów: {ex.Message}" })
+                {
+                    StatusCode = 500
+                };
+            }
+        }
+
         [HttpPost]
         [Route("api/reservation/{id}/confirm")]
         public IActionResult ConfirmReservation(int id)
@@ -115,7 +163,7 @@ namespace Fryzjer.Pages.Hairdressers
                         blocks.Add(currentBlock);
                     }
                     string modal;
-                    if (reservation.status == 'O' && reservation.ServiceId!=4)
+                    if (reservation.status == 'O' && reservation.ServiceId != 4)
                     {
                         modal = "#manageReservationModal";
                     }
@@ -129,7 +177,7 @@ namespace Fryzjer.Pages.Hairdressers
                         ClientInfo = $"{reservation.Client?.Name} {reservation.Client?.Surname}\nTel: {reservation.Client?.Phone}",
                         ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
                         Modal = modal,
-                        Status= reservation.status
+                        Status = reservation.status
                     };
                 }
                 else

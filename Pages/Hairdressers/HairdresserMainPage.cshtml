@@ -12,19 +12,15 @@
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#vacationModal">
             Wniosek o urlop
         </button>
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#historyModal">
-                Historia rezerwacji
-            </button>
-        </div>
-
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#historyModal">
+            Historia rezerwacji
+        </button>
     </div>
 
     <div class="d-flex justify-content-between mb-3">
         <a href="?week=@(Model.CurrentWeek - 1)" class="btn btn-outline-primary">Poprzednia</a>
         <a href="?week=@(Model.CurrentWeek + 1)" class="btn btn-outline-primary">Następna</a>
     </div>
-
-
 
     @for (int weekIndex = 0; weekIndex < 2; weekIndex++)
     {
@@ -99,6 +95,7 @@
         </div>
     }
 </div>
+
 
 <!-- Modal do rezerwacji -->
 <div class="modal fade" id="reservationModal">
@@ -647,4 +644,98 @@
             alert('Wystąpił błąd podczas tworzenia rezerwacji: ' + error);
         }
     });
+
+
 </script>
+
+                    document.addEventListener('DOMContentLoaded', function () {
+    // Funkcja do ładowania historii rezerwacji
+    async function loadReservationsHistory() {
+        try {
+            const response = await fetch('/api/reservation/history');
+            if (response.ok) {
+                const data = await response.json();
+                const tbody = document.getElementById('reservationsTableBody');
+                tbody.innerHTML = '';
+
+                data.forEach(reservation => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+<td>${new Date(reservation.date).toLocaleDateString()}</td>
+<td>${reservation.clientName} ${reservation.clientSurname}</td>
+<td>${reservation.serviceName}</td>
+<td>${reservation.startTime} - ${reservation.endTime}</td>
+<td>${getReservationStatus(reservation.status)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        } catch (error) {
+            console.error('Błąd podczas ładowania historii rezerwacji:', error);
+        }
+    }
+
+    // Funkcja do ładowania historii urlopów
+    async function loadVacationHistory() {
+        try {
+            const response = await fetch('/api/vacation/history');
+            if (response.ok) {
+                const data = await response.json();
+                const tbody = document.getElementById('vacationTableBody');
+                tbody.innerHTML = '';
+
+                data.forEach(vacation => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+<td>${new Date(vacation.date).toLocaleDateString()}</td>
+<td>${vacation.startTime} - ${vacation.endTime}</td>
+<td>${getVacationStatus(vacation.status)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                const errorData = await response.json();
+                console.error('Błąd podczas pobierania historii urlopów:', errorData.error);
+            }
+        } catch (error) {
+            console.error('Błąd podczas ładowania historii urlopów:', error);
+        }
+    }
+
+    // Funkcja pomocnicza do wyświetlania statusu urlopu
+    function getVacationStatus(status) {
+        const statusMap = {
+            'P': '<span class="badge bg-success">Zatwierdzony</span>',
+            'O': '<span class="badge bg-warning">Oczekuje</span>',
+            'A': '<span class="badge bg-danger">Odrzucony</span>'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Funkcja pomocnicza do wyświetlania statusu rezerwacji
+    function getReservationStatus(status) {
+        const statusMap = {
+            'P': '<span class="badge bg-success">Potwierdzona</span>',
+            'O': '<span class="badge bg-warning">Oczekująca</span>',
+            'A': '<span class="badge bg-danger">Anulowana</span>'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Ładowanie danych przy otwieraniu modalu
+    document.getElementById('historyModal').addEventListener('show.bs.modal', function () {
+        loadReservationsHistory();
+        loadVacationHistory();
+    });
+
+    // Odświeżanie danych przy zmianie zakładki
+    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(button => {
+        button.addEventListener('shown.bs.tab', function (event) {
+            if (event.target.id === 'reservations-tab') {
+                loadReservationsHistory();
+            } else if (event.target.id === 'vacation-tab') {
+                loadVacationHistory();
+            }
+        });
+    });
+});
