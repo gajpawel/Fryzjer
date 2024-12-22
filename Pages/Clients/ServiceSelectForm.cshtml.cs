@@ -95,9 +95,12 @@ namespace Fryzjer.Pages.Clients
                 PlaceName = place.Name;
             }
 
-            HairdresserNames = await _context.Hairdresser
-                .Where(h => h.PlaceId == id)
-                .Select(h => h.Name + " " + h.Surname)
+            HairdresserNames = await _context.Specialization
+                .Include(h => h.Hairdresser)
+                .Include(s => s.Service)
+                .Where(h => h.Hairdresser.PlaceId == id)
+                .Where(s => s.Service.Name == ServiceName)
+                .Select(h => h.Hairdresser.Name + " " + h.Hairdresser.Surname)
                 .ToListAsync();
 
             if (!HairdresserNames.Any())
