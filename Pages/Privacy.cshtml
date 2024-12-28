@@ -1,8 +1,110 @@
 ﻿@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Widok tymczasowy";
+    ViewData["Title"] = "Zarządzanie harmonogramami";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Strona w budowie. Zaktualizowano dnia @ViewData["Timestamp"]</p>
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <form method="get" class="form-inline">
+                <div class="form-group">
+                    <label for="hairdresserId" class="mr-2">Wybierz fryzjera:</label>
+                    <select name="hairdresserId" id="hairdresserId" class="form-control"
+                            asp-items="Model.HairdressersList"
+                            asp-for="SelectedHairdresserId"
+                            onchange="this.form.submit()">
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        @if (Model.SelectedHairdresserId.HasValue)
+        {
+            <div class="col-md-8">
+                <form method="post" asp-page-handler="UpdateWorkHours" class="form-inline">
+                    <input type="hidden" asp-for="WorkHours.HairdresserId" value="@Model.SelectedHairdresserId" />
+                    <div class="form-group mx-2">
+                        <label for="startTime" class="mr-2">Godzina rozpoczęcia:</label>
+                        <input type="time" id="startTime" asp-for="WorkHours.StartTime" class="form-control" />
+                    </div>
+                    <div class="form-group mx-2">
+                        <label for="endTime" class="mr-2">Godzina zakończenia:</label>
+                        <input type="time" id="endTime" asp-for="WorkHours.EndTime" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Zaktualizuj godziny pracy</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="row">
+        @foreach (var hairdresser in Model.Hairdressers)
+        {
+            <div class="col">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">@hairdresser.Name @hairdresser.Surname</h5>
+                        <small class="text-muted">@(hairdresser.Place?.Name ?? "Brak przypisanego lokalu")</small>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="schedule-container">
+                            <div class="d-flex">
+                                @foreach (var day in Model.WeeklySchedule)
+                                {
+                                    <div class="day-column flex-fill mx-1">
+                                        <h6 class="text-center">@day.Date.ToString("dddd, dd-MM")</h6>
+                                        <div class="time-slots">
+                                            @foreach (var block in day.TimeBlocks)
+                                            {
+                                                <div class="time-block @(block.IsReserved ? "reserved" : "") p-1 mb-1"
+                                                     title="@(block.IsReserved ? $"{block.ClientInfo}\n{block.ServiceName}" : "Wolny termin")">
+                                                    <small>@block.TimeRange</small>
+                                                    @if (block.IsReserved)
+                                                    {
+                                                        <div class="client-info">
+                                                            <small>@block.ServiceName</small>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .time-block {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+
+        .time-block.reserved {
+            background-color: #e2e3e5;
+        }
+
+    .schedule-container {
+        overflow-x: auto;
+    }
+
+    .day-column {
+        min-width: 150px;
+    }
+
+    .client-info {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
