@@ -148,7 +148,7 @@ namespace Fryzjer.Pages.Hairdressers
             var reservations = _context.Reservation
                 .Include(r => r.Client)
                 .Include(r => r.Service)
-                .Where(r => r.date == date && r.HairdresserId == hairdresserId)
+                .Where(r => r.date == date && r.HairdresserId == hairdresserId && r.status != 'A')
                 .ToList()
                 .OrderBy(r => r.time)
                 .ToList();

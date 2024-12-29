@@ -65,7 +65,7 @@
                                         @block.TimeRange<br />
                                         @Html.Raw(block.ClientInfo.Replace("\n", "<br />"))<br />
                                         @block.ServiceName<br />
-                                        @if (block.Modal == "#manageReservationModal")
+                                        @if (block.Modal == "#manageReservationModal" || (block.ServiceName == "urlop" && block.Status == 'O'))
                                         {
                                             <b>Oczekuje na akceptację</b>
                                         }

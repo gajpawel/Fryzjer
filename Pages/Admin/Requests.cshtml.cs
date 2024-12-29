@@ -128,7 +128,7 @@ namespace Fryzjer.Pages.Admin
                 var startTime = vacationBlock.Min(r => r.time);
                 var endTime = vacationBlock.Max(r => r.time).Add(new TimeSpan(0, 15, 0));
 
-                // Znajdujemy i usuwamy koliduj¹ce rezerwacje
+                // Znajdujemy i aktualizujemy koliduj¹ce rezerwacje
                 var conflictingReservations = _context.Reservation
                     .Where(r => r.date == mainRequest.date &&
                                r.HairdresserId == mainRequest.HairdresserId &&
@@ -139,8 +139,12 @@ namespace Fryzjer.Pages.Admin
 
                 if (conflictingReservations.Any())
                 {
-                    _context.Reservation.RemoveRange(conflictingReservations);
+                    foreach (var reservation in conflictingReservations)
+                    {
+                        reservation.status = 'A'; // Ustawiamy status na 'A' (anulowana)
+                    }
                 }
+
 
                 // Zatwierdzamy urlop
                 foreach (var request in vacationBlock)
