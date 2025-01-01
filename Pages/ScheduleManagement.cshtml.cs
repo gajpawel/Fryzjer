@@ -8,12 +8,12 @@ using Fryzjer.Models;
 
 namespace Fryzjer.Pages
 {
-    public class PrivacyModel : PageModel
+    public class ScheduleManagement : PageModel
     {
         private readonly FryzjerContext _context;
-        private readonly ILogger<PrivacyModel> _logger;
+        private readonly ILogger<ScheduleManagement> _logger;
 
-        public PrivacyModel(FryzjerContext context, ILogger<PrivacyModel> logger)
+        public ScheduleManagement(FryzjerContext context, ILogger<ScheduleManagement> logger)
         {
             _context = context;
             _logger = logger;
@@ -47,7 +47,14 @@ namespace Fryzjer.Pages
                 .OrderBy(h => h.Name)
                 .ToListAsync();
 
-            HairdressersList = new SelectList(Hairdressers, "Id", "Name");
+            HairdressersList = new SelectList(
+    Hairdressers.Select(h => new
+                {
+                    h.Id,
+                    FullName = $"{h.Name} {h.Surname}"
+                }),
+                "Id",
+                "FullName");
 
             SelectedHairdresserId = hairdresserId ?? Hairdressers.FirstOrDefault()?.Id;
 
@@ -71,8 +78,10 @@ namespace Fryzjer.Pages
                     .Include(r => r.Client)
                     .Include(r => r.Service)
                     .Where(r => r.date == date && r.HairdresserId == hairdresserId)
-                    .OrderBy(r => r.time)
-                    .ToListAsync();
+                    .ToListAsync();  // Najpierw pobieramy dane
+
+                // Sortowanie po stronie klienta
+                reservations = reservations.OrderBy(r => r.time.TotalMinutes).ToList();
 
                 var timeBlocks = new List<TimeBlock>();
                 TimeBlock currentBlock = null;

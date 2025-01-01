@@ -8,7 +8,7 @@ namespace Fryzjer.Pages.Admin
         public IActionResult OnPostSchedule()
         {
             // Po klikniêciu przycisku "Przegl¹d harmonogramów"
-            return RedirectToPage("/Privacy");
+            return RedirectToPage("/ScheduleManagement");
         }
 
         public IActionResult OnPostRequests()
