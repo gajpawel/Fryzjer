@@ -20,6 +20,7 @@ namespace Fryzjer.Pages.Clients
         public string ErrorMessage { get; set; } = string.Empty;
 		public List<Reservation> CurrentReservations { get; set; } = new();
 		public List<Reservation> PastReservations { get; set; } = new();
+        public Reservation previousReservation { get; set; }
 
 
 		public ClientProfileModel(FryzjerContext context)
@@ -42,6 +43,19 @@ namespace Fryzjer.Pages.Clients
 
 			// Pobierz rezerwacje
 			var now = DateTime.Now;
+
+            var reservationsToUpdate = _context.Reservation
+                .Where(r => r.status != 'A' && r.date < now)
+                .ToList();
+
+            // Aktualizujemy status na 'Z'
+            foreach (var reservation in reservationsToUpdate)
+            {
+                reservation.status = 'Z';
+            }
+
+            // Zapisujemy zmiany w bazie danych
+            _context.SaveChanges();
 
             // Pobierz dane bez sortowania
             CurrentReservations = _context.Reservation

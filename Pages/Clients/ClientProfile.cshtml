@@ -39,6 +39,11 @@
             <ul class="list-group">
                 @foreach (var reservation in Model.CurrentReservations)
                 {
+                        @if (Model.previousReservation != null && reservation.date == Model.previousReservation.date && reservation.HairdresserId == Model.previousReservation.HairdresserId && Model.previousReservation.time+ TimeSpan.FromMinutes(15) >= reservation.time)
+                    {
+                        Model.previousReservation = reservation;
+                        continue;
+                    }
                     <li class="list-group-item">
                         <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
                         <strong>Usługa:</strong> @reservation.Service?.Name<br />
@@ -55,7 +60,10 @@
                                 Anuluj
                             </button>
                         }
-                    </li>
+                            @{
+                                Model.previousReservation = reservation;
+                            }
+                        </li>
                 }
             </ul>
         }

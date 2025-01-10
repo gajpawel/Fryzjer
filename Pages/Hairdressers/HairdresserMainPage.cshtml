@@ -163,40 +163,76 @@
 
 
 <!-- Modal do zarządzania rezerwacją -->
-<div class="modal fade" id="manageReservationModal">
+<div class="modal fade" id="manageReservationModal" tabindex="-1" aria-labelledby="manageReservationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Co chcesz zrobić z rezerwacją?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="manageReservationModalLabel">Co chcesz zrobić z rezerwacją?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Wybierz jedną z dostępnych opcji:
             </div>
             <div class="modal-footer">
+                <!-- Powrót -->
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
-                <button type="button" class="btn btn-success" id="confirmReservationBtn">Potwierdź rezerwację</button>
-                <button type="button" class="btn btn-danger" id="deleteReservationConfirmManage">Anuluj rezerwację</button>
+                <!-- Usuń -->
+                <form method="post" asp-page-handler="DeleteReservation" id="deleteReservationForm" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="deleteManageReservationId" />
+                    <button type="submit" class="btn btn-danger">Usuń</button>
+                </form>
+                <!-- Zaakceptuj -->
+                <form method="post" asp-page-handler="ConfirmReservation" id="confirmReservationForm" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="confirmReservationId" />
+                    <button type="submit" class="btn btn-success">Zaakceptuj</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal do usuwania rezerwacji -->
-<div class="modal fade" id="deleteReservationModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Usuń rezerwację</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                Czy na pewno chcesz usunąć tę rezerwację?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-danger" id="deleteReservationConfirm">Usuń</button>
+
+
+<!-- Modal do potwierdzenia anulowania rezerwacji -->
+<div class="modal fade" id="deleteReservationModal" tabindex="-1" aria-labelledby="deleteReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteReservationModalLabel">Potwierdź anulowanie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Czy na pewno chcesz anulować tę rezerwację?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                    <!-- Formularz do anulowania rezerwacji -->
+                    <form method="post" asp-page-handler="DeleteReservation" id="deleteReservationForm" style="display:inline;">
+                        <input type="hidden" name="reservationId" id="deleteReservationId" />
+                        <button type="submit" class="btn btn-danger">Tak</button>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 </div>
+    <script>
+        // Skrypt do ustawienia ID rezerwacji w formularzu
+    document.addEventListener("DOMContentLoaded", function () {
+        const modalButtons = document.querySelectorAll('button[data-bs-toggle="modal"]');
+
+        modalButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // Pobranie ID rezerwacji z atrybutu data-reservation-id
+                const reservationId = this.getAttribute('data-reservation-id');
+                // Ustawienie ID w polach formularzy
+                document.getElementById('deleteManageReservationId').value = reservationId;
+                document.getElementById('confirmReservationId').value = reservationId;
+                document.getElementById('deleteReservationId').value = reservationId;
+            });
+        });
+    });
+
+    </script>
 
 <!-- Historia rezerwacji Modal -->
 <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
@@ -537,66 +573,6 @@
                 selectedReservationId = this.getAttribute('data-reservation-id');
             });
         });
-    });
-
-    document.getElementById('confirmReservationBtn').addEventListener('click', async () => {
-        if (selectedReservationId) {
-            try {
-                const response = await fetch(`/api/reservation/${selectedReservationId}/confirm`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    alert('Rezerwacja została potwierdzona.');
-                    location.reload();
-                } else {
-                    const errorText = await response.text();
-                    alert('Wystąpił błąd podczas potwierdzania rezerwacji: ' + errorText);
-                }
-            } catch (error) {
-                alert('Wystąpił błąd podczas potwierdzania rezerwacji: ' + error);
-            }
-        }
-    });
-
-    document.getElementById('deleteReservationConfirm').addEventListener('click', async () => {
-        if (selectedReservationId) {
-            try {
-                const response = await fetch(`/api/reservation/${selectedReservationId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    alert('Rezerwacja została usunięta.');
-                    location.reload();
-                } else {
-                    const errorText = await response.text();
-                    alert('Wystąpił błąd podczas usuwania rezerwacji: ' + errorText);
-                }
-            } catch (error) {
-                alert('Wystąpił błąd podczas usuwania rezerwacji: ' + error);
-            }
-        }
-    });
-
-    document.getElementById('deleteReservationConfirmManage').addEventListener('click', async () => {
-        if (selectedReservationId) {
-            try {
-                const response = await fetch(`/api/reservation/${selectedReservationId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    alert('Rezerwacja została anulowana.');
-                    location.reload();
-                } else {
-                    const errorText = await response.text();
-                    alert('Wystąpił błąd podczas anulowania rezerwacji: ' + errorText);
-                }
-            } catch (error) {
-                alert('Wystąpił błąd podczas anulowania rezerwacji: ' + error);
-            }
-        }
     });
 
     document.getElementById('saveReservation').addEventListener('click', async () => {

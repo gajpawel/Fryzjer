@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace Fryzjer.Pages.Hairdressers
 {
@@ -190,6 +191,36 @@ namespace Fryzjer.Pages.Hairdressers
                 blocks.Add(currentBlock);
             }
             return blocks;
+        }
+
+        public IActionResult OnPostDeleteReservation(int reservationId)
+        {
+            Debug.WriteLine("ID Rezerwacji: " + reservationId);
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+
+            if (reservation != null && (reservation.status == 'O' || reservation.status == 'P')) // Tylko oczekuj¹ce lub potwierdzone
+            {
+                reservation.status = 'A'; // Zmieniamy status na 'A' (anulowana)
+                _context.SaveChanges(); // Zapisujemy zmiany w bazie danych
+            }
+
+            // Po anulowaniu, prze³adowujemy stronê, aby zaktualizowaæ widok
+            return RedirectToPage();
+        }
+
+        public IActionResult OnPostConfirmReservation(int reservationId)
+        {
+            Debug.WriteLine("ID Rezerwacji: " + reservationId);
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+
+            if (reservation != null && (reservation.status == 'O')) // Tylko oczekuj¹ce lub potwierdzone
+            {
+                reservation.status = 'P'; // Zmieniamy status na 'P'
+                _context.SaveChanges(); // Zapisujemy zmiany w bazie danych
+            }
+
+            // Po anulowaniu, prze³adowujemy stronê, aby zaktualizowaæ widok
+            return RedirectToPage();
         }
     }
 
