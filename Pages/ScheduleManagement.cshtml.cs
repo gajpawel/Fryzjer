@@ -1,10 +1,10 @@
-﻿// ScheduleManagement.cshtml.cs
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Fryzjer.Data;
 using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
+using Fryzjer.Pages.Shared;
 
 namespace Fryzjer.Pages
 {
@@ -13,12 +13,14 @@ namespace Fryzjer.Pages
         private readonly FryzjerContext _context;
         private readonly ILogger<ScheduleManagementModel> _logger;
 
+        private readonly ScheduleFactory _scheduleFactory;
+
         public ScheduleManagementModel(FryzjerContext context, ILogger<ScheduleManagementModel> logger)
         {
             _context = context;
             _logger = logger;
+            _scheduleFactory = new ScheduleFactory(context); // Inicjalizacja fabryki
         }
-
         [BindProperty(SupportsGet = true)]
         public int WeekOffset { get; set; } = 0;
 
@@ -47,6 +49,7 @@ namespace Fryzjer.Pages
             }
         }
 
+        // Wykorzystanie fabryki w metodzie OnGetAsync
         public async Task<IActionResult> OnGetAsync(int? hairdresserId = null, int weekOffset = 0)
         {
             WeekOffset = weekOffset;
@@ -74,7 +77,7 @@ namespace Fryzjer.Pages
                     .Include(h => h.Place)
                     .FirstOrDefaultAsync(h => h.Id == SelectedHairdresserId);
 
-                WeeklySchedule = await GenerateScheduleAsync(SelectedHairdresserId.Value);
+                WeeklySchedule = await _scheduleFactory.GenerateScheduleAsync(SelectedHairdresserId.Value, WeekStartDate);
             }
 
             return Page();
