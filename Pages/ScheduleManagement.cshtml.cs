@@ -90,7 +90,7 @@ namespace Fryzjer.Pages
                 startDate = startDate.AddDays(-1);
             }
 
-            // Generuj harmonogram od poniedziałku do soboty (6 dni), można zmienić na 5 albo 7 zależy ile dni w tygodniu lokal pracuje
+            // Generuje harmonogram od poniedziałku do soboty (6 dni), można zmienić na 5 albo 7 zależy ile dni w tygodniu lokal pracuje
             for (int i = 0; i < 6; i++)
             {
                 var date = startDate.AddDays(i);
