@@ -50,7 +50,7 @@ namespace Fryzjer.Pages
             {
                 var hasher = new PasswordHasher<string>();
                 var result = hasher.VerifyHashedPassword(null, administrator.Password, Password);
-                if (result == PasswordVerificationResult.Success) // Upewnij siê, ¿e has³a s¹ w odpowiednim formacie (np. zahaszowane)
+                if (result == PasswordVerificationResult.Success)
                 {
                     // Zapisanie danych fryzjera w sesji
                     HttpContext.Session.SetString("UserLogin", administrator.Login);
@@ -72,7 +72,7 @@ namespace Fryzjer.Pages
             {
                 var hasher = new PasswordHasher<string>();
                 var result = hasher.VerifyHashedPassword(null, hairdresser.password, Password);
-                if (result == PasswordVerificationResult.Success) // Upewnij siê, ¿e has³a s¹ w odpowiednim formacie (np. zahaszowane)
+                if (result == PasswordVerificationResult.Success)
                 {
                     // Zapisanie danych fryzjera w sesji
                     HttpContext.Session.SetString("UserLogin", hairdresser.login);
@@ -100,6 +100,7 @@ namespace Fryzjer.Pages
                 {
                     // Zapisanie danych klienta w sesji
                     HttpContext.Session.SetString("UserLogin", client.Login);
+                    HttpContext.Session.SetInt32("ClientId", client.Id); // Dodanie ID klienta jako Int32 do sesji
                     HttpContext.Session.SetString("UserType", "Client");
 
                     return RedirectToPage("/Index"); // Przekierowanie na stronê g³ówn¹ klienta

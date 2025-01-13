@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Controllers", "Controllers", "{4068534C-654A-4065-90C8-B2C7B8B75378}"
 	ProjectSection(SolutionItems) = preProject
 		ClientController.cs = ClientController.cs
+		ClientReservationController.cs = ClientReservationController.cs
 		ReservationController.cs = ReservationController.cs
 	EndProjectSection
 EndProject

@@ -3,10 +3,6 @@ using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Fryzjer.Pages.Clients
 {
@@ -20,6 +16,11 @@ namespace Fryzjer.Pages.Clients
         // Harmonogram na kolejny tydzieñ
         public List<DailySchedule> WeeklySchedule2 { get; set; } = new List<DailySchedule>();
 
+        [BindProperty]
+        public string SelectedHour { get; set; }  // Godzina
+        [BindProperty]
+        public string SelectedDate { get; set; }  // Data
+
         public int CurrentWeek { get; set; } = 0;
 
         public ServiceSelectFormModel(FryzjerContext context)
@@ -28,7 +29,7 @@ namespace Fryzjer.Pages.Clients
         }
 
         [BindProperty]
-        public int PlaceId { get; set; }
+        public int? SelectedHairdresserId { get; set; }
 
         [BindProperty]
         public int ServiceId { get; set; }
@@ -36,14 +37,11 @@ namespace Fryzjer.Pages.Clients
         [BindProperty]
         public String? SelectedHairdresserName { get; set; }
 
-        public string SelectedServiceName { get; set; } // Nazwa wybranej us³ugi
-
-
         public string PlaceName { get; set; }
         public List<string> HairdresserNames { get; set; } = new List<string>();
         public List<Service> Services { get; set; } = new List<Service>();
 
-
+        public int? ClientId { get; set; }
 
         [BindProperty]
         public string Date { get; set; }
@@ -51,14 +49,12 @@ namespace Fryzjer.Pages.Clients
         [BindProperty]
         public string Time { get; set; }
 
-        [BindProperty]
-        public string HairdresserName { get; set; }
         public string? ServiceName { get; private set; }
 
         public List<string> GetTimeSlots()
         {
             var timeSlots = new List<string>();
-            for (int hour = 8; hour < 18; hour++) // godziny od 8:00 do 17:45
+            for (int hour = 8; hour < 18; hour++)
             {
                 timeSlots.Add($"{hour}:00");
                 timeSlots.Add($"{hour}:15");
@@ -68,39 +64,90 @@ namespace Fryzjer.Pages.Clients
             return timeSlots;
         }
 
-
-
         public async Task<IActionResult> OnGetAsync(int id, int week = 0, int srv = 0)
         {
-            PlaceId = id;
             ServiceId = srv;
+            ClientId = HttpContext.Session.GetInt32("ClientId");
 
-            // Przypisanie ServiceId do ViewData
-            ViewData["ServiceId"] = ServiceId;
-
-            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == ServiceId);
+            // Pobierz us³ugê z bazy danych
+            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == srv);
             if (service != null)
             {
-                ServiceName = service.Name; // Przypisanie nazwy us³ugi do zmiennej
-                ViewData["ServiceName"] = ServiceName; // Przekazanie do ViewData
-            }
-            else
-            {
-                ServiceName = "Nie znaleziono nazwy us³ugi."; // W przypadku, gdy nie uda³o siê znaleŸæ nazwy us³ugi
+                ViewData["ServiceId"] = ServiceId;
+                ViewData["ServiceName"] = service.Name;
+                ViewData["ServiceDuration"] = service.Duration.ToString(@"hh\:mm");
             }
 
+            // Wczytanie wspólnych danych
+            await LoadDataForServiceAndHairdresser(id, week);
+
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync(int id, int week = 0, int srv = 0)
+        {
+            ServiceId = srv;
+            ViewData["ServiceId"] = ServiceId;
+
+            // Pobierz informacje o us³udze
+            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == srv);
+            if (service != null)
+            {
+                ViewData["ServiceDuration"] = service.Duration.ToString(@"hh\:mm");
+            }
+
+            // Wczytanie wspólnych danych
+            await LoadDataForServiceAndHairdresser(id, week);
+
+
+
+            // Przetwarzanie logiki specyficznej dla POST
+            if (!string.IsNullOrEmpty(SelectedHairdresserName))
+            {
+                var hairdresser = await _context.Hairdresser
+                    .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == SelectedHairdresserName);
+
+                if (hairdresser != null)
+                {
+                    SelectedHairdresserId = hairdresser.Id;
+                    ViewData["HairdresserDetails"] = $"Wybrano fryzjera: {hairdresser.Name} {hairdresser.Surname}";
+
+                    var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
+                    WeeklySchedule1 = await GenerateScheduleAsync(startDate, hairdresser.Id);
+                    WeeklySchedule2 = await GenerateScheduleAsync(startDate.AddDays(7), hairdresser.Id);
+                }
+                else
+                {
+                    ViewData["HairdresserDetails"] = "Nie znaleziono fryzjera.";
+                }
+            }
+
+            return Page();
+        }
+
+        private async Task LoadDataForServiceAndHairdresser(int id, int week)
+        {
+            // Wczytanie us³ugi
+            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == ServiceId);
+            ServiceName = service?.Name ?? "Nie znaleziono nazwy us³ugi.";
+            ViewData["ServiceName"] = ServiceName;
+            
+            if (service != null)
+            {
+                ViewData["ServiceDuration"] = service.Duration.ToString(@"hh\:mm");
+            }
+
+            // Wczytanie miejsca
             var place = await _context.Place.FirstOrDefaultAsync(p => p.Id == id);
-            if (place != null)
-            {
-                PlaceName = place.Name;
-            }
+            PlaceName = place?.Name;
 
+            // Wczytanie fryzjerów
             HairdresserNames = await _context.Specialization
                 .Include(h => h.Hairdresser)
                 .Include(s => s.Service)
                 .Where(h => h.Hairdresser.PlaceId == id)
                 .Where(s => s.Service.Name == ServiceName)
-                .Select(h => h.Hairdresser.Name + " " + h.Hairdresser.Surname)
+                .Select(h => $"{h.Hairdresser.Name} {h.Hairdresser.Surname}")
                 .ToListAsync();
 
             if (!HairdresserNames.Any())
@@ -108,6 +155,7 @@ namespace Fryzjer.Pages.Clients
                 ViewData["Message"] = "Brak fryzjerów dla wybranego salonu.";
             }
 
+            // Wczytanie us³ug
             Services = await _context.Specialization
                 .Include(s => s.Service)
                 .Where(s => s.Hairdresser.PlaceId == id)
@@ -120,114 +168,21 @@ namespace Fryzjer.Pages.Clients
                 ViewData["Message"] = "Brak us³ug dostêpnych dla tego salonu.";
             }
 
-            CurrentWeek = week; // Correctly assign week here
-
+            // Ustawienie aktualnego tygodnia
+            CurrentWeek = week;
             ViewData["SelectedHairdresserName"] = SelectedHairdresserName ?? "Nie wybrano fryzjera.";
-
-            return Page();
         }
-
-
-
-
-        public async Task<IActionResult> OnPostAsync(int id, int week = 0, int srv = 0) {
-
-            ServiceId = srv;
-
-            ViewData["ServiceId"] = ServiceId;
-
-            var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == ServiceId);
-             SelectedServiceName = service?.Name ?? "Nie wybrano us³ugi";
-
-
-            var place = await _context.Place.FirstOrDefaultAsync(p => p.Id == id);
-            if (place != null)
-            {
-                PlaceName = place.Name;
-            }
-
-
-            if (!string.IsNullOrEmpty(SelectedHairdresserName))
-            {
-                ViewData["SelectedHairdresserName"] = SelectedHairdresserName; // Zachowujemy wybór fryzjera
-            }
-
-            // Opcjonalnie: odczytanie szczegó³ów wybranego fryzjera
-            if (!string.IsNullOrEmpty(SelectedHairdresserName))
-            {
-                var hairdresser = await _context.Hairdresser
-                    .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == SelectedHairdresserName);
-
-
-                CurrentWeek = week; // Correctly assign week here
-
-
-                if (hairdresser != null)
-                {
-                    ViewData["HairdresserDetails"] = $"Wybrano fryzjera: {hairdresser.Name} {hairdresser.Surname}";
-
-                    // Generowanie harmonogramu dla wybranego fryzjera
-                    var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1); // +1 to adjust for Monday as the start
-                    WeeklySchedule1 = await GenerateScheduleAsync(startDate, hairdresser.Id); // Bie¿¹cy tydzieñ
-                    WeeklySchedule2 = await GenerateScheduleAsync(startDate.AddDays(7), hairdresser.Id); // Kolejny tydzieñ
-                }
-                else
-                {
-                    ViewData["HairdresserDetails"] = "Nie znaleziono fryzjera.";
-                }
-            }
-
-            return Page(); // Powrót do widoku
-        }
-
-
-
-        public async Task<IActionResult> OnPostReserveAsync()
-        {
-            // Pobranie aktualnego u¿ytkownika (przyk³ad dla Identity)
-            var clientId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Zak³adamy, ¿e NameIdentifier to ClientId
-
-            if (string.IsNullOrEmpty(clientId))
-            {
-                TempData["Error"] = "Nie znaleziono zalogowanego u¿ytkownika.";
-                return RedirectToPage("/Clients/ClientProfile");
-            }
-
-            // SprawdŸ, czy wybrano wszystkie dane
-            if (string.IsNullOrEmpty(Date) || string.IsNullOrEmpty(Time) || ServiceId == 0 || HairdresserName == null)
-            {
-                TempData["Error"] = "Proszê uzupe³niæ wszystkie dane rezerwacji.";
-                return Page();
-            }
-
-            // ZnajdŸ fryzjera na podstawie imienia i nazwiska
-            var hairdresser = await _context.Hairdresser
-                .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == HairdresserName);
-
-            if (hairdresser == null)
-            {
-                TempData["Error"] = "Nie znaleziono wybranego fryzjera.";
-                return Page();
-            }
-
-            // Przekierowanie bez zapisu do bazy
-            TempData["Success"] = "Rezerwacja zosta³a zapisana.";
-            return RedirectToPage("/Clients/ClientProfile");
-        }
-
-
-
 
         private async Task<List<DailySchedule>> GenerateScheduleAsync(DateTime startDate, int hairdresserId)
         {
             var schedule = new List<DailySchedule>();
 
-            for (int i = 0; i < 5; i++) // Tylko dni robocze (poniedzia³ek–pi¹tek)
+            for (int i = 0; i < 5; i++)
             {
                 var date = startDate.AddDays(i);
                 var timeBlocks = new List<TimeBlock>();
 
-                if (date >= DateTime.Now.Date) // Generujemy godziny tylko dla przysz³ych dat
+                if (date >= DateTime.Now.Date)
                 {
                     timeBlocks = await GenerateDailyTimeBlocksAsync(date, hairdresserId);
                 }
@@ -245,16 +200,15 @@ namespace Fryzjer.Pages.Clients
         private async Task<List<TimeBlock>> GenerateDailyTimeBlocksAsync(DateTime date, int hairdresserId)
         {
             var blocks = new List<TimeBlock>();
-            var startTime = new TimeSpan(8, 0, 0); // Start o 08:00
-            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
+            var startTime = new TimeSpan(8, 0, 0);
+            var endTime = new TimeSpan(18, 0, 0);
 
-            // Pobieramy istniej¹ce rezerwacje na dany dzieñ dla danego fryzjera
             var reservations = _context.Reservation
                .Include(r => r.Client)
                .Include(r => r.Service)
                .Where(r => r.date == date && r.HairdresserId == hairdresserId)
-               .ToList()                  // Najpierw pobieramy dane
-               .OrderBy(r => r.time)      // Potem sortujemy w pamiêci
+               .ToList()
+               .OrderBy(r => r.time)
                .ToList();
 
             TimeBlock currentBlock = null;
@@ -267,14 +221,13 @@ namespace Fryzjer.Pages.Clients
                     {
                         blocks.Add(currentBlock);
                     }
-
                     currentBlock = new TimeBlock
                     {
                         StartTime = reservation.time,
                         EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
                         IsReserved = true,
                         ReservationId = reservation.Id,
-                        ClientInfo = $"{reservation.Client?.Name} {reservation.Client?.Surname}\nTel: {reservation.Client?.Phone}",
+                        ClientInfo = "Zarezerwowane",
                         ServiceName = reservation.Service?.Name ?? "Brak us³ugi"
                     };
                 }
@@ -299,7 +252,6 @@ namespace Fryzjer.Pages.Clients
         public List<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
     }
 
-    // Klasa do reprezentowania bloku czasowego
     public class TimeBlock
     {
         public TimeSpan StartTime { get; set; }
@@ -310,5 +262,4 @@ namespace Fryzjer.Pages.Clients
         public int? ReservationId { get; set; }
         public string? ServiceName { get; set; }
     }
-
 }

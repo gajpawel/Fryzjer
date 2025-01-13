@@ -23,11 +23,11 @@
             </select>
         </div>
 
-
         <div class="form-group mb-3">
             <label for="ServiceId" class="form-label">Wybrana usługa:</label>
             <div class="border p-3 bg-light rounded">
                 <p class="mb-0">Usługa: <strong>@ViewData["ServiceName"]</strong></p>
+                <p class="mb-0">Czas trwania: <strong>@ViewData["ServiceDuration"]</strong></p>
             </div>
         </div>
 
@@ -133,12 +133,16 @@ else
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Czy na pewno chcesz zarezerwować godzinę <strong id="modalHour"></strong> w dniu <strong id="modalDate"></strong>?</p>
-                <form id="reservationForm" method="post" asp-page-handler="Reserve">
-                    <input type="hidden" name="Date" id="inputDate" />
-                    <input type="hidden" name="Time" id="inputTime" />
-                    <input type="hidden" name="HairdresserName" value="@ViewData["SelectedHairdresserName"]" />
-                    <button type="submit" class="btn btn-primary">Tak, zarezerwuj</button>
+                <p>Czy na pewno chcesz zarezerwować godzinę <strong id="modalHour">10:30</strong> w dniu <strong id="modalDate">2025-01-15</strong>?</p>
+                <form id="reservationForm" method="post">
+                    <input type="hidden" name="Date" id="inputDate" /> <!-- Ukryte pole na datę -->
+                    <input type="hidden" name="Time" id="inputTime" /> <!-- Ukryte pole na godzinę rozpoczęcia -->
+                    <input type="hidden" name="EndTime" id="inputEndTime" /> <!-- Ukryte pole na godzinę zakończenia -->
+                    <input type="hidden" name="ServiceId" id="inputServiceId" value="@ViewData["ServiceId"]" /> <!-- Przekazanie ID usługi -->
+                    <input type="hidden" name="SelectedHairdresserId" id="inputHairdresserId" value="@Model.SelectedHairdresserId" /> <!-- Przekazanie ID fryzjera -->
+                    <input type="hidden" name="ClientId" id="inputClientId" value="@HttpContext.Session.GetInt32("ClientId")" /> <!-- Przekazanie ID klienta -->
+                    <input type="hidden" id="serviceDuration" value="@ViewData["ServiceDuration"]" />
+                    <button type="submit" class="btn btn-primary" id="confirmReservation">Tak, zarezerwuj</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
                 </form>
             </div>
@@ -148,20 +152,83 @@ else
 
 
 
+
 <script>
-    document.querySelectorAll('.time-slot').forEach(button => {
-        button.addEventListener('click', function () {
-            // Ustawienie danych godziny i daty
-            const selectedHour = this.getAttribute('data-hour');
-            const selectedDate = this.getAttribute('data-date');
+   
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        const timeSlots = document.querySelectorAll('.time-slot');
+        timeSlots.forEach(slot => {
+            slot.addEventListener('click', function () {
+                const selectedHour = this.getAttribute('data-hour');
+                const selectedDate = this.getAttribute('data-date');
 
-            document.getElementById('modalHour').textContent = selectedHour || ''; // Ustaw wartość modalHour
-            document.getElementById('modalDate').textContent = selectedDate || ''; // Ustaw wartość modalDate
+                // Aktualizacja modalu
+                document.getElementById('modalHour').textContent = selectedHour;
+                document.getElementById('modalDate').textContent = selectedDate;
+                document.getElementById('inputDate').value = selectedDate;
+                document.getElementById('inputTime').value = selectedHour;
 
-            // Ustawienie wartości ukrytych inputów
-            document.getElementById('inputDate').value = selectedDate;
-            document.getElementById('inputTime').value = selectedHour;
+                // Obliczanie czasu zakończenia
+                const serviceDuration = document.getElementById('serviceDuration').value || '00:30';
+                const [hours, minutes] = serviceDuration.split(':').map(Number);
+                const durationInMinutes = (hours * 60) + minutes;
+
+                const startDateTime = new Date(`${selectedDate}T${selectedHour}`);
+                const endDateTime = new Date(startDateTime.getTime() + durationInMinutes * 60000);
+                const endTime = endDateTime.toTimeString().slice(0, 5);
+
+                document.getElementById('inputEndTime').value = endTime;
+            });
         });
-    });
 
-</script>
+
+        const reservationForm = document.getElementById('reservationForm');
+        reservationForm.addEventListener('submit', async function (e) {
+            e.preventDefault(); // Zapobiega standardowemu wysłaniu formularza
+
+
+            const serviceDuration = document.getElementById('serviceDuration').value;
+            const [hours, minutes] = serviceDuration.split(':').map(Number);
+            const durationInMinutes = (hours * 60) + minutes;
+
+            // Pobierz wszystkie potrzebne dane
+            const reservationData = {
+                clientId: parseInt(document.getElementById('inputClientId').value),
+                date: document.getElementById('inputDate').value,
+                time: timeToMinutes(document.getElementById('inputTime').value),
+                endTime: document.getElementById('inputEndTime').value,
+                serviceId: parseInt(document.getElementById('inputServiceId').value),
+                hairdresserId: parseInt(document.getElementById('inputHairdresserId').value),
+               serviceDuration: durationInMinutes,
+                status: "O"
+            };
+
+            try {
+                const response = await fetch('/api/ClientReservation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reservationData)
+                });
+
+                if (response.ok) {
+                    alert('Rezerwacja została pomyślnie zapisana!');
+                    window.location.href = '/Clients/ClientProfile';
+                } else {
+                    const errorText = await response.text();
+                    alert('Błąd podczas zapisywania rezerwacji: ' + errorText);
+                }
+            } catch (error) {
+                alert('Wystąpił błąd podczas komunikacji z serwerem: ' + error.message);
+            }
+        });
+
+        // Funkcja pomocnicza do konwersji czasu na minuty
+        function timeToMinutes(timeString) {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+    });
+    </script>
