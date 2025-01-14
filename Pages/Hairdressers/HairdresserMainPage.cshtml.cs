@@ -195,7 +195,6 @@ namespace Fryzjer.Pages.Hairdressers
 
         public IActionResult OnPostDeleteReservation(int reservationId)
         {
-            Debug.WriteLine("ID Rezerwacji: " + reservationId);
             var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
 
             if (reservation != null && (reservation.status == 'O' || reservation.status == 'P')) // Tylko oczekuj¹ce lub potwierdzone
@@ -204,13 +203,23 @@ namespace Fryzjer.Pages.Hairdressers
                 _context.SaveChanges(); // Zapisujemy zmiany w bazie danych
             }
 
+            //Usuñ nastêpn¹ rezerwacjê jeœli to ten sam klient w ci¹gu 15 min i ta sama us³uga
+            var tempId = reservationId+1;
+            var nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+            while (nextReservation != null && reservation != null && nextReservation.ClientId == reservation.ClientId && nextReservation.date == reservation.date && reservation.ServiceId == nextReservation.ServiceId && reservation.time + TimeSpan.FromMinutes(15) >= nextReservation.time)
+            {
+                nextReservation.status = 'A';
+                tempId += 1;
+                reservation = nextReservation;
+                nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+            }
+            _context.SaveChanges();
             // Po anulowaniu, prze³adowujemy stronê, aby zaktualizowaæ widok
             return RedirectToPage();
         }
 
         public IActionResult OnPostConfirmReservation(int reservationId)
         {
-            Debug.WriteLine("ID Rezerwacji: " + reservationId);
             var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
 
             if (reservation != null && (reservation.status == 'O')) // Tylko oczekuj¹ce lub potwierdzone
@@ -219,7 +228,18 @@ namespace Fryzjer.Pages.Hairdressers
                 _context.SaveChanges(); // Zapisujemy zmiany w bazie danych
             }
 
-            // Po anulowaniu, prze³adowujemy stronê, aby zaktualizowaæ widok
+            //PotwierdŸ nastêpn¹ rezerwacjê jeœli to ten sam klient w ci¹gu 15 min i ta sama us³uga
+            var tempId = reservationId + 1;
+            var nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+            while (nextReservation != null && reservation != null && nextReservation.ClientId == reservation.ClientId && nextReservation.date == reservation.date && reservation.ServiceId == nextReservation.ServiceId && reservation.time + TimeSpan.FromMinutes(15) >= nextReservation.time)
+            {
+                nextReservation.status = 'P';
+                tempId += 1;
+                reservation = nextReservation;
+                nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+            }
+            _context.SaveChanges();
+            // Po zatwierdzeniu, prze³adowujemy stronê, aby zaktualizowaæ widok
             return RedirectToPage();
         }
     }

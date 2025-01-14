@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 
 namespace Fryzjer.Pages.Admin
 {
-    public class AccessManagementModel : PageModel
+    public class AccessManagementModel : PageModel //zarz¹dzanie sposobem logowania na konto admina
     {
         private readonly FryzjerContext _context;
         public string UserName { get; private set; } = string.Empty;

@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Fryzjer.Pages.Hairdressers
 {
-    public class EditDescriptionModel : PageModel
+    public class EditDescriptionModel : PageModel //zarz¹dzanie wizytówk¹ fryzjera
     {
         private readonly FryzjerContext _context;
 

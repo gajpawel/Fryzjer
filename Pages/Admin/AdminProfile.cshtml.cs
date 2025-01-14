@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Fryzjer.Pages.Admin
 {
-    public class AdminProfile : PageModel
+    public class AdminProfile : PageModel //strona g³ówna konta admina
     {
         public IActionResult OnPostSchedule()
         {

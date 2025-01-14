@@ -42,7 +42,7 @@ namespace Fryzjer.Pages.Clients
 			if (client == null) return;
 
 			// Pobierz rezerwacje
-			var now = DateTime.Now;
+			var now = DateTime.Now.AddDays(-1);
 
             var reservationsToUpdate = _context.Reservation
                 .Where(r => r.status != 'A' && r.date < now)

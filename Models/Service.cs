@@ -14,6 +14,6 @@ namespace Fryzjer.Models
 		[Required(ErrorMessage = "Cena jest wymagana.")]
 		[Range(0, double.MaxValue, ErrorMessage = "Cena musi być większa lub równa 0.")]
 		public double Price { get; set; }
-        public uint? Color { get; set; } //np. dla białego będzie 0xFFFFFFFF
+        public uint? Color { get; set; } //kolor usługi wyświetlany w harmonogramach - np. dla białego będzie 0xFFFFFFFF
     }
 }

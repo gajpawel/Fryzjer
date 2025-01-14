@@ -39,7 +39,7 @@
             <ul class="list-group">
                 @foreach (var reservation in Model.CurrentReservations)
                 {
-                        @if (Model.previousReservation != null && reservation.date == Model.previousReservation.date && reservation.HairdresserId == Model.previousReservation.HairdresserId && Model.previousReservation.time+ TimeSpan.FromMinutes(15) >= reservation.time)
+                        @if (Model.previousReservation != null && reservation.date == Model.previousReservation.date && reservation.HairdresserId == Model.previousReservation.HairdresserId && Model.previousReservation.ServiceId==reservation.ServiceId && Model.previousReservation.time+ TimeSpan.FromMinutes(15) >= reservation.time)
                     {
                         Model.previousReservation = reservation;
                         continue;

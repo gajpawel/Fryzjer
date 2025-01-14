@@ -16,7 +16,7 @@ namespace Fryzjer.Models
         public Client? Client { get; set; }
 
         [ForeignKey("Hairdresser")]
-        public int HairdresserId { get; set; } /// dla uproszczenia zakładamy że rezerwację obsługuje tylko jeden pracownik
+        public int HairdresserId { get; set; }
         public Hairdresser? Hairdresser { get; set; }
 
         [ForeignKey("Service")]
