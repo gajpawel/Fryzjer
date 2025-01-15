@@ -1,5 +1,6 @@
 using Fryzjer.Data;
 using Fryzjer.Models;
+using Fryzjer.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -7,13 +8,13 @@ namespace Fryzjer.Pages.Admin
 {
     public class AddSalonModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private PlaceRepository _placeRepository;
         private readonly IWebHostEnvironment _environment;
 
         public AddSalonModel(FryzjerContext context, IWebHostEnvironment environment)
         {
-            _context = context;
             _environment = environment;
+            _placeRepository = new PlaceRepository(context);
         }
 
         [BindProperty]
@@ -71,8 +72,8 @@ namespace Fryzjer.Pages.Admin
                 newSalon.photoPath = $"/images/{photoFileName}";
             }
 
-            _context.Place.Add(newSalon);
-            await _context.SaveChangesAsync();
+            _placeRepository.insert(newSalon);
+            _placeRepository.save();
 
             return RedirectToPage("/Admin/Salon/Salon");
         }

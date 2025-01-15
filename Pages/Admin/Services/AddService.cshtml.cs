@@ -3,19 +3,20 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Data;
 using Fryzjer.Models;
 using System.Text.RegularExpressions;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class AddServiceModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private ServiceRepository _serviceRepository;
 
         [BindProperty]
         public Service NewService { get; set; } = new Service();
 
         public AddServiceModel(FryzjerContext context)
         {
-            _context = context;
+            _serviceRepository = new ServiceRepository(context);
         }
 
         public void OnGet()
@@ -39,8 +40,8 @@ namespace Fryzjer.Pages.Admin
             }
 
             // Dodanie nowej us³ugi do bazy danych
-            _context.Service.Add(NewService);
-            _context.SaveChanges();
+            _serviceRepository.insert(NewService);
+            _serviceRepository.save();
 
             return RedirectToPage("/Admin/Services/Services");
         }

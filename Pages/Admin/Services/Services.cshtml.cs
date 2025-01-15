@@ -4,12 +4,13 @@ using Fryzjer.Data;
 using Fryzjer.Models;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class ServicesModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private ServiceRepository _serviceRepository;
 
         [BindProperty]
         public Service NewService { get; set; }
@@ -18,19 +19,19 @@ namespace Fryzjer.Pages.Admin
 
         public ServicesModel(FryzjerContext context)
         {
-            _context = context;
+            _serviceRepository = new ServiceRepository(context);
         }
 
         public async Task OnGetAsync()
         {
             // Pobierz wszystkie us³ugi
-            Services = await _context.Service.ToListAsync();
+            Services = _serviceRepository.getAll();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
             // ZnajdŸ us³ugê po id
-            var service = await _context.Service.FindAsync(id);
+            var service = _serviceRepository.getById(id);
 
             if (service == null)
             {
@@ -39,8 +40,8 @@ namespace Fryzjer.Pages.Admin
             }
 
             // Usuñ us³ugê
-            _context.Service.Remove(service);
-            await _context.SaveChangesAsync();
+            _serviceRepository.deleteById(service.Id);
+            _serviceRepository.save();
 
             // Po usuniêciu przekieruj u¿ytkownika na stronê listy us³ug
             return RedirectToPage();

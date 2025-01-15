@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Models;
 using Fryzjer.Data;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class DeleteEmployeeModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private HairdresserRepository _hairdresserRepository;
 
         public DeleteEmployeeModel(FryzjerContext context)
         {
-            _context = context;
+            _hairdresserRepository = new HairdresserRepository(context);
         }
 
         public Hairdresser Hairdresser { get; set; } = default!;
@@ -23,7 +24,7 @@ namespace Fryzjer.Pages.Admin
                 return NotFound();
             }
 
-            Hairdresser = await _context.Hairdresser.FindAsync(id);
+            Hairdresser = _hairdresserRepository.getById(id.GetValueOrDefault());
 
             if (Hairdresser == null)
             {
@@ -40,12 +41,12 @@ namespace Fryzjer.Pages.Admin
                 return NotFound();
             }
 
-            var hairdresser = await _context.Hairdresser.FindAsync(id);
+            var hairdresser = _hairdresserRepository.getById(id.GetValueOrDefault());
 
             if (hairdresser != null)
             {
-                _context.Hairdresser.Remove(hairdresser);
-                await _context.SaveChangesAsync();
+                _hairdresserRepository.deleteById(hairdresser.Id);
+                _hairdresserRepository.save();
             }
 
             return RedirectToPage("/Admin/Employee/EmployeeManagement");

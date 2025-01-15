@@ -5,39 +5,40 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class SalonModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private PlaceRepository _placeRepository;
 
         // Lista salonów
         public List<Place> Places { get; set; }
 
         public SalonModel(FryzjerContext context)
         {
-            _context = context;
+            _placeRepository = new PlaceRepository(context);
         }
 
         // Metoda GET - ³adowanie listy salonów
         public void OnGet()
         {
             // Pobieramy wszystkie salony, w tym nowe pola photoPath i description
-            Places = _context.Place.ToList();
+            Places = _placeRepository.getAll();
         }
 
         // Metoda POST - usuwanie salonu
         public async Task<IActionResult> OnPostAsync(int id)
         {
             // Szukamy salonu po id
-            var place = await _context.Place.FindAsync(id);
+            var place = _placeRepository.getById(id);
 
             if (place != null)
             {
                 // Usuwamy salon z bazy
-                _context.Place.Remove(place);
-                await _context.SaveChangesAsync();
+                _placeRepository.deleteById(place.Id);
+                _placeRepository.save();
             }
 
             // Po usuniêciu przekierowujemy na stronê z list¹ salonów

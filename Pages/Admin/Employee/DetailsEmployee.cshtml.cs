@@ -3,16 +3,17 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Fryzjer.Models;
 using Fryzjer.Data;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class DetailsEmployeeModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private HairdresserRepository _hairdresserRepository;
 
         public DetailsEmployeeModel(FryzjerContext context)
         {
-            _context = context;
+            _hairdresserRepository = new HairdresserRepository(context);
         }
 
         public Hairdresser Hairdresser { get; set; } = default!;
@@ -24,9 +25,7 @@ namespace Fryzjer.Pages.Admin
                 return NotFound();
             }
 
-            Hairdresser = await _context.Hairdresser
-                .Include(h => h.Place) // Jeœli chcesz równie¿ dane lokalu
-                .FirstOrDefaultAsync(m => m.Id == id);
+            Hairdresser = _hairdresserRepository.getAndIncludePlace(id.GetValueOrDefault());
 
             if (Hairdresser == null)
             {

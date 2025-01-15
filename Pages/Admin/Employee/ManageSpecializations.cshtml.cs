@@ -3,16 +3,21 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Fryzjer.Data;
 using Fryzjer.Models;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class ManageSpecializationsModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private SpecializationRepository _specializationRepository;
+        private HairdresserRepository _hairdresserRepository;
+        private ServiceRepository _serviceRepository;
 
         public ManageSpecializationsModel(FryzjerContext context)
         {
-            _context = context;
+            _specializationRepository = new SpecializationRepository(context);
+            _hairdresserRepository = new HairdresserRepository(context);
+            _serviceRepository = new ServiceRepository(context);
         }
 
         [BindProperty]
@@ -28,18 +33,15 @@ namespace Fryzjer.Pages.Admin
         {
             HairdresserId = hairdresserId;
 
-            Hairdresser = await _context.Hairdresser
-                .FirstOrDefaultAsync(h => h.Id == hairdresserId);
+            Hairdresser = _hairdresserRepository.getById(hairdresserId);
 
             if (Hairdresser == null)
             {
                 return NotFound();
             }
 
-            AvailableServices = await _context.Service.ToListAsync();
-            CurrentSpecializations = await _context.Specialization
-                .Where(s => s.HairdresserId == hairdresserId)
-                .ToListAsync();
+            AvailableServices = _serviceRepository.getAll();
+            CurrentSpecializations = _specializationRepository.getByHairdresserId(hairdresserId);
 
             return Page();
         }
@@ -52,22 +54,22 @@ namespace Fryzjer.Pages.Admin
             }
 
             // Usuñ wszystkie obecne specjalizacje
-            var currentSpecs = await _context.Specialization
-                .Where(s => s.HairdresserId == HairdresserId)
-                .ToListAsync();
-            _context.Specialization.RemoveRange(currentSpecs);
+            var currentSpecs = _specializationRepository.getByHairdresserId(HairdresserId);
+            foreach (var spec in currentSpecs)
+                _specializationRepository.deleteById(spec.Id);
 
             // Dodaj nowe specjalizacje
             foreach (var serviceId in SelectedServices)
             {
-                _context.Specialization.Add(new Specialization
+                Specialization s = new Specialization
                 {
                     HairdresserId = HairdresserId,
                     ServiceId = serviceId
-                });
+                };
+                _specializationRepository.insert(s);
             }
 
-            await _context.SaveChangesAsync();
+            _specializationRepository.save();
 
             return RedirectToPage("/Admin/Employee/EmployeeManagement");
         }

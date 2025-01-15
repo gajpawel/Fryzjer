@@ -1,5 +1,6 @@
 using Fryzjer.Data;
 using Fryzjer.Models;
+using Fryzjer.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -9,12 +10,12 @@ namespace Fryzjer.Pages.Admin
 {
     public class DeleteSalonModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private PlaceRepository _placeRepository;
         private readonly IWebHostEnvironment _environment;
 
         public DeleteSalonModel(FryzjerContext context, IWebHostEnvironment environment)
         {
-            _context = context;
+            _placeRepository = new PlaceRepository(context);
             _environment = environment;
         }
 
@@ -30,7 +31,7 @@ namespace Fryzjer.Pages.Admin
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
-            var salon = await _context.Place.FindAsync(id);
+            var salon = _placeRepository.getById(id);
             if (salon == null)
             {
                 return NotFound();
@@ -48,7 +49,7 @@ namespace Fryzjer.Pages.Admin
 
         public async Task<IActionResult> OnPostAsync(int id)
         {
-            var salon = await _context.Place.FindAsync(id);
+            var salon = _placeRepository.getById(id);
             if (salon == null)
             {
                 return NotFound();
@@ -75,8 +76,8 @@ namespace Fryzjer.Pages.Admin
             }
 
             // Usuñ salon z bazy
-            _context.Place.Remove(salon);
-            await _context.SaveChangesAsync();
+            _placeRepository.deleteById(salon.Id);
+            _placeRepository.save();
 
             return RedirectToPage("/Admin/Salon/Salon");
         }

@@ -3,24 +3,25 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Fryzjer.Data;
 using Fryzjer.Models;
 using System.Text.RegularExpressions;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class EditServiceModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private ServiceRepository _serviceRepository;
 
         [BindProperty]
         public Service EditService { get; set; } = new Service();
 
         public EditServiceModel(FryzjerContext context)
         {
-            _context = context;
+            _serviceRepository = new ServiceRepository(context);
         }
 
         public IActionResult OnGet(int id)
         {
-            EditService = _context.Service.Find(id); // Pobranie istniej¹cej us³ugi na podstawie ID
+            EditService = _serviceRepository.getById(id); // Pobranie istniej¹cej us³ugi na podstawie ID
             if (EditService == null)
             {
                 return RedirectToPage("/Admin/Services/Services"); // Jeœli nie ma takiej us³ugi, przekierowanie do listy us³ug
@@ -46,7 +47,7 @@ namespace Fryzjer.Pages.Admin
             }
 
             // Pobranie us³ugi z bazy na podstawie ID
-            var serviceToUpdate = _context.Service.Find(id);
+            var serviceToUpdate = _serviceRepository.getById(id);
             if (serviceToUpdate == null)
             {
                 return NotFound(); // Jeœli rekord nie istnieje, zwróæ status 404
@@ -57,7 +58,7 @@ namespace Fryzjer.Pages.Admin
             serviceToUpdate.Duration = EditService.Duration;
             serviceToUpdate.Price = EditService.Price;
 
-            _context.SaveChanges(); // Zapisanie zmian
+            _serviceRepository.save(); // Zapisanie zmian
 
             TempData["SuccessMessage"] = "Us³uga zosta³a zaktualizowana pomyœlnie!";
 

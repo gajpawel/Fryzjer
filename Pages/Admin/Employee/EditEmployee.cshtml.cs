@@ -7,15 +7,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class EditEmployeeModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private HairdresserRepository _hairdresserRepository;
+        private PlaceRepository _placeRepository;
         public EditEmployeeModel(FryzjerContext context)
         {
-            _context = context;
+            _hairdresserRepository = new HairdresserRepository(context);
+            _placeRepository = new PlaceRepository(context);
         }
 
         [BindProperty]
@@ -24,14 +27,14 @@ namespace Fryzjer.Pages.Admin
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
-            Hairdresser = await _context.Hairdresser.FirstOrDefaultAsync(h => h.Id == id);
+            Hairdresser = _hairdresserRepository.getById(id);
 
             if (Hairdresser == null)
             {
                 return NotFound();
             }
 
-            Places = await _context.Place.ToListAsync();
+            Places = _placeRepository.getAll();
             return Page();
         }
 
@@ -39,12 +42,11 @@ namespace Fryzjer.Pages.Admin
         {
             if (!ModelState.IsValid)
             {
-                Places = await _context.Place.ToListAsync();
+                Places = _placeRepository.getAll();
                 return Page();
             }
 
-            var existingHairdresser = await _context.Hairdresser
-                .FirstOrDefaultAsync(h => h.Id == Hairdresser.Id);
+            var existingHairdresser = _hairdresserRepository.getById(Hairdresser.Id);
 
             if (existingHairdresser == null)
             {
@@ -66,11 +68,11 @@ namespace Fryzjer.Pages.Admin
 
             try
             {
-                await _context.SaveChangesAsync();
+                _hairdresserRepository.save();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!HairdresserExists(Hairdresser.Id))
+                if (!_hairdresserRepository.exists(Hairdresser.Id))
                 {
                     return NotFound();
                 }
@@ -78,11 +80,6 @@ namespace Fryzjer.Pages.Admin
             }
 
             return RedirectToPage("/Admin/Employee/EmployeeManagement");
-        }
-
-        private bool HairdresserExists(int id)
-        {
-            return _context.Hairdresser.Any(h => h.Id == id);
         }
     }
 

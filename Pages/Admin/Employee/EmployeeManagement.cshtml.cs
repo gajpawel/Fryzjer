@@ -6,16 +6,17 @@ using Fryzjer.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fryzjer.Repositories;
 
 namespace Fryzjer.Pages.Admin
 {
     public class EmployeeManagementModel : PageModel
     {
-        private readonly FryzjerContext _context;
+        private HairdresserRepository _hairdresserRepository;
 
         public EmployeeManagementModel(FryzjerContext context)
         {
-            _context = context;
+            _hairdresserRepository = new HairdresserRepository(context);
         }
 
         // Property to hold the list of hairdressers
@@ -25,7 +26,7 @@ namespace Fryzjer.Pages.Admin
         public async Task<IActionResult> OnGetAsync()
         {
             // Fetch hairdressers from the database or initialize an empty list
-            Hairdressers = await _context.Hairdresser.ToListAsync();
+            Hairdressers = _hairdresserRepository.getAll();
 
             // If Hairdressers is null (although unlikely), initialize an empty list
             if (Hairdressers == null)
