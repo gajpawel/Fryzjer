@@ -43,10 +43,7 @@ namespace Fryzjer.Controllers
                 // Czas trwania usługi (przekazywany z formularza jako liczba minut)
                 int serviceDuration = request.ServiceDuration; // Czas w minutach z formularza
 
-                if (serviceDuration != 60)
-                {
-                    return BadRequest("Czas trwania usługi musi wynosić dokładnie 60 minut.");
-                }
+              
 
                 // Oblicz liczbę rezerwacji na podstawie czasu trwania usługi
                 int numberOfReservations = (int)Math.Ceiling(serviceDuration / 15.0);
