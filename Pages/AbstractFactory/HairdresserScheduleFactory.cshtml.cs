@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Threading.Tasks;
+using static Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel;
+using static Fryzjer.Pages.Admin.RequestsModel;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Fryzjer.Pages.AbstractFactory
 {
@@ -17,6 +20,8 @@ namespace Fryzjer.Pages.AbstractFactory
         private readonly FryzjerContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+        public List<VacationData> VacationHistory { get; set; }
+        
         public HairdresserScheduleFactoryModel(FryzjerContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
@@ -38,9 +43,43 @@ namespace Fryzjer.Pages.AbstractFactory
             var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
             WeeklySchedule1 = GenerateSchedule(startDate, hairdresserId.Value);
             WeeklySchedule2 = GenerateSchedule(startDate.AddDays(7), hairdresserId.Value);
+
+
+
+
+            var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
+
+            var vacationData = _context.Reservation
+                     .Include(r => r.Hairdresser)
+                     .ThenInclude(h => h.Place)
+                     .Where(r => r.ServiceId == vacationService.Id)
+                     .Where(r => r.HairdresserId == hairdresserId)
+                     .ToList();
+
+            var groupedVacationData = vacationData
+                   .GroupBy(r => new { r.date, r.status })
+                   .ToList();
+
+            VacationHistory = new List<VacationData>();
+
+            foreach (var group in groupedVacationData)
+            {
+                var startTime = group.Min(r => r.time);
+                var endTime = group.Max(r => r.time).Add(new TimeSpan(0, 15, 0));
+                var firstRequest = group.First();
+
+                VacationHistory.Add(new VacationData
+                {
+                    date = group.Key.date.ToString("dd-MM-yyyy"),
+                    startTime = startTime.ToString(),
+                    endTime = endTime.ToString(),
+                    status = group.Key.status,
+                });
+            }
         }
 
-        private List<DailySchedule> GenerateSchedule(DateTime startDate, int hairdresserId)
+
+            private List<DailySchedule> GenerateSchedule(DateTime startDate, int hairdresserId)
         {
             var schedule = new List<DailySchedule>();
             for (int i = 0; i < 5; i++) // 5 dni roboczych
@@ -384,7 +423,7 @@ namespace Fryzjer.Pages.AbstractFactory
             }
         }
 
-        private string GetStatusText(char status)
+        public string GetStatusText(char status)
         {
             if (status == 'O') return "Oczekuj¹cy";
             if (status == 'P') return "Potwierdzony";
@@ -499,6 +538,14 @@ namespace Fryzjer.Pages.AbstractFactory
             public string startTime { get; set; }
             public string endTime { get; set; }
             public string type { get; set; }
+        }
+
+        public class VacationData
+        {
+            public string date { get; set; }
+            public string startTime { get; set; }
+            public string endTime { get; set; }
+            public char status { get; set; }
         }
     }
 }

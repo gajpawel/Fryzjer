@@ -233,7 +233,15 @@
                         </tr>
                     </thead>
                     <tbody id="vacationHistory">
-                        <!-- Wypełniane dynamicznie -->
+                        @foreach (var res in Model.VacationHistory)
+                        {
+                            <tr>
+                                <td>@res.date</td>
+                                <td>@res.startTime - @res.endTime</td>
+                                <td>@Model.GetStatusText(res.status)</td>
+                            </tr>
+                        }
+
                     </tbody>
                 </table>
             </div>
@@ -310,18 +318,22 @@
 
     .vacation-o {
         background-color: #fff3cd;
+        color: #333;
     }
 
     .vacation-p {
         background-color: #d4edda;
+        color: #333;
     }
 
     .vacation-a {
         background-color: #f8d7da;
+        color: #333;
     }
 
     .reserved {
         background-color: #e9ecef;
+        color: #333;
     }
 </style>
 

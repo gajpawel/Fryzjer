@@ -79,7 +79,7 @@ namespace Fryzjer.Pages
                     HttpContext.Session.SetInt32("HairdresserId", hairdresser.Id); // Kluczowe dla przekierowania na profil
                     HttpContext.Session.SetString("UserType", "Hairdresser");
 
-                    return RedirectToPage("/Hairdressers/HairdresserMainPage"); // Przekierowanie na panel fryzjera
+                    return RedirectToPage("/Hairdressers/HairdresserProfile"); // Przekierowanie na panel fryzjera
                 }
                 else
                 {

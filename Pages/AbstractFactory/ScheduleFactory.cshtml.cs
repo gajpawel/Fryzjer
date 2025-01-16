@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
 using System;
 using Fryzjer.Models;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Fryzjer.Pages.AbstractFactory
 {
