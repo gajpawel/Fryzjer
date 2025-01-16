@@ -7,7 +7,6 @@ using Fryzjer.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddRazorPages();
 builder.Services.AddControllers(); // Dodaje kontrolery API
 builder.Services.AddSession(options =>
@@ -19,6 +18,8 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddDbContext<FryzjerContext>(options =>
     options.UseSqlite("Data Source=fryzjer.db"));
+
+builder.Services.AddHttpContextAccessor(); // Dodana nowa linia do obs³ugi IHttpContextAccessor
 
 var app = builder.Build();
 
@@ -32,7 +33,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseSession();
 app.UseRouting();
 app.UseAuthorization();
@@ -43,8 +43,9 @@ var routePermissions = new Dictionary<string, PermissionController.UserTypes[]>
     { "/Clients", [PermissionController.UserTypes.Client, PermissionController.UserTypes.Admin] },
     { "/Hairdressers", [PermissionController.UserTypes.Hairdresser, PermissionController.UserTypes.Admin] },
     { "/Admin", [PermissionController.UserTypes.Admin] },
-     { "/Admin/Services/AddService", new [] { PermissionController.UserTypes.Admin } }
+    { "/Admin/Services/AddService", new [] { PermissionController.UserTypes.Admin } }
 };
+
 //rejestracja permisji wykorzystuj¹c middleware
 foreach (var routePermission in routePermissions)
 {
