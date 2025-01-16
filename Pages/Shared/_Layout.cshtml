@@ -39,16 +39,16 @@
                         else if (Context.Session?.GetString("UserType") == "Hairdresser") // Zalogowany fryzjer
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark @(Context.Request.Path == "/Hairdressers/HairdresserMainPage" ? "active" : "")" asp-area="" asp-page="/Hairdressers/HairdresserMainPage">Panel fryzjera</a>
+                                <a class="nav-link text-dark @(Context.Request.Path == "/AbstractFactory/HairdresserScheduleFactory" ? "active" : "")" asp-area="" asp-page="/AbstractFactory/HairdresserScheduleFactory">Panel fryzjera</a>
                             </li>
                         }
                         else if (Context.Session?.GetString("UserType") == "Client") // Zalogowany klient
                         {
-                            
+
                         }
                         else // Niezalogowany użytkownik
                         {
-                            
+
                         }
                     </ul>
                     <ul class="navbar-nav">

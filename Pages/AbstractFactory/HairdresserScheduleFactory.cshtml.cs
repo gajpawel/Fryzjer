@@ -15,13 +15,10 @@ namespace Fryzjer.Pages.AbstractFactory
     public class HairdresserScheduleFactoryModel : ScheduleFactoryModel
     {
         private readonly FryzjerContext _context;
-        // Tabela harmonogramu z blokami czasowymi dla ka¿dego dnia
-        public Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>> ScheduleTable { get; set; }
 
         public HairdresserScheduleFactoryModel(FryzjerContext context)
         {
             _context = context;
-            ScheduleTable = new Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>>();
         }
 
         // Implementacja metody abstrakcyjnej z klasy bazowej
@@ -43,66 +40,68 @@ namespace Fryzjer.Pages.AbstractFactory
             // Oblicz pierwszy dzieñ tygodnia (poniedzia³ek)
             var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
 
-            // Generowanie harmonogramu dla fryzjera
-            ScheduleTable = GenerateSchedule(startDate, hairdresserId.Value);
+            WeeklySchedule1 = GenerateSchedule(startDate, hairdresserId.Value);
+            WeeklySchedule2 = GenerateSchedule(startDate.AddDays(7), hairdresserId.Value);
         }
 
-        /// <summary>
-        /// Generuje harmonogram dla konkretnego fryzjera w okreœlonym tygodniu
-        /// </summary>
-        /// <param name="startDate">Data pocz¹tku tygodnia</param>
-        /// <param name="hairdresserId">ID fryzjera</param>
-        private Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>> GenerateSchedule(DateTime startDate, int hairdresserId)
+        private List<DailySchedule> GenerateSchedule(DateTime startDate, int hairdresserId)
         {
-            // Inicjalizacja s³ownika harmonogramu
-            var schedule = new Dictionary<TimeSpan, Dictionary<DayOfWeek, TimeBlock>>();
-            var startTime = new TimeSpan(8, 0, 0); // Start o 8:00
-            var endTime = new TimeSpan(18, 0, 0); // Koniec o 18:00
-
-            // Inicjalizuj puste bloki dla ka¿dego przedzia³u czasu
-            for (var time = startTime; time < endTime; time = time.Add(new TimeSpan(0, 15, 0)))
+            var schedule = new List<DailySchedule>();
+            for (int i = 0; i < 5; i++)
             {
-                schedule[time] = Enum.GetValues(typeof(DayOfWeek))
-                    .Cast<DayOfWeek>()
-                    .Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday)
-                    .ToDictionary(d => d, d => new TimeBlock
-                    {
-                        StartTime = time,
-                        EndTime = time.Add(new TimeSpan(0, 15, 0)),
-                        IsReserved = false,
-                        BlockClass = "available",
-                        Status = 'N' // N dla normalnego (niezarezerwowanego) bloku
-                    });
+                var date = startDate.AddDays(i);
+                var timeBlocks = new List<TimeBlock>();
+                if (date >= DateTime.Now.Date)
+                {
+                    timeBlocks = GenerateDailyTimeBlocks(date, hairdresserId);
+                }
+                schedule.Add(new DailySchedule
+                {
+                    Date = date,
+                    TimeBlocks = timeBlocks
+                });
             }
+            return schedule;
+        }
 
-            // Pobierz us³ugê "urlop"
+        private List<TimeBlock> GenerateDailyTimeBlocks(DateTime date, int hairdresserId)
+        {
+            var blocks = new List<TimeBlock>();
+            var startTime = new TimeSpan(8, 0, 0);
+            var endTime = new TimeSpan(18, 0, 0);
+
             var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
 
-            // Pobieranie istniej¹cych rezerwacji dla fryzjera w danym tygodniu
             var reservations = _context.Reservation
                 .Include(r => r.Client)
                 .Include(r => r.Service)
-                .Where(r => r.date >= startDate &&
-                           r.date < startDate.AddDays(7) &&
-                           r.HairdresserId == hairdresserId)
-                .OrderBy(r => r.date)
-                .ThenBy(r => r.time)
+                .Where(r => r.date == date && r.HairdresserId == hairdresserId && r.status != 'A')
+                .AsEnumerable()
+                .OrderBy(r => r.time.Hours * 60 + r.time.Minutes)
                 .ToList();
 
-            // Mapowanie rezerwacji na odpowiednie pola w tabeli
+            TimeBlock currentBlock = null;
             foreach (var reservation in reservations)
             {
-                var day = reservation.date.DayOfWeek;
-                var time = reservation.time;
+                bool isVacation = reservation.ServiceId == vacationService?.Id;
+                bool shouldCreateNewBlock = currentBlock == null ||
+                                          reservation.time != currentBlock.EndTime ||
+                                          (!isVacation && currentBlock.ClientId != reservation.ClientId) ||
+                                          currentBlock.ServiceId != reservation.ServiceId;
 
-                if (schedule.ContainsKey(time) && schedule[time].ContainsKey(day))
+                if (shouldCreateNewBlock)
                 {
-                    var displayInfo = "";
-                    var blockClass = "reserved";
-
-                    if (reservation.ServiceId == vacationService?.Id)
+                    if (currentBlock != null)
                     {
-                        // Wyœwietlanie statusu urlopu
+                        blocks.Add(currentBlock);
+                    }
+
+                    string modal = (reservation.status == 'O' && !isVacation) ?
+                        "#manageReservationModal" : "#deleteReservationModal";
+
+                    string clientInfo;
+                    if (isVacation)
+                    {
                         var statusText = reservation.status switch
                         {
                             'O' => "Urlop (oczekuje)",
@@ -110,41 +109,105 @@ namespace Fryzjer.Pages.AbstractFactory
                             'A' => "Urlop (anulowany)",
                             _ => "Urlop"
                         };
-                        displayInfo = statusText;
-                        blockClass = $"vacation-{reservation.status.ToString().ToLower()}";
+                        clientInfo = statusText;
                     }
                     else
                     {
-                        // Standardowa rezerwacja
-                        displayInfo = reservation.Client != null ?
+                        clientInfo = reservation.Client != null ?
                             $"{reservation.Client.Name} {reservation.Client.Surname}\nTel: {reservation.Client.Phone}" :
                             "Zarezerwowane";
                     }
 
-                    schedule[time][day] = new TimeBlock
+                    currentBlock = new TimeBlock
                     {
-                        StartTime = time,
-                        EndTime = time.Add(new TimeSpan(0, 15, 0)),
+                        StartTime = reservation.time,
+                        EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
                         IsReserved = true,
-                        ClientInfo = displayInfo,
-                        ServiceName = reservation.Service?.Name,
-                        ServiceId = reservation.ServiceId,
                         ReservationId = reservation.Id,
-                        BlockClass = blockClass,
-                        Status = reservation.status
+                        ClientId = reservation.ClientId,
+                        ClientInfo = clientInfo,
+                        ServiceId = reservation.ServiceId,
+                        ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
+                        Modal = modal,
+                        Status = reservation.status,
+                        BlockClass = isVacation ? $"vacation-{reservation.status.ToString().ToLower()}" : "reserved"
                     };
+                }
+                else
+                {
+                    currentBlock.EndTime = currentBlock.EndTime.Add(new TimeSpan(0, 15, 0));
                 }
             }
 
-            return schedule;
+            if (currentBlock != null)
+            {
+                blocks.Add(currentBlock);
+            }
+            return blocks;
         }
 
-        /// <summary>
-        /// Obs³uguje ¿¹danie POST dla sk³adania wniosku o urlop
-        /// </summary>
+        public IActionResult OnPostDeleteReservation(int reservationId)
+        {
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+
+            if (reservation != null && (reservation.status == 'O' || reservation.status == 'P'))
+            {
+                reservation.status = 'A';
+                _context.SaveChanges();
+
+                var tempId = reservationId + 1;
+                var nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+
+                while (nextReservation != null &&
+                       reservation != null &&
+                       nextReservation.ClientId == reservation.ClientId &&
+                       nextReservation.date == reservation.date &&
+                       reservation.ServiceId == nextReservation.ServiceId &&
+                       reservation.time + TimeSpan.FromMinutes(15) >= nextReservation.time)
+                {
+                    nextReservation.status = 'A';
+                    tempId += 1;
+                    reservation = nextReservation;
+                    nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+                }
+                _context.SaveChanges();
+            }
+
+            return RedirectToPage();
+        }
+
+        public IActionResult OnPostConfirmReservation(int reservationId)
+        {
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+
+            if (reservation != null && reservation.status == 'O')
+            {
+                reservation.status = 'P';
+                _context.SaveChanges();
+
+                var tempId = reservationId + 1;
+                var nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+
+                while (nextReservation != null &&
+                       reservation != null &&
+                       nextReservation.ClientId == reservation.ClientId &&
+                       nextReservation.date == reservation.date &&
+                       reservation.ServiceId == nextReservation.ServiceId &&
+                       reservation.time + TimeSpan.FromMinutes(15) >= nextReservation.time)
+                {
+                    nextReservation.status = 'P';
+                    tempId += 1;
+                    reservation = nextReservation;
+                    nextReservation = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+                }
+                _context.SaveChanges();
+            }
+
+            return RedirectToPage();
+        }
+
         public IActionResult OnPostVacationRequest(DateTime date, TimeSpan startTime, TimeSpan endTime)
         {
-            // Sprawdzenie czy fryzjer jest zalogowany
             int? hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
             if (hairdresserId == null)
             {
@@ -153,14 +216,12 @@ namespace Fryzjer.Pages.AbstractFactory
 
             try
             {
-                // Pobierz us³ugê "urlop"
                 var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
                 if (vacationService == null)
                 {
                     throw new Exception("Nie znaleziono us³ugi typu urlop w systemie.");
                 }
 
-                // SprawdŸ czy nie ma ju¿ rezerwacji w tym czasie
                 var existingReservations = _context.Reservation
                     .Any(r => r.date == date &&
                              r.HairdresserId == hairdresserId &&
@@ -172,7 +233,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     throw new Exception("Istniej¹ ju¿ rezerwacje w wybranym czasie.");
                 }
 
-                // Tworzenie bloków urlopowych (co 15 minut)
                 var currentTime = startTime;
                 while (currentTime < endTime)
                 {
@@ -180,7 +240,7 @@ namespace Fryzjer.Pages.AbstractFactory
                     {
                         date = date,
                         time = currentTime,
-                        status = 'O', // Oczekuje na potwierdzenie
+                        status = 'O',
                         ClientId = 0,
                         HairdresserId = hairdresserId.Value,
                         ServiceId = vacationService.Id
@@ -195,7 +255,6 @@ namespace Fryzjer.Pages.AbstractFactory
             }
             catch (Exception ex)
             {
-                // W przypadku b³êdu, przekazanie komunikatu do widoku
                 TempData["ErrorMessage"] = ex.Message;
                 return RedirectToPage();
             }

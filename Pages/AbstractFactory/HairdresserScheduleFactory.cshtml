@@ -1,123 +1,212 @@
 ﻿@page
 @model Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel
 @{
-    ViewData["Title"] = "Harmonogram Fryzjera";
+    ViewData["Title"] = "Panel fryzjera";
+    var today = DateTime.Now.Date;
 }
 
 <div class="container mt-4">
-    <h1 class="text-center">Harmonogram</h1>
+    <h1 class="text-center mb-4">Harmonogram</h1>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="?week=@(Model.CurrentWeek - 1)" class="btn btn-outline-primary">Poprzednia</a>
-
-        <!-- Przycisk do składania wniosku urlopowego -->
+    <div class="text-end mb-3">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#vacationModal">
             Wniosek o urlop
         </button>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#historyModal">
+            Historia rezerwacji
+        </button>
+    </div>
 
+    <div class="d-flex justify-content-between mb-3">
+        <a href="?week=@(Model.CurrentWeek - 1)" class="btn btn-outline-primary">Poprzednia</a>
         <a href="?week=@(Model.CurrentWeek + 1)" class="btn btn-outline-primary">Następna</a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table schedule-table">
-            <thead>
-                <tr>
-                    <th>Godzina</th>
-                    @foreach (var day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday))
-                    {
-                        <th>@day.ToString("dddd")</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var time in Model.ScheduleTable.Keys.OrderBy(t => t))
-                {
-                    <tr>
-                        <td class="time-column">@time.ToString(@"HH\:mm")</td>
-                        @foreach (var day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d >= DayOfWeek.Monday && d <= DayOfWeek.Friday))
-                        {
-                            if (Model.ScheduleTable[time].TryGetValue(day, out var block))
-                            {
-                                <td class="@block.BlockClass">
-                                    @if (block.IsReserved)
-                                    {
-                                        <div class="reservation-info">
-                                            @if (block.ServiceName?.ToLower() == "urlop")
-                                            {
-                                                var statusClass = block.Status switch
-                                                {
-                                                    'O' => "text-warning",
-                                                    'P' => "text-success",
-                                                    'A' => "text-danger",
-                                                    _ => ""
-                                                };
-                                                <span class="@statusClass">@block.ClientInfo</span>
-                                            }
-                                            else
-                                            {
-                                                <strong>@Html.Raw(block.ClientInfo?.Replace("\n", "<br />"))</strong>
+    @for (int weekIndex = 0; weekIndex < 2; weekIndex++)
+    {
+        var weeklySchedule = weekIndex == 0 ? Model.WeeklySchedule1 : Model.WeeklySchedule2;
 
-                                                <br />
-                                                <span>@block.ServiceName</span>
-                                            }
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-outline-success w-100" data-bs-toggle="modal" data-bs-target="#reservationModal">
-                                            Wolne
+        <div class="row text-center mb-5">
+            @foreach (var day in weeklySchedule)
+            {
+                <div class="col-md-2 border bg-light mx-2 p-2">
+                    <h5>@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
+                    <ul class="list-unstyled">
+                        @if (day.Date < today)
+                        {
+                            <li>---</li>
+                        }
+                        else
+                        {
+                            var startTime = new TimeSpan(8, 0, 0);
+                            var endTime = new TimeSpan(18, 0, 0);
+
+                            foreach (var block in day.TimeBlocks)
+                            {
+                                while (startTime < block.StartTime)
+                                {
+                                    <li>
+                                        <button class="btn btn-sm btn-success time-slot mb-2"
+                                                data-hour="@($"{startTime.Hours:D2}:{startTime.Minutes:D2}")"
+                                                data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#reservationModal">
+                                            @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
                                         </button>
-                                    }
-                                </td>
+                                    </li>
+                                    startTime = startTime.Add(new TimeSpan(0, 15, 0));
+                                }
+
+                                <li>
+                                    <button class="btn btn-sm mb-2 @(block.Modal == "#manageReservationModal" ? "btn-warning" : "btn-danger") reserved-time-slot"
+                                            data-reservation-id="@block.ReservationId"
+                                            data-bs-toggle="modal"
+                                            data-bs-target=@block.Modal>
+                                        @block.TimeRange<br />
+                                        @Html.Raw(block.ClientInfo?.Replace("\n", "<br />"))<br />
+                                        @block.ServiceName<br />
+                                        @if (block.Modal == "#manageReservationModal" || (block.ServiceName == "urlop" && block.Status == 'O'))
+                                        {
+                                            <b>Oczekuje na akceptację</b>
+                                        }
+                                    </button>
+                                </li>
+
+                                startTime = block.EndTime;
+                            }
+
+                            while (startTime < endTime)
+                            {
+                                <li>
+                                    <button class="btn btn-sm btn-success time-slot mb-2"
+                                            data-hour="@($"{startTime.Hours:D2}:{startTime.Minutes:D2}")"
+                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#reservationModal">
+                                        @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
+                                    </button>
+                                </li>
+                                startTime = startTime.Add(new TimeSpan(0, 15, 0));
                             }
                         }
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                    </ul>
+                </div>
+            }
+        </div>
+    }
 </div>
-
-<!-- Modal do składania wniosku o urlop -->
-<div class="modal fade" id="vacationModal" tabindex="-1" aria-labelledby="vacationModalLabel" aria-hidden="true">
+<!-- Modal do rezerwacji -->
+<div class="modal fade" id="reservationModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="vacationModalLabel">Wniosek o urlop</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Rezerwacja godziny</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form method="post" asp-page-handler="VacationRequest" id="vacationForm">
+                <form id="reservationForm">
                     <div class="mb-3">
-                        <label for="date" class="form-label">Data</label>
-                        <input type="date" class="form-control" id="date" name="date" required
-                               min="@DateTime.Now.ToString("yyyy-MM-dd")">
+                        <label for="clientLogin" class="form-label">Login klienta</label>
+                        <input type="text" class="form-control" id="clientLogin" placeholder="Opcjonalny login klienta">
                     </div>
                     <div class="mb-3">
-                        <label for="startTime" class="form-label">Godzina rozpoczęcia</label>
-                        <select class="form-control" id="startTime" name="startTime" required>
-                            <option value="">Wybierz godzinę</option>
-                            @for (var time = new TimeSpan(8, 0, 0); time < new TimeSpan(18, 0, 0); time = time.Add(new TimeSpan(0, 15, 0)))
+                        <label for="clientName" class="form-label">Imię</label>
+                        <input type="text" class="form-control" id="clientName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientSurname" class="form-label">Nazwisko</label>
+                        <input type="text" class="form-control" id="clientSurname" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientPhone" class="form-label">Numer telefonu</label>
+                        <input type="text" class="form-control" id="clientPhone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clientGender" class="form-label">Płeć</label>
+                        <select class="form-control" id="clientGender" required>
+                            <option value="M">Mężczyzna</option>
+                            <option value="K">Kobieta</option>
+                            <option value="N">Inne</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="service" class="form-label">Usługa</label>
+                        <select class="form-control" id="service" required>
+                            @foreach (var service in Model.Services.Where(s => s.Name.ToLower() != "urlop"))
                             {
-                                <option value="@time.ToString()">@time.ToString(@"HH\:mm")</option>
+                                <option value="@service.Id" data-duration="@service.Duration">
+                                    @service.Name
+                                </option>
                             }
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="endTime" class="form-label">Godzina zakończenia</label>
-                        <select class="form-control" id="endTime" name="endTime" required>
-                            <option value="">Wybierz godzinę</option>
-                            @for (var time = new TimeSpan(8, 0, 0); time <= new TimeSpan(18, 0, 0); time = time.Add(new TimeSpan(0, 15, 0)))
-                            {
-                                <option value="@time.ToString()">@time.ToString(@"HH\:mm")</option>
-                            }
-                        </select>
+                        <label for="reservationStart" class="form-label">Godzina rozpoczęcia</label>
+                        <input type="text" class="form-control" id="reservationStart" readonly>
                     </div>
+                    <div class="mb-3">
+                        <label for="reservationEnd" class="form-label">Godzina zakończenia</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="reservationEnd" readonly>
+                            <button type="button" class="btn btn-secondary" id="changeEndTime">
+                                Zmień
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="reservationDate">
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="submit" form="vacationForm" class="btn btn-primary">Złóż wniosek</button>
+                <button type="button" class="btn btn-primary" id="saveReservation">Zarezerwuj</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do zarządzania rezerwacją -->
+<div class="modal fade" id="manageReservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Co chcesz zrobić z rezerwacją?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Wybierz jedną z dostępnych opcji:
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
+                <form method="post" asp-page-handler="DeleteReservation" id="deleteReservationForm" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="deleteManageReservationId" />
+                    <button type="submit" class="btn btn-danger">Usuń</button>
+                </form>
+                <form method="post" asp-page-handler="ConfirmReservation" id="confirmReservationForm" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="confirmReservationId" />
+                    <button type="submit" class="btn btn-success">Zaakceptuj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do potwierdzenia anulowania rezerwacji -->
+<div class="modal fade" id="deleteReservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Potwierdź anulowanie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz anulować tę rezerwację?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form method="post" asp-page-handler="DeleteReservation" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="deleteReservationId" />
+                    <button type="submit" class="btn btn-danger">Tak</button>
+                </form>
             </div>
         </div>
     </div>
@@ -148,15 +237,15 @@
         text-align: center;
     }
 
-    .vacation-o { /* Oczekujący */
+    .vacation-o {
         background-color: #fff3cd;
     }
 
-    .vacation-p { /* Potwierdzony */
+    .vacation-p {
         background-color: #d4edda;
     }
 
-    .vacation-a { /* Anulowany */
+    .vacation-a {
         background-color: #f8d7da;
     }
 
@@ -165,38 +254,199 @@
     }
 </style>
 
-<script>
-    // Walidacja godzin w formularzu urlopu
-    document.getElementById('startTime')?.addEventListener('change', function () {
-        const startTime = this.value;
-        const endTimeSelect = document.getElementById('endTime');
-        const endTimeOptions = endTimeSelect.options;
+@section Scripts {
+    <script>
+        let selectedDate, selectedHour;
 
-        for (let i = 0; i < endTimeOptions.length; i++) {
-            endTimeOptions[i].disabled = endTimeOptions[i].value <= startTime && endTimeOptions[i].value !== "";
+        // Obsługa autouzupełniania danych klienta
+        document.getElementById('clientLogin')?.addEventListener('blur', async () => {
+            const login = document.getElementById('clientLogin').value;
+            const genderSelect = document.getElementById('clientGender');
+
+            if (!login) {
+                document.getElementById('clientName').value = '';
+                document.getElementById('clientSurname').value = '';
+                document.getElementById('clientPhone').value = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/client?login=${login}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('clientName').value = data.name;
+                    document.getElementById('clientSurname').value = data.surname;
+                    document.getElementById('clientPhone').value = data.phone;
+                    if (data.gender) {
+                        document.getElementById('clientGender').value = data.gender;
+                    }
+                } else {
+                    alert('Podany login nie istnieje w bazie. Wprowadź dane ręcznie lub użyj prawidłowego loginu.');
+                    document.getElementById('clientLogin').value = '';
+                    document.getElementById('clientName').value = '';
+                    document.getElementById('clientSurname').value = '';
+                    document.getElementById('clientPhone').value = '';
+                }
+            } catch (error) {
+                console.error('Błąd podczas wyszukiwania klienta:', error);
+                alert('Wystąpił błąd podczas wyszukiwania klienta. Spróbuj ponownie później.');
+            }
+        });
+
+        // Obsługa wyboru terminu
+        document.querySelectorAll('.time-slot').forEach(button => {
+            button.addEventListener('click', function () {
+                selectedDate = this.getAttribute('data-date');
+                selectedHour = this.getAttribute('data-hour');
+
+                document.getElementById('reservationDate').value = selectedDate;
+                document.getElementById('reservationStart').value = selectedHour;
+
+                const serviceSelect = document.getElementById('service');
+                const reservationEnd = document.getElementById('reservationEnd');
+
+                const updateEndTime = () => {
+                    const durationString = serviceSelect.options[serviceSelect.selectedIndex].dataset.duration;
+                    const [durationHours, durationMinutes] = durationString.split(':').map(Number);
+                    const durationInMinutes = (durationHours * 60) + durationMinutes;
+
+                    const [startHour, startMinute] = selectedHour.split(':').map(Number);
+                    const totalMinutes = startHour * 60 + startMinute + durationInMinutes;
+
+                    const endHour = Math.floor(totalMinutes / 60);
+                    const endMinute = totalMinutes % 60;
+                    reservationEnd.value = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+                };
+
+                serviceSelect.removeEventListener('change', updateEndTime);
+                serviceSelect.addEventListener('change', updateEndTime);
+                updateEndTime();
+            });
+        });
+
+        // Obsługa przycisku zmiany godziny zakończenia
+        document.getElementById('changeEndTime')?.addEventListener('click', function () {
+            const endTimeInput = document.getElementById('reservationEnd');
+            const currentEndTime = endTimeInput.value;
+            const [hours, minutes] = currentEndTime.split(':').map(Number);
+
+            const selectEndTime = document.createElement('select');
+            selectEndTime.className = 'form-control';
+
+            let time = new Date();
+            time.setHours(hours, minutes);
+            const endOfDay = new Date();
+            endOfDay.setHours(18, 0);
+
+            while (time <= endOfDay) {
+                const option = document.createElement('option');
+                option.value = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+                option.text = option.value;
+                if (option.value === currentEndTime) {
+                    option.selected = true;
+                }
+                selectEndTime.appendChild(option);
+                time.setMinutes(time.getMinutes() + 15);
+            }
+
+            endTimeInput.parentNode.replaceChild(selectEndTime, endTimeInput);
+            selectEndTime.id = 'reservationEnd';
+        });
+
+        // Funkcja sprawdzająca nakładanie się rezerwacji
+        async function checkTimeOverlap(date, startTime, endTime) {
+            try {
+                const response = await fetch(`/api/reservation/check-overlap?date=${date}&startTime=${startTime}&endTime=${endTime}`);
+                if (!response.ok) {
+                    return "Godziny usług nakładają się na siebie";
+                }
+                return null;
+            } catch (error) {
+                console.error('Błąd podczas sprawdzania nakładania się godzin:', error);
+                return "Wystąpił błąd podczas sprawdzania dostępności godzin";
+            }
         }
 
-        if (endTimeSelect.value <= startTime) {
-            endTimeSelect.value = "";
-        }
-    });
+        // Obsługa zapisu rezerwacji
+        document.getElementById('saveReservation')?.addEventListener('click', async () => {
+            const clientLogin = document.getElementById('clientLogin').value;
+            const clientName = document.getElementById('clientName').value;
+            const clientSurname = document.getElementById('clientSurname').value;
+            const clientPhone = document.getElementById('clientPhone').value;
+            const clientGender = document.getElementById('clientGender').value;
+            const serviceId = document.getElementById('service').value;
+            const reservationStart = document.getElementById('reservationStart').value;
+            const reservationEnd = document.getElementById('reservationEnd').value;
 
-    // Walidacja formularza przed wysłaniem
-    document.getElementById('vacationForm')?.addEventListener('submit', function (e) {
-        const date = document.getElementById('date').value;
-        const startTime = document.getElementById('startTime').value;
-        const endTime = document.getElementById('endTime').value;
+            if (!clientName || !clientSurname || !clientPhone || !clientGender || !serviceId || !reservationStart || !reservationEnd) {
+                alert('Wypełnij wszystkie wymagane pola!');
+                return;
+            }
 
-        if (!date || !startTime || !endTime) {
-            e.preventDefault();
-            alert('Wypełnij wszystkie pola!');
-            return;
-        }
+            if (clientLogin) {
+                try {
+                    const checkResponse = await fetch(`/api/client?login=${clientLogin}`);
+                    if (!checkResponse.ok) {
+                        alert('Podany login nie istnieje w bazie. Usuń login lub użyj prawidłowego.');
+                        return;
+                    }
+                } catch (error) {
+                    alert('Wystąpił błąd podczas weryfikacji loginu. Spróbuj ponownie później.');
+                    return;
+                }
+            }
 
-        if (startTime >= endTime) {
-            e.preventDefault();
-            alert('Godzina zakończenia musi być późniejsza niż godzina rozpoczęcia!');
-            return;
-        }
-    });
-</script>
+            // Sprawdź nakładanie się godzin
+            const overlapError = await checkTimeOverlap(selectedDate, reservationStart, reservationEnd);
+            if (overlapError) {
+                alert(overlapError);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/reservation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: selectedDate,
+                        hour: reservationStart,
+                        endHour: reservationEnd,
+                        client: {
+                            login: clientLogin || null,
+                            name: clientName,
+                            surname: clientSurname,
+                            phone: clientPhone,
+                            gender: clientGender
+                        },
+                        serviceId: serviceId
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Rezerwacja została zapisana.');
+                    location.reload();
+                } else {
+                    const errorText = await response.text();
+                    alert('Wystąpił błąd przy tworzeniu rezerwacji: ' + errorText);
+                }
+            } catch (error) {
+                alert('Wystąpił błąd podczas tworzenia rezerwacji: ' + error);
+            }
+        });
+
+        // Obsługa ID rezerwacji w modalach
+        document.addEventListener("DOMContentLoaded", function () {
+            const modalButtons = document.querySelectorAll('button[data-bs-toggle="modal"]');
+            modalButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const reservationId = this.getAttribute('data-reservation-id');
+                    if (reservationId) {
+                        document.getElementById('deleteManageReservationId').value = reservationId;
+                        document.getElementById('confirmReservationId').value = reservationId;
+                        document.getElementById('deleteReservationId').value = reservationId;
+                    }
+                });
+            });
+        });
+    </script>
+}
