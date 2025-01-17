@@ -22,7 +22,7 @@ namespace Fryzjer.Data
         public DbSet<Fryzjer.Models.Service> Service { get; set; } = default!;
         public DbSet<Fryzjer.Models.Specialization> Specialization { get; set; } = default!;
         public DbSet<Fryzjer.Models.Administrator> Administrator { get; set; } = default!;
-
+        public object Vacation { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

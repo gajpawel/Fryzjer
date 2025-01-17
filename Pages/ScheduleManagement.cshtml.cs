@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Fryzjer.Data;
-using Fryzjer.Pages.AbstractFactory;
+using Fryzjer.Pages.AbstractFactory; // Importowanie przestrzeni nazw
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,13 +16,13 @@ namespace Fryzjer.Pages
     {
         private readonly FryzjerContext _context;
         private readonly ILogger<ScheduleManagementModel> _logger;
-        private readonly ScheduleFactory _scheduleFactory;
+        private readonly AdminScheduleFactory _scheduleFactory;
 
         public ScheduleManagementModel(FryzjerContext context, ILogger<ScheduleManagementModel> logger)
         {
             _context = context;
             _logger = logger;
-            _scheduleFactory = new ClientScheduleFactory(this, context);
+            _scheduleFactory = new AdminScheduleFactory(this, context); // Użycie nowej fabryki
         }
 
         [BindProperty(SupportsGet = true)]
