@@ -26,7 +26,8 @@ namespace Fryzjer.Controllers
             {
                 client.Name,
                 client.Surname,
-                client.Phone
+                client.Phone,
+                Gender = client.Gender
             });
         }
     }

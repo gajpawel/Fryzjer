@@ -8,9 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Threading.Tasks;
-using static Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel;
-using static Fryzjer.Pages.Admin.RequestsModel;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Fryzjer.Pages.AbstractFactory
 {
@@ -21,7 +18,8 @@ namespace Fryzjer.Pages.AbstractFactory
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public List<VacationData> VacationHistory { get; set; }
-        
+        public List<Service> HairdresserServices { get; set; }
+
         public HairdresserScheduleFactoryModel(FryzjerContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
@@ -38,27 +36,30 @@ namespace Fryzjer.Pages.AbstractFactory
             }
 
             CurrentWeek = week;
-            Services = _context.Service.ToList();
+
+            // Pobierz tylko us³ugi przypisane do danego fryzjera
+            var hairdresserServices = _context.Specialization
+                .Where(s => s.HairdresserId == hairdresserId)
+                .Include(s => s.Service)
+                .Select(s => s.Service)
+                .ToList();
 
             var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
             WeeklySchedule1 = GenerateSchedule(startDate, hairdresserId.Value);
             WeeklySchedule2 = GenerateSchedule(startDate.AddDays(7), hairdresserId.Value);
 
-
-
-
             var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
 
             var vacationData = _context.Reservation
-                     .Include(r => r.Hairdresser)
-                     .ThenInclude(h => h.Place)
-                     .Where(r => r.ServiceId == vacationService.Id)
-                     .Where(r => r.HairdresserId == hairdresserId)
-                     .ToList();
+                .Include(r => r.Hairdresser)
+                .ThenInclude(h => h.Place)
+                .Where(r => r.ServiceId == vacationService.Id)
+                .Where(r => r.HairdresserId == hairdresserId)
+                .ToList();
 
             var groupedVacationData = vacationData
-                   .GroupBy(r => new { r.date, r.status })
-                   .ToList();
+                .GroupBy(r => new { r.date, r.status })
+                .ToList();
 
             VacationHistory = new List<VacationData>();
 
@@ -66,23 +67,21 @@ namespace Fryzjer.Pages.AbstractFactory
             {
                 var startTime = group.Min(r => r.time);
                 var endTime = group.Max(r => r.time).Add(new TimeSpan(0, 15, 0));
-                var firstRequest = group.First();
 
                 VacationHistory.Add(new VacationData
                 {
                     date = group.Key.date.ToString("dd-MM-yyyy"),
-                    startTime = startTime.ToString(),
-                    endTime = endTime.ToString(),
+                    startTime = startTime.ToString(@"hh\:mm"),
+                    endTime = endTime.ToString(@"hh\:mm"),
                     status = group.Key.status,
                 });
             }
         }
 
-
-            private List<DailySchedule> GenerateSchedule(DateTime startDate, int hairdresserId)
+        private List<DailySchedule> GenerateSchedule(DateTime startDate, int hairdresserId)
         {
             var schedule = new List<DailySchedule>();
-            for (int i = 0; i < 5; i++) // 5 dni roboczych
+            for (int i = 0; i < 5; i++)
             {
                 var date = startDate.AddDays(i);
                 var timeBlocks = new List<TimeBlock>();
@@ -113,18 +112,61 @@ namespace Fryzjer.Pages.AbstractFactory
                 .ToList();
 
             TimeBlock currentBlock = null;
+            TimeBlock currentVacationBlock = null;
+
             foreach (var reservation in reservations)
             {
                 if (reservation.status == 'A')
                     continue;
 
                 bool isVacation = reservation.ServiceId == vacationService?.Id;
-                bool shouldCreateNewBlock = currentBlock == null ||
-                                        reservation.time != currentBlock.EndTime ||
-                                        (!isVacation && currentBlock.ClientId != reservation.ClientId) ||
-                                        currentBlock.ServiceId != reservation.ServiceId;
 
-                if (shouldCreateNewBlock)
+                if (isVacation)
+                {
+                    if (currentVacationBlock == null ||
+                        reservation.time != currentVacationBlock.EndTime ||
+                        currentVacationBlock.Status != reservation.status)
+                    {
+                        if (currentVacationBlock != null)
+                        {
+                            blocks.Add(currentVacationBlock);
+                        }
+
+                        var statusText = reservation.status switch
+                        {
+                            'O' => "Urlop (oczekuje)",
+                            'P' => "Urlop (potwierdzony)",
+                            'A' => "Urlop (anulowany)",
+                            'Z' => "Urlop (zakoñczony)",
+                            _ => "Urlop"
+                        };
+
+                        currentVacationBlock = new TimeBlock
+                        {
+                            StartTime = reservation.time,
+                            EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
+                            IsReserved = true,
+                            ReservationId = reservation.Id,
+                            ClientId = reservation.ClientId,
+                            ClientInfo = statusText,
+                            ServiceId = reservation.ServiceId,
+                            ServiceName = "Urlop",
+                            Modal = reservation.status == 'O' ? "#manageReservationModal" : "#deleteReservationModal",
+                            Status = reservation.status,
+                            BlockClass = $"vacation-{reservation.status.ToString().ToLower()}"
+                        };
+                    }
+                    else
+                    {
+                        currentVacationBlock.EndTime = reservation.time.Add(new TimeSpan(0, 15, 0));
+                    }
+                    continue;
+                }
+
+                if (currentBlock == null ||
+                    reservation.time != currentBlock.EndTime ||
+                    currentBlock.ClientId != reservation.ClientId ||
+                    currentBlock.ServiceId != reservation.ServiceId)
                 {
                     if (currentBlock != null)
                     {
@@ -134,31 +176,7 @@ namespace Fryzjer.Pages.AbstractFactory
                     string modal = "#deleteReservationModal";
                     if (reservation.status == 'O')
                     {
-                        modal = isVacation ? "#vacationRequestModal" : "#manageReservationModal";
-                    }
-
-                    string clientInfo;
-                    string blockClass;
-
-                    if (isVacation)
-                    {
-                        var statusText = reservation.status switch
-                        {
-                            'O' => "Urlop (oczekuje)",
-                            'P' => "Urlop (potwierdzony)",
-                            'A' => "Urlop (anulowany)",
-                            'Z' => "Urlop (zakoñczony)",
-                            _ => "Urlop"
-                        };
-                        clientInfo = statusText;
-                        blockClass = $"vacation-{reservation.status.ToString().ToLower()}";
-                    }
-                    else
-                    {
-                        clientInfo = reservation.Client != null ?
-                            $"{reservation.Client.Name} {reservation.Client.Surname}\nTel: {reservation.Client.Phone}" :
-                            "Zarezerwowane";
-                        blockClass = "reserved";
+                        modal = "#manageReservationModal";
                     }
 
                     currentBlock = new TimeBlock
@@ -168,12 +186,14 @@ namespace Fryzjer.Pages.AbstractFactory
                         IsReserved = true,
                         ReservationId = reservation.Id,
                         ClientId = reservation.ClientId,
-                        ClientInfo = clientInfo,
+                        ClientInfo = reservation.Client != null ?
+                            $"{reservation.Client.Name} {reservation.Client.Surname}\nTel: {reservation.Client.Phone}" :
+                            "Zarezerwowane",
                         ServiceId = reservation.ServiceId,
                         ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
                         Modal = modal,
                         Status = reservation.status,
-                        BlockClass = blockClass
+                        BlockClass = "reserved"
                     };
                 }
                 else
@@ -185,6 +205,10 @@ namespace Fryzjer.Pages.AbstractFactory
             if (currentBlock != null)
             {
                 blocks.Add(currentBlock);
+            }
+            if (currentVacationBlock != null)
+            {
+                blocks.Add(currentVacationBlock);
             }
 
             return blocks;
@@ -213,7 +237,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     return BadRequest("Nie znaleziono us³ugi typu urlop w systemie.");
                 }
 
-                // Konwersja czasów z walidacj¹
                 TimeSpan startTime, endTime;
                 if (request.type == "fullDay")
                 {
@@ -239,7 +262,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     }
                 }
 
-                // Sprawdzamy istniej¹ce rezerwacje tylko w celach informacyjnych
                 var existingReservations = await _context.Reservation
                     .Include(r => r.Client)
                     .Where(r => r.date == request.date &&
@@ -253,7 +275,6 @@ namespace Fryzjer.Pages.AbstractFactory
                                (r.time <= startTime && r.time.Add(TimeSpan.FromMinutes(15)) > startTime))
                     .ToList();
 
-                // Pobierz lub utwórz systemowego klienta dla urlopów
                 var systemClient = await _context.Client
                     .FirstOrDefaultAsync(c => c.Name == "System" && c.Surname == "Urlop");
 
@@ -270,7 +291,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     await _context.SaveChangesAsync();
                 }
 
-                // Tworzenie rezerwacji urlopowych
                 var newReservations = new List<Reservation>();
                 var currentTime = startTime;
 
@@ -280,7 +300,7 @@ namespace Fryzjer.Pages.AbstractFactory
                     {
                         date = request.date,
                         time = currentTime,
-                        status = 'O', // Status oczekuj¹cy
+                        status = 'O',
                         ClientId = systemClient.Id,
                         HairdresserId = hairdresserId.Value,
                         ServiceId = vacationService.Id
@@ -302,7 +322,8 @@ namespace Fryzjer.Pages.AbstractFactory
                     success = true,
                     message = message,
                     hasConflicts = conflictingReservations.Any(),
-                    conflicts = conflictingReservations.Select(r => new {
+                    conflicts = conflictingReservations.Select(r => new
+                    {
                         time = r.time.ToString(@"hh\:mm"),
                         clientName = $"{r.Client?.Name} {r.Client?.Surname}"
                     }).ToList()
@@ -310,12 +331,11 @@ namespace Fryzjer.Pages.AbstractFactory
             }
             catch (Exception ex)
             {
-                var innerException = ex.InnerException != null ? $"\nInner exception: {ex.InnerException.Message}" : "";
-                return BadRequest($"Wyst¹pi³ b³¹d podczas tworzenia urlopu: {ex.Message}{innerException}");
+                return BadRequest($"Wyst¹pi³ b³¹d podczas tworzenia urlopu: {ex.Message}");
             }
         }
 
-        public async Task<IActionResult> OnPostConfirmVacationAsync(int vacationId)
+        public async Task<IActionResult> OnPostCancelVacationRequestAsync([FromBody] VacationRequest request)
         {
             var hairdresserId = HttpContext.Session.GetInt32("HairdresserId");
             if (hairdresserId == null)
@@ -325,40 +345,31 @@ namespace Fryzjer.Pages.AbstractFactory
 
             try
             {
-                var vacationReservation = await _context.Reservation
-                    .FirstOrDefaultAsync(r => r.Id == vacationId);
+                var vacationService = await _context.Service
+                    .FirstOrDefaultAsync(s => s.Name.ToLower() == "urlop");
 
-                if (vacationReservation == null)
+                if (vacationService == null)
                 {
-                    return NotFound("Nie znaleziono rezerwacji urlopowej.");
+                    return BadRequest("Nie znaleziono us³ugi typu urlop w systemie.");
                 }
 
-                // Pobierz wszystkie rezerwacje urlopowe z tego samego dnia
-                var allVacationReservations = await _context.Reservation
-                    .Where(r => r.date == vacationReservation.date &&
+                var vacationRequests = await _context.Reservation
+                    .Where(r => r.date == request.date &&
                            r.HairdresserId == hairdresserId &&
-                           r.ServiceId == vacationReservation.ServiceId &&
-                           r.status == 'O')
+                           r.ServiceId == vacationService.Id &&
+                           r.status == 'O' &&
+                           r.time >= TimeSpan.Parse(request.startTime) &&
+                           r.time < TimeSpan.Parse(request.endTime))
                     .ToListAsync();
 
-                // Pobierz koliduj¹ce rezerwacje klientów
-                var conflictingReservations = await _context.Reservation
-                    .Where(r => r.date == vacationReservation.date &&
-                           r.HairdresserId == hairdresserId &&
-                           r.ServiceId != vacationReservation.ServiceId &&
-                           r.status == 'P')
-                    .ToListAsync();
-
-                // Anuluj koliduj¹ce rezerwacje
-                foreach (var reservation in conflictingReservations)
+                if (!vacationRequests.Any())
                 {
-                    reservation.status = 'A';
+                    return NotFound("Nie znaleziono oczekuj¹cego wniosku urlopowego.");
                 }
 
-                // PotwierdŸ rezerwacje urlopowe
-                foreach (var vacation in allVacationReservations)
+                foreach (var vacation in vacationRequests)
                 {
-                    vacation.status = 'P';
+                    vacation.status = 'A';
                 }
 
                 await _context.SaveChangesAsync();
@@ -366,7 +377,7 @@ namespace Fryzjer.Pages.AbstractFactory
             }
             catch (Exception ex)
             {
-                return BadRequest($"Wyst¹pi³ b³¹d podczas potwierdzania urlopu: {ex.Message}");
+                return BadRequest($"Wyst¹pi³ b³¹d podczas anulowania wniosku: {ex.Message}");
             }
         }
 
@@ -388,7 +399,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     return NotFound("Nie znaleziono us³ugi typu urlop");
                 }
 
-                // Najpierw pobieramy dane
                 var vacationsData = await _context.Reservation
                     .Where(r => r.HairdresserId == hairdresserId &&
                            r.ServiceId == vacationService.Id)
@@ -402,7 +412,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     })
                     .ToListAsync();
 
-                // Nastêpnie mapujemy status na tekst
                 var vacations = vacationsData.Select(v => new
                 {
                     date = v.date,
@@ -425,12 +434,16 @@ namespace Fryzjer.Pages.AbstractFactory
 
         public string GetStatusText(char status)
         {
-            if (status == 'O') return "Oczekuj¹cy";
-            if (status == 'P') return "Potwierdzony";
-            if (status == 'A') return "Anulowany";
-            if (status == 'Z') return "Zakoñczony";
-            return "Nieznany";
+            return status switch
+            {
+                'O' => "Oczekuj¹cy",
+                'P' => "Potwierdzony",
+                'A' => "Anulowany",
+                'Z' => "Zakoñczony",
+                _ => "Nieznany"
+            };
         }
+
         public IActionResult OnPostDeleteReservation(int reservationId)
         {
             var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
@@ -509,7 +522,6 @@ namespace Fryzjer.Pages.AbstractFactory
                     return NotFound("Nie znaleziono rezerwacji urlopowej.");
                 }
 
-                // Pobierz wszystkie rezerwacje urlopowe z tego samego dnia
                 var allVacationReservations = await _context.Reservation
                     .Where(r => r.date == vacationReservation.date &&
                            r.HairdresserId == hairdresserId &&
@@ -517,7 +529,6 @@ namespace Fryzjer.Pages.AbstractFactory
                            r.status == 'P')
                     .ToListAsync();
 
-                // Oznacz rezerwacje urlopowe jako zakoñczone
                 foreach (var vacation in allVacationReservations)
                 {
                     vacation.status = 'Z';
