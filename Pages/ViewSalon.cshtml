@@ -104,6 +104,13 @@
 										</a>
 									</th>
 								}
+								else {
+								<th>
+									<a href="@Url.Page("/Login", new { id = Model.SalonId, srv = serv.Id })" class="btn btn-dark mx-auto d-block">
+										Zamów Usługę
+									</a>
+								</th>
+								}
 							</tr>
 						}
 					</table>

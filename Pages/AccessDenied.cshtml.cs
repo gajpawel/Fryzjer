@@ -8,5 +8,11 @@ namespace Fryzjer.Pages
         public void OnGet()
         {
         }
+
+        public int GetRandom()
+        {
+            Random random = new Random();
+            return random.Next(1, 6);
+        }
     }
 }
