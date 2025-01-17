@@ -12,15 +12,15 @@ namespace Fryzjer.Models
         public char status { get; set; } // O - oczekuje na akceptację, P - potwierdzona, Z - zakończona A - anulowana
 
         [ForeignKey("Client")]
-        public int ClientId { get; set; }
+        public int? ClientId { get; set; }
         public Client? Client { get; set; }
 
         [ForeignKey("Hairdresser")]
-        public int HairdresserId { get; set; }
+        public int? HairdresserId { get; set; }
         public Hairdresser? Hairdresser { get; set; }
 
         [ForeignKey("Service")]
-        public int ServiceId { get; set; }
+        public int? ServiceId { get; set; }
         public Service? Service { get; set; }
     }
 }

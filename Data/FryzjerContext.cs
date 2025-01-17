@@ -49,14 +49,14 @@ namespace Fryzjer.Data
                 .HasOne(r => r.Hairdresser)
                 .WithMany()
                 .HasForeignKey(r => r.HairdresserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Reservation - Service
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.Service)
                 .WithMany()
                 .HasForeignKey(r => r.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Hairdresser - Place
             modelBuilder.Entity<Hairdresser>()

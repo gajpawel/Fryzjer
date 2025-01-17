@@ -38,6 +38,22 @@ namespace Fryzjer.Repositories
             {
                 return;
             }
+
+            // Znajdujemy wszystkie rezerwacje, które spełniają warunki
+            var reservationsToUpdate = _context.Reservation
+                .Where(r => r.HairdresserId == hairdresser.Id && r.status != 'Z')
+                .ToList();
+
+            // Aktualizujemy status na 'A'
+            foreach (var reservation in reservationsToUpdate)
+            {
+                reservation.status = 'A';
+            }
+
+            // Zapisujemy zmiany w bazie danych
+            this.save();
+
+            // Usuwamy fryzjera
             _context.Hairdresser.Remove(hairdresser);
         }
         public void insert(Models.Hairdresser entity)

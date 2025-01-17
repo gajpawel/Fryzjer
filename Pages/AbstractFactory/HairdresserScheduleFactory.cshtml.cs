@@ -147,7 +147,7 @@ namespace Fryzjer.Pages.AbstractFactory
                             EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
                             IsReserved = true,
                             ReservationId = reservation.Id,
-                            ClientId = reservation.ClientId,
+                            ClientId = reservation.ClientId.GetValueOrDefault(),
                             ClientInfo = statusText,
                             ServiceId = reservation.ServiceId,
                             ServiceName = "Urlop",
@@ -185,7 +185,7 @@ namespace Fryzjer.Pages.AbstractFactory
                         EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
                         IsReserved = true,
                         ReservationId = reservation.Id,
-                        ClientId = reservation.ClientId,
+                        ClientId = reservation.ClientId.GetValueOrDefault(),
                         ClientInfo = reservation.Client != null ?
                             $"{reservation.Client.Name} {reservation.Client.Surname}\nTel: {reservation.Client.Phone}" :
                             "Zarezerwowane",

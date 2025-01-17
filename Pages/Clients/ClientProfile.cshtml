@@ -46,8 +46,8 @@
                     }
                     <li class="list-group-item">
                         <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
-                        <strong>Usługa:</strong> @reservation.Service?.Name<br />
-                        <strong>Fryzjer:</strong> @reservation.Hairdresser?.Name @reservation.Hairdresser?.Surname<br />
+                        <strong>Usługa:</strong> @(reservation.Service!=null ? reservation.Service.Name : "Usługa nieznana")<br />
+                            <strong>Fryzjer:</strong> @(reservation.Hairdresser!=null ? reservation.Hairdresser?.Name+" "+reservation.Hairdresser?.Surname : "Fryzjer nieznany")<br />
                         <strong>Status:</strong>
                         @(reservation.status == 'O' ? "Oczekuje na akceptację" :
                             reservation.status == 'P' ? "Potwierdzona" : "Zakończona")
@@ -105,8 +105,8 @@
                 {
                     <li class="list-group-item">
                         <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
-                        <strong>Usługa:</strong> @reservation.Service?.Name<br />
-                        <strong>Fryzjer:</strong> @reservation.Hairdresser?.Name @reservation.Hairdresser?.Surname<br />
+                        <strong>Usługa:</strong> @(reservation.Service != null ? reservation.Service.Name : "Usługa nieznana")<br />
+                        <strong>Fryzjer:</strong> @(reservation.Hairdresser != null ? reservation.Hairdresser?.Name + " " + reservation.Hairdresser?.Surname : "Fryzjer nieznany")<br />
                         <strong>Status:</strong> @(reservation.status == 'Z' ? "Zakończona" : "Anulowana")
                     </li>
                 }
