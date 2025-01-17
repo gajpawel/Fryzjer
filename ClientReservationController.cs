@@ -33,7 +33,7 @@ namespace Fryzjer.Controllers
                     return BadRequest("Dane rezerwacji są wymagane.");
                 }
 
-                _logger.LogInformation($"Request received: Date={request.Date}, Time={request.Time}, ServiceDuration={request.ServiceDuration}, HairdresserId={request.HairdresserId}");
+                _logger.LogInformation("Request received for creating a reservation.");
 
                 // Walidacja daty
                 if (request.Date < DateTime.Now.Date)
@@ -48,101 +48,65 @@ namespace Fryzjer.Controllers
                     return BadRequest("Id fryzjera jest wymagane.");
                 }
 
-                // Czas trwania usługi (przekazywany z formularza jako liczba minut)
-                int serviceDuration = request.ServiceDuration;
-                if (serviceDuration <= 0)
+                // Czas trwania usługi
+                if (request.ServiceDuration <= 0)
                 {
-                    _logger.LogError("ServiceDuration is invalid or zero.");
+                    _logger.LogError("Invalid service duration.");
                     return BadRequest("Czas trwania usługi musi być większy niż 0 minut.");
                 }
 
-                // Konwersja minut na TimeSpan (początek rezerwacji)
                 TimeSpan startTime = TimeSpan.FromMinutes(request.Time);
-                _logger.LogInformation($"Start time: {startTime}");
-
-                // Tworzymy obiekt TimeSpan z czasu trwania usługi
-                TimeSpan duration = TimeSpan.FromMinutes(serviceDuration);
-                _logger.LogInformation($"Service duration: {duration}");
-
-                // Obliczamy czas zakończenia rezerwacji
+                TimeSpan duration = TimeSpan.FromMinutes(request.ServiceDuration);
                 TimeSpan endTime = startTime.Add(duration);
-                _logger.LogInformation($"End time: {endTime}");
 
-                    // Sprawdzamy, czy w tym czasie istnieje już jakaś rezerwacja dla fryzjera
-                    var overlappingReservations = _context.Reservation
-                        .Where(r => r.HairdresserId == request.HairdresserId &&
-                                    r.date == request.Date)
-                        .AsEnumerable() // Wymusza przetłumaczenie na kod po stronie klienta
-                        .Where(r => (r.time >= startTime && r.time < endTime))
-                        .ToList();
-
-
-                // Jeśli są rezerwacje nakładające się, logujemy szczegóły
-                if (overlappingReservations.Any())
+                TimeSpan workDayEnd = new TimeSpan(18, 0, 0); // 18:00
+                if (endTime > workDayEnd)
                 {
-                    // Logowanie szczegółów wszystkich nakładających się rezerwacji
-                    foreach (var reservation in overlappingReservations)
-                    {
-                        // Wyświetlanie szczegółów w logach
-                        _logger.LogWarning($"Overlapping reservation found: HairdresserId={reservation.HairdresserId}, " +
-                                           $"Date={reservation.date}, Time={reservation.time}, " +
-                                           $"EndTime={reservation.time.Add(TimeSpan.FromMinutes(serviceDuration))}");
-                    }
-
-                    // Logujemy również szczegóły obliczonych czasów
-                    _logger.LogWarning($"Requested Start Time: {startTime}, Requested End Time: {endTime}, " +
-                                       $"Service Duration: {serviceDuration} minutes.");
-
-                    // Wysyłamy szczegóły w odpowiedzi BadRequest
-                    return BadRequest(new
-                    {
-                        Message = "Wybrany czas jest już zarezerwowany. Proszę wybrać inny termin.",
-                        RequestedStartTime = startTime,
-                        RequestedEndTime = endTime,
-                        ServiceDurationMinutes = serviceDuration,
-                        OverlappingReservations = overlappingReservations.Select(r => new
-                        {
-                            r.HairdresserId,
-                            r.date,
-                            r.time,
-                            EndTime = r.time.Add(TimeSpan.FromMinutes(serviceDuration))
-                        })
-                    });
+                    _logger.LogWarning("Requested reservation exceeds workday hours.");
+                    return BadRequest("Czas zakończenia rezerwacji wykracza poza okres pracy. Proszę wybrać wcześniejszy termin.");
                 }
 
-                // Oblicz liczbę rezerwacji na podstawie czasu trwania usługi
-                int numberOfReservations = (int)Math.Ceiling(serviceDuration / 15.0);
-                _logger.LogInformation($"Number of reservations to be created: {numberOfReservations}");
+                // Sprawdzanie, czy istnieją nakładające się rezerwacje
+                var overlappingReservations = _context.Reservation
+                    .Where(r => r.HairdresserId == request.HairdresserId && r.date == request.Date)
+                    .AsEnumerable()
+                    .Where(r => (r.time >= startTime && r.time < endTime))
+                    .ToList();
+
+                if (overlappingReservations.Any())
+                {
+                    _logger.LogWarning("Overlapping reservations detected.");
+                    return BadRequest("Wybrany czas rezerwacji nakłada się na istniejącą rezerwację.");
+                }
+
+                int numberOfReservations = (int)Math.Ceiling(request.ServiceDuration / 15.0);
+                _logger.LogInformation("Creating reservations.");
 
                 for (int i = 0; i < numberOfReservations; i++)
                 {
                     var reservation = new Reservation
                     {
                         date = request.Date,
-                        time = startTime.Add(TimeSpan.FromMinutes(i * 15)), // Każda rezerwacja przesunięta o 15 minut
+                        time = startTime.Add(TimeSpan.FromMinutes(i * 15)),
                         status = request.Status,
                         ClientId = request.ClientId,
-                        HairdresserId = request.HairdresserId.Value, // Używamy .Value, bo HairdresserId jest typu int? (nullable)
+                        HairdresserId = request.HairdresserId.Value,
                         ServiceId = request.ServiceId
                     };
-
-                    _logger.LogInformation($"Adding reservation: {reservation.time}, HairdresserId={reservation.HairdresserId}, ClientId={reservation.ClientId}");
 
                     _context.Reservation.Add(reservation);
                 }
 
                 _context.SaveChanges();
+                _logger.LogInformation("Reservations successfully created.");
                 return Ok("Rezerwacje zostały pomyślnie utworzone.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas tworzenia rezerwacji.");
-                return StatusCode(500, $"Wystąpił błąd podczas tworzenia rezerwacji: {ex.Message}");
+                _logger.LogError("Error while creating reservations.");
+                return StatusCode(500, "Wystąpił błąd podczas tworzenia rezerwacji.");
             }
         }
-
-
-
 
         public class CreateReservationRequest
         {

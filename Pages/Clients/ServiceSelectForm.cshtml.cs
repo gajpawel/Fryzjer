@@ -3,29 +3,27 @@ using Fryzjer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Fryzjer.Pages.AbstractFactory;
 
 namespace Fryzjer.Pages.Clients
 {
     public class ServiceSelectFormModel : PageModel
     {
         private readonly FryzjerContext _context;
+        private readonly IScheduleOperations _scheduleOperations;
 
         // Harmonogram na bie¿¹cy tydzieñ
         public List<DailySchedule> WeeklySchedule1 { get; set; } = new List<DailySchedule>();
 
         // Harmonogram na kolejny tydzieñ
         public List<DailySchedule> WeeklySchedule2 { get; set; } = new List<DailySchedule>();
-
-        [BindProperty]
-        public string SelectedHour { get; set; }  // Godzina
-        [BindProperty]
-        public string SelectedDate { get; set; }  // Data
-
         public int CurrentWeek { get; set; } = 0;
 
         public ServiceSelectFormModel(FryzjerContext context)
         {
             _context = context;
+            var factory = new ClientScheduleFactory(this, context);
+            _scheduleOperations = factory.CreateSchedule();
         }
 
         [BindProperty]
@@ -42,32 +40,17 @@ namespace Fryzjer.Pages.Clients
         public List<Service> Services { get; set; } = new List<Service>();
 
         public int? ClientId { get; set; }
-
-        [BindProperty]
-        public string Date { get; set; }
-
-        [BindProperty]
-        public string Time { get; set; }
-
         public string? ServiceName { get; private set; }
-
-        public List<string> GetTimeSlots()
-        {
-            var timeSlots = new List<string>();
-            for (int hour = 8; hour < 18; hour++)
-            {
-                timeSlots.Add($"{hour}:00");
-                timeSlots.Add($"{hour}:15");
-                timeSlots.Add($"{hour}:30");
-                timeSlots.Add($"{hour}:45");
-            }
-            return timeSlots;
-        }
-
         public async Task<IActionResult> OnGetAsync(int id, int week = 0, int srv = 0)
         {
             ServiceId = srv;
             ClientId = HttpContext.Session.GetInt32("ClientId");
+
+            // Tworzenie fabryki
+            var factory = new ClientScheduleFactory(this, _context);
+
+            // U¿ycie fabryki do utworzenia obiektu operacji na harmonogramie
+            var scheduleOperations = factory.CreateSchedule();
 
             // Pobierz us³ugê z bazy danych
             var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == srv);
@@ -96,30 +79,37 @@ namespace Fryzjer.Pages.Clients
                 ViewData["ServiceDuration"] = service.Duration.ToString(@"hh\:mm");
             }
 
-            // Wczytanie wspólnych danych
-            await LoadDataForServiceAndHairdresser(id, week);
+            var factory = new ClientScheduleFactory(this, _context);
+            var scheduleOperations = factory.CreateSchedule();
 
-
-
-            // Przetwarzanie logiki specyficznej dla POST
-            if (!string.IsNullOrEmpty(SelectedHairdresserName))
+            // Rzutowanie do ClientScheduleOperations, aby uzyskaæ dostêp do specyficznych metod
+            if (scheduleOperations is ClientScheduleOperations clientScheduleOperations)
             {
-                var hairdresser = await _context.Hairdresser
-                    .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == SelectedHairdresserName);
+                // Wczytanie wspólnych danych
+                await LoadDataForServiceAndHairdresser(id, week);
 
-                if (hairdresser != null)
+                // Przetwarzanie logiki specyficznej dla POST
+                if (!string.IsNullOrEmpty(SelectedHairdresserName))
                 {
-                    SelectedHairdresserId = hairdresser.Id;
-                    ViewData["HairdresserDetails"] = $"Wybrano fryzjera: {hairdresser.Name} {hairdresser.Surname}";
+                    var hairdresser = await _context.Hairdresser
+                        .FirstOrDefaultAsync(h => (h.Name + " " + h.Surname) == SelectedHairdresserName);
 
-                    var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
-                    WeeklySchedule1 = await GenerateScheduleAsync(startDate, hairdresser.Id);
-                    WeeklySchedule2 = await GenerateScheduleAsync(startDate.AddDays(7), hairdresser.Id);
+                    if (hairdresser != null)
+                    {
+
+                        SelectedHairdresserId = hairdresser.Id;
+                        var startDate = DateTime.Now.Date.AddDays(7 * week - (int)DateTime.Now.DayOfWeek + 1);
+                        (WeeklySchedule1, WeeklySchedule2) = clientScheduleOperations.CreateSchedule(hairdresser.Id, startDate);
+                    }
+                    else
+                    {
+                        ViewData["HairdresserDetails"] = "Nie znaleziono fryzjera.";
+                    }
                 }
-                else
-                {
-                    ViewData["HairdresserDetails"] = "Nie znaleziono fryzjera.";
-                }
+            }
+            else
+            {
+                ViewData["Error"] = "Nie uda³o siê utworzyæ operacji na harmonogramie.";
             }
 
             return Page();
@@ -131,7 +121,7 @@ namespace Fryzjer.Pages.Clients
             var service = await _context.Service.FirstOrDefaultAsync(s => s.Id == ServiceId);
             ServiceName = service?.Name ?? "Nie znaleziono nazwy us³ugi.";
             ViewData["ServiceName"] = ServiceName;
-            
+
             if (service != null)
             {
                 ViewData["ServiceDuration"] = service.Duration.ToString(@"hh\:mm");
@@ -172,94 +162,5 @@ namespace Fryzjer.Pages.Clients
             CurrentWeek = week;
             ViewData["SelectedHairdresserName"] = SelectedHairdresserName ?? "Nie wybrano fryzjera.";
         }
-
-        private async Task<List<DailySchedule>> GenerateScheduleAsync(DateTime startDate, int hairdresserId)
-        {
-            var schedule = new List<DailySchedule>();
-
-            for (int i = 0; i < 5; i++)
-            {
-                var date = startDate.AddDays(i);
-                var timeBlocks = new List<TimeBlock>();
-
-                if (date >= DateTime.Now.Date)
-                {
-                    timeBlocks = await GenerateDailyTimeBlocksAsync(date, hairdresserId);
-                }
-
-                schedule.Add(new DailySchedule
-                {
-                    Date = date,
-                    TimeBlocks = timeBlocks
-                });
-            }
-
-            return schedule;
-        }
-
-        private async Task<List<TimeBlock>> GenerateDailyTimeBlocksAsync(DateTime date, int hairdresserId)
-        {
-            var blocks = new List<TimeBlock>();
-            var startTime = new TimeSpan(8, 0, 0);
-            var endTime = new TimeSpan(18, 0, 0);
-
-            var reservations = _context.Reservation
-               .Include(r => r.Client)
-               .Include(r => r.Service)
-               .Where(r => r.date == date && r.HairdresserId == hairdresserId)
-               .ToList()
-               .OrderBy(r => r.time)
-               .ToList();
-
-            TimeBlock currentBlock = null;
-
-            foreach (var reservation in reservations)
-            {
-                if (currentBlock == null || reservation.time != currentBlock.EndTime)
-                {
-                    if (currentBlock != null)
-                    {
-                        blocks.Add(currentBlock);
-                    }
-                    currentBlock = new TimeBlock
-                    {
-                        StartTime = reservation.time,
-                        EndTime = reservation.time.Add(new TimeSpan(0, 15, 0)),
-                        IsReserved = true,
-                        ReservationId = reservation.Id,
-                        ClientInfo = "Zarezerwowane",
-                        ServiceName = reservation.Service?.Name ?? "Brak us³ugi"
-                    };
-                }
-                else
-                {
-                    currentBlock.EndTime = currentBlock.EndTime.Add(new TimeSpan(0, 15, 0));
-                }
-            }
-
-            if (currentBlock != null)
-            {
-                blocks.Add(currentBlock);
-            }
-
-            return blocks;
-        }
-    }
-
-    public class DailySchedule
-    {
-        public DateTime Date { get; set; }
-        public List<TimeBlock> TimeBlocks { get; set; } = new List<TimeBlock>();
-    }
-
-    public class TimeBlock
-    {
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
-        public bool IsReserved { get; set; }
-        public string TimeRange => $"{StartTime:hh\\:mm} - {EndTime:hh\\:mm}";
-        public string? ClientInfo { get; set; }
-        public int? ReservationId { get; set; }
-        public string? ServiceName { get; set; }
     }
 }

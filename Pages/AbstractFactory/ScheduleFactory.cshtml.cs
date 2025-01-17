@@ -24,7 +24,7 @@ namespace Fryzjer.Pages.AbstractFactory
     /// Interfejs definiuj¹cy podstawowe operacje na harmonogramie
     public interface IScheduleOperations
     {
-        void CreateSchedule(int userId, DateTime startDate);
+        (List<DailySchedule>, List<DailySchedule>) CreateSchedule(int hairdresserId, DateTime startDate);
         void HandleReservation(int reservationId);
         void HandleVacationRequest(DateTime date, TimeSpan startTime, TimeSpan endTime);
     }
