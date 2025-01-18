@@ -2,7 +2,6 @@
 @model Fryzjer.Pages.AbstractFactory.HairdresserScheduleFactoryModel
 @{
     ViewData["Title"] = "Panel fryzjera";
-    var today = DateTime.Now.Date;
 }
 
 <div class="container mt-4">
@@ -32,19 +31,78 @@
                 <div class="col-md-2 border bg-light mx-2 p-2">
                     <h5>@day.Date.ToString("dddd, dd-MM-yyyy")</h5>
                     <ul class="list-unstyled">
-                        @if (day.Date < today)
-                        {
-                            <li>---</li>
-                        }
-                        else
-                        {
+                        @{
                             var startTime = new TimeSpan(8, 0, 0);
                             var endTime = new TimeSpan(18, 0, 0);
+                            var currentDateTime = DateTime.Now;
 
                             foreach (var block in day.TimeBlocks)
                             {
                                 // Wstaw wolne sloty przed tym blokiem
                                 while (startTime < block.StartTime)
+                                {
+                                    var slotDateTime = day.Date.Add(startTime);
+                                    
+                                    @if (slotDateTime > currentDateTime)
+                                    {
+                                        <li>
+                                            <button class="btn btn-sm btn-success time-slot mb-2"
+                                                    data-hour="@($"{startTime.Hours:D2}:{startTime.Minutes:D2}")"
+                                                    data-date="@day.Date.ToString("yyyy-MM-dd")"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#reservationModal">
+                                                @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
+                                            </button>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <div class="btn btn-sm btn-secondary mb-2 disabled">
+                                                @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
+                                            </div>
+                                        </li>
+                                    }
+
+                                    startTime = startTime.Add(TimeSpan.FromMinutes(15));
+                                }
+                                // Przyciski bloków (rezerwacja/urlop)
+                                <li>
+                                    @if (string.IsNullOrEmpty(block.Modal))
+                                    {
+                                        <div class="btn btn-sm mb-2 @block.BlockClass">
+                                            @block.TimeRange<br />
+                                            @Html.Raw(block.ClientInfo?.Replace("\n", "<br />"))<br />
+                                            @block.ServiceName
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm mb-2 @block.BlockClass"
+                                                data-reservation-id="@block.ReservationId"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="@block.Modal">
+                                            @block.TimeRange<br />
+                                            @Html.Raw(block.ClientInfo?.Replace("\n", "<br />"))<br />
+                                            @block.ServiceName<br />
+                                            @if (block.Modal == "#manageReservationModal"
+                                       || (block.ServiceName.ToLower() == "urlop" && block.Status == 'O'))
+                                            {
+                                                <b>Oczekuje na akceptację</b>
+                                            }
+                                        </button>
+                                    }
+                                </li>
+
+                                startTime = block.EndTime;
+                            }
+
+                            // Wstaw wolne sloty po ostatnim bloku
+                            while (startTime < endTime)
+                            {
+                                var slotDateTime = day.Date.Add(startTime);
+
+                                @if (slotDateTime > currentDateTime)
                                 {
                                     <li>
                                         <button class="btn btn-sm btn-success time-slot mb-2"
@@ -55,46 +113,16 @@
                                             @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
                                         </button>
                                     </li>
-                                    ;
-                                    startTime = startTime.Add(TimeSpan.FromMinutes(15));
+                                }
+                                else
+                                {
+                                    <li>
+                                        <div class="btn btn-sm btn-secondary mb-2 disabled">
+                                            @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
+                                        </div>
+                                    </li>
                                 }
 
-                                // Przyciski bloków (rezerwacja/urlop)
-                                <li>
-                                    <button class="btn btn-sm mb-2
-                                        @(block.Modal == "#manageReservationModal" ? "btn-warning" : "btn-danger")
-                                        @block.BlockClass"
-                                            data-reservation-id="@block.ReservationId"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="@block.Modal">
-                                        @block.TimeRange<br />
-                                        @Html.Raw(block.ClientInfo?.Replace("\n", "<br />"))<br />
-                                        @block.ServiceName<br />
-                                        @if (block.Modal == "#manageReservationModal"
-                                       || (block.ServiceName.ToLower() == "urlop" && block.Status == 'O'))
-                                        {
-                                            <b>Oczekuje na akceptację</b>
-                                        }
-                    </button>
-                </li>
-;
-
-                                startTime = block.EndTime;
-                            }
-
-                            // Wstaw wolne sloty po ostatnim bloku
-                            while (startTime < endTime)
-                            {
-                                <li>
-                                    <button class="btn btn-sm btn-success time-slot mb-2"
-                                            data-hour="@($"{startTime.Hours:D2}:{startTime.Minutes:D2}")"
-                                            data-date="@day.Date.ToString("yyyy-MM-dd")"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#reservationModal">
-                                        @($"{startTime.Hours:D2}:{startTime.Minutes:D2}")
-                                    </button>
-                                </li>
-                                ;
                                 startTime = startTime.Add(TimeSpan.FromMinutes(15));
                             }
                         }
@@ -112,7 +140,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
-
 <!-- ============================
      Modal REZERWACJI USŁUGI
 ============================ -->
@@ -183,6 +210,57 @@
     </div>
 </div>
 
+<!-- ============================
+     Modal ZARZĄDZANIA REZERWACJĄ
+============================ -->
+<div class="modal fade" id="manageReservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rezerwacja oczekująca</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Co chcesz zrobić z tą rezerwacją?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
+                <form method="post" asp-page-handler="DeleteReservation" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="deleteManageReservationId" />
+                    <button type="submit" class="btn btn-danger">Usuń</button>
+                </form>
+                <form method="post" asp-page-handler="ConfirmReservation" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="confirmReservationId" />
+                    <button type="submit" class="btn btn-success">Zaakceptuj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================
+     Modal POTWIERDZENIA ANULACJI
+============================ -->
+<div class="modal fade" id="deleteReservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Potwierdź anulowanie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz anulować tę rezerwację?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form method="post" asp-page-handler="DeleteReservation" style="display:inline;">
+                    <input type="hidden" name="reservationId" id="deleteReservationId" />
+                    <button type="submit" class="btn btn-danger">Tak</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ============================
      Modal WNIOSKU URLOPU
 ============================ -->
@@ -288,34 +366,6 @@
 </div>
 
 <!-- ============================
-     Modal ZARZĄDZANIA REZERWACJĄ
-============================ -->
-<div class="modal fade" id="manageReservationModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Rezerwacja oczekująca</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                Co chcesz zrobić z tą rezerwacją?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
-                <form method="post" asp-page-handler="DeleteReservation" style="display:inline;">
-                    <input type="hidden" name="reservationId" id="deleteManageReservationId" />
-                    <button type="submit" class="btn btn-danger">Usuń</button>
-                </form>
-                <form method="post" asp-page-handler="ConfirmReservation" style="display:inline;">
-                    <input type="hidden" name="reservationId" id="confirmReservationId" />
-                    <button type="submit" class="btn btn-success">Zaakceptuj</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============================
      Modal ZARZĄDZANIA URLOPEM
 ============================ -->
 <div class="modal fade" id="manageVacationModal" tabindex="-1">
@@ -339,30 +389,6 @@
     </div>
 </div>
 
-<!-- ============================
-     Modal POTWIERDZENIA ANULACJI
-============================ -->
-<div class="modal fade" id="deleteReservationModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Potwierdź anulowanie</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                Czy na pewno chcesz anulować tę rezerwację?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
-                <form method="post" asp-page-handler="DeleteReservation" style="display:inline;">
-                    <input type="hidden" name="reservationId" id="deleteReservationId" />
-                    <button type="submit" class="btn btn-danger">Tak</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
     .time-column {
         width: 100px;
@@ -380,28 +406,35 @@
         text-align: center;
     }
 
+    /* Urlopy */
     .vacation-o {
-        background-color: #fff3cd; /* żółte tło */
+        background-color: #e6e6fa; /* jasny fiolet (lavender) */
         color: #333;
     }
 
     .vacation-p {
-        background-color: #d4edda; /* zielone */
+        background-color: #98FB98; /* jasny zielony (pale green) */
         color: #333;
     }
 
     .vacation-z {
-        background-color: #cce5ff; /* niebieskie */
-        color: #333;
+        background-color: #4682B4; /* ciemniejszy niebieski (steel blue) */
+        color: white; /* biały tekst dla lepszej czytelności na ciemnym tle */
     }
 
-    .vacation-a {
-        background-color: #f8d7da; /* różowe? */
-        color: #333;
-    }
-
+    /* Zwykłe rezerwacje */
     .reserved {
-        background-color: #e9ecef; /* szare */
+        background-color: #ffc0cb; /* różowe dla zaakceptowanych */
+        color: #333;
+    }
+
+    .pending {
+        background-color: #fff3cd; /* żółte dla oczekujących */
+        color: #333;
+    }
+
+    .completed {
+        background-color: #cce5ff; /* jasny niebieski dla zakończonych */
         color: #333;
     }
 </style>
@@ -526,36 +559,40 @@
         });
 
         // ===========================================
-        // ZAPIS NOWEJ REZERWACJI (Zwykła usługa)
+        // ZAPIS NOWEJ REZERWACJI
         // ===========================================
         document.getElementById('saveReservation')?.addEventListener('click', async () => {
+            const date = document.getElementById('reservationDate').value;
+            const startTime = document.getElementById('reservationStart').value;
+            
+            // Sprawdź czy termin nie jest w przeszłości
+            const reservationDateTime = new Date(date + 'T' + startTime);
+            if (reservationDateTime < new Date()) {
+                alert('Nie można dokonać rezerwacji na termin w przeszłości.');
+                return;
+            }
+
             const clientLogin = document.getElementById('clientLogin').value;
-            const clientName  = document.getElementById('clientName').value;
+            const clientName = document.getElementById('clientName').value;
             const clientSurname = document.getElementById('clientSurname').value;
-            const clientPhone   = document.getElementById('clientPhone').value;
-            const clientGender  = document.getElementById('clientGender').value;
-            const serviceId     = document.getElementById('service').value;
-            const reservationStart = document.getElementById('reservationStart').value;
-            const reservationEnd   = document.getElementById('reservationEnd').value;
-            const date            = document.getElementById('reservationDate').value;
+            const clientPhone = document.getElementById('clientPhone').value;
+            const clientGender = document.getElementById('clientGender').value;
+            const serviceId = document.getElementById('service').value;
+            const reservationEnd = document.getElementById('reservationEnd').value;
 
             if (!clientName || !clientSurname || !clientPhone || !clientGender ||
-                !serviceId || !reservationStart || !reservationEnd) {
+                !serviceId || !startTime || !reservationEnd) {
                 alert('Wypełnij wszystkie pola wymagane!');
                 return;
             }
 
             try {
-                // Tu ewentualnie API weryfikujące overlap
-                // lub sprawdzenie, czy login klienta istnieje (jak w poprzednim kodzie)
-
-                // Przykładowe wywołanie Twojego API /api/reservation (dostosuj do swojego backendu)
                 const response = await fetch('/api/reservation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         date: date,
-                        hour: reservationStart,
+                        hour: startTime,
                         endHour: reservationEnd,
                         client: {
                             login: clientLogin || null,
