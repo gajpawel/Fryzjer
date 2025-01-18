@@ -16,6 +16,7 @@ namespace Fryzjer.Pages.AbstractFactory
     {
         private readonly FryzjerContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ScheduleFactory _scheduleFactory;
 
         public List<VacationData> VacationHistory { get; set; }
         public List<DailySchedule> WeeklySchedule1 { get; set; } = new List<DailySchedule>();
@@ -27,8 +28,18 @@ namespace Fryzjer.Pages.AbstractFactory
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _scheduleFactory = new ConcreteScheduleFactory(this);
         }
 
+        public class ConcreteScheduleFactory : ScheduleFactory
+        {
+            public ConcreteScheduleFactory(PageModel pageModel) : base(pageModel) { }
+
+            public override IScheduleOperations CreateSchedule()
+            {
+                return _pageModel as IScheduleOperations;
+            }
+        }
         public void OnGet(int week = 0)
         {
             var hairdresserId = _httpContextAccessor.HttpContext?.Session.GetInt32("HairdresserId");
@@ -40,7 +51,6 @@ namespace Fryzjer.Pages.AbstractFactory
 
             CurrentWeek = week;
 
-            // Pobierz us³ugi fryzjera
             var hairdresserServices = _context.Specialization
                 .Where(s => s.HairdresserId == hairdresserId)
                 .Include(s => s.Service)
@@ -49,21 +59,20 @@ namespace Fryzjer.Pages.AbstractFactory
                 .ToList();
             Services = hairdresserServices;
 
-            // Generuj harmonogram (2 tygodnie)
             var startDate = DateTime.Now.Date.AddDays(7 * week);
 
-            // Jeœli jest weekend, poka¿ nastêpny tydzieñ zamiast poprzedniego
             if (startDate.DayOfWeek == DayOfWeek.Saturday || startDate.DayOfWeek == DayOfWeek.Sunday)
             {
                 startDate = startDate.AddDays(((int)DayOfWeek.Monday - (int)startDate.DayOfWeek + 7) % 7);
             }
             else
             {
-                // Dla pozosta³ych dni ustaw na pocz¹tek tygodnia
                 startDate = startDate.AddDays(-(int)startDate.DayOfWeek + (int)DayOfWeek.Monday);
             }
 
-            var (schedule1, schedule2) = CreateSchedule(hairdresserId.Value, startDate);
+            var scheduleOperations = _scheduleFactory.CreateSchedule();
+            var (schedule1, schedule2) = scheduleOperations.CreateSchedule(hairdresserId.Value, startDate);
+
             WeeklySchedule1 = schedule1;
             WeeklySchedule2 = schedule2;
 
@@ -75,7 +84,6 @@ namespace Fryzjer.Pages.AbstractFactory
             var schedule1 = new List<DailySchedule>();
             var schedule2 = new List<DailySchedule>();
 
-            // Generuj pierwszy tydzieñ
             for (int i = 0; i < 5; i++)
             {
                 var date = startDate.AddDays(i);
@@ -86,7 +94,6 @@ namespace Fryzjer.Pages.AbstractFactory
                 });
             }
 
-            // Generuj drugi tydzieñ
             var nextWeek = startDate.AddDays(7);
             for (int i = 0; i < 5; i++)
             {
@@ -100,7 +107,6 @@ namespace Fryzjer.Pages.AbstractFactory
 
             return (schedule1, schedule2);
         }
-
         private List<TimeBlock> GenerateDailyTimeBlocks(DateTime date, int hairdresserId)
         {
             var blocks = new List<TimeBlock>();
@@ -132,7 +138,9 @@ namespace Fryzjer.Pages.AbstractFactory
 
                 if (isVacation)
                 {
-                    if (currentVacationBlock == null || reservation.time != currentVacationBlock.EndTime)
+                    if (currentVacationBlock == null ||
+                        reservation.time != currentVacationBlock.EndTime ||
+                        reservation.status != currentVacationBlock.Status)
                     {
                         if (currentVacationBlock != null)
                             blocks.Add(currentVacationBlock);
@@ -142,7 +150,7 @@ namespace Fryzjer.Pages.AbstractFactory
                         string modal = reservation.status switch
                         {
                             'O' => "#manageVacationModal",
-                            'Z' => "", // Brak modalu dla zakoñczonych
+                            'Z' => "",
                             _ => "#deleteReservationModal"
                         };
 
@@ -192,7 +200,7 @@ namespace Fryzjer.Pages.AbstractFactory
                         string modal = reservation.status switch
                         {
                             'O' => "#manageReservationModal",
-                            'Z' => "", // Brak modalu dla zakoñczonych
+                            'Z' => "",
                             _ => "#deleteReservationModal"
                         };
 
@@ -207,9 +215,9 @@ namespace Fryzjer.Pages.AbstractFactory
 
                         string blockClass = reservation.status switch
                         {
-                            'O' => "pending",      // ¿ó³te
-                            'P' => "reserved",     // ró¿owe
-                            'Z' => "completed",    // niebieskie
+                            'O' => "pending",
+                            'P' => "reserved",
+                            'Z' => "completed",
                             _ => "reserved"
                         };
 
@@ -242,7 +250,6 @@ namespace Fryzjer.Pages.AbstractFactory
 
             return blocks;
         }
-
         private void LoadVacationHistory(int hairdresserId)
         {
             var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
@@ -291,61 +298,6 @@ namespace Fryzjer.Pages.AbstractFactory
 
             OnPostVacationRequestAsync(request).Wait();
         }
-
-        public IActionResult OnPostDeleteReservation(int reservationId)
-        {
-            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
-            if (reservation != null && (reservation.status == 'O' || reservation.status == 'P'))
-            {
-                reservation.status = 'A';
-                _context.SaveChanges();
-
-                var tempId = reservationId + 1;
-                var next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
-                while (next != null &&
-                       next.ClientId == reservation.ClientId &&
-                       next.date == reservation.date &&
-                       next.ServiceId == reservation.ServiceId &&
-                       (next.status == 'O' || next.status == 'P') &&
-                       next.time == reservation.time.Add(TimeSpan.FromMinutes(15)))
-                {
-                    next.status = 'A';
-                    _context.SaveChanges();
-                    tempId++;
-                    reservation = next;
-                    next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
-                }
-            }
-            return RedirectToPage();
-        }
-
-        public IActionResult OnPostConfirmReservation(int reservationId)
-        {
-            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
-            if (reservation != null && reservation.status == 'O')
-            {
-                reservation.status = 'P';
-                _context.SaveChanges();
-
-                var tempId = reservationId + 1;
-                var next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
-                while (next != null &&
-                       next.ClientId == reservation.ClientId &&
-                       next.date == reservation.date &&
-                       next.ServiceId == reservation.ServiceId &&
-                       next.status == 'O' &&
-                       next.time == reservation.time.Add(TimeSpan.FromMinutes(15)))
-                {
-                    next.status = 'P';
-                    _context.SaveChanges();
-                    tempId++;
-                    reservation = next;
-                    next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
-                }
-            }
-            return RedirectToPage();
-        }
-
         [HttpPost]
         public async Task<IActionResult> OnPostVacationRequestAsync([FromBody] VacationRequest request)
         {
@@ -493,20 +445,57 @@ namespace Fryzjer.Pages.AbstractFactory
             }
             return slots;
         }
-
-        /// <summary>
-        /// Zwraca opis statusu na podstawie przekazanego znaku.
-        /// </summary>
-        public string GetStatusText(char status)
+        public IActionResult OnPostDeleteReservation(int reservationId)
         {
-            return status switch
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+            if (reservation != null && (reservation.status == 'O' || reservation.status == 'P'))
             {
-                'O' => "Oczekuj¹cy",
-                'P' => "Potwierdzony",
-                'A' => "Anulowany",
-                'Z' => "Zakoñczony",
-                _ => "Nieznany"
-            };
+                reservation.status = 'A';
+                _context.SaveChanges();
+                var tempId = reservationId + 1;
+                var next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+                while (next != null &&
+                       next.ClientId == reservation.ClientId &&
+                       next.date == reservation.date &&
+                       next.ServiceId == reservation.ServiceId &&
+                       (next.status == 'O' || next.status == 'P') &&
+                       next.time == reservation.time.Add(TimeSpan.FromMinutes(15)))
+                {
+                    next.status = 'A';
+                    _context.SaveChanges();
+                    tempId++;
+                    reservation = next;
+                    next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+                }
+            }
+            return RedirectToPage();
+        }
+
+        public IActionResult OnPostConfirmReservation(int reservationId)
+        {
+            var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
+            if (reservation != null && reservation.status == 'O')
+            {
+                reservation.status = 'P';
+                _context.SaveChanges();
+
+                var tempId = reservationId + 1;
+                var next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+                while (next != null &&
+                       next.ClientId == reservation.ClientId &&
+                       next.date == reservation.date &&
+                       next.ServiceId == reservation.ServiceId &&
+                       next.status == 'O' &&
+                       next.time == reservation.time.Add(TimeSpan.FromMinutes(15)))
+                {
+                    next.status = 'P';
+                    _context.SaveChanges();
+                    tempId++;
+                    reservation = next;
+                    next = _context.Reservation.FirstOrDefault(r => r.Id == tempId);
+                }
+            }
+            return RedirectToPage();
         }
 
         public class VacationRequest
@@ -524,6 +513,18 @@ namespace Fryzjer.Pages.AbstractFactory
             public string startTime { get; set; }
             public string endTime { get; set; }
             public char status { get; set; }
+        }
+
+        public string GetStatusText(char status)
+        {
+            return status switch
+            {
+                'O' => "Oczekuj¹cy",
+                'P' => "Potwierdzony",
+                'A' => "Anulowany",
+                'Z' => "Zakoñczony",
+                _ => "Nieznany"
+            };
         }
     }
 }
