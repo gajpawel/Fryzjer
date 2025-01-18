@@ -8,17 +8,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Azure;
 
 namespace Fryzjer.Pages.AbstractFactory
 {
     [IgnoreAntiforgeryToken]
-    public class HairdresserScheduleFactoryModel : ScheduleFactoryModel, IScheduleOperations
+    public class HairdresserScheduleFactoryModel : PageModel, IScheduleOperations
     {
         private readonly FryzjerContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public List<VacationData> VacationHistory { get; set; }
+        public List<DailySchedule> WeeklySchedule1 { get; set; } = new List<DailySchedule>();
+        public List<DailySchedule> WeeklySchedule2 { get; set; } = new List<DailySchedule>();
+        public int CurrentWeek { get; set; }
+        public List<Service> Services { get; set; } = new List<Service>();
 
         public HairdresserScheduleFactoryModel(FryzjerContext context, IHttpContextAccessor httpContextAccessor)
         {
@@ -26,7 +29,7 @@ namespace Fryzjer.Pages.AbstractFactory
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public override void OnGet(int week = 0)
+        public void OnGet(int week = 0)
         {
             var hairdresserId = _httpContextAccessor.HttpContext?.Session.GetInt32("HairdresserId");
             if (hairdresserId == null)
@@ -102,7 +105,6 @@ namespace Fryzjer.Pages.AbstractFactory
         {
             var blocks = new List<TimeBlock>();
 
-            // Jeœli data jest z poprzedniego tygodnia, zwróæ pust¹ listê
             if (date.Date < DateTime.Now.Date.AddDays(-((int)DateTime.Now.DayOfWeek - 1)))
             {
                 return blocks;
@@ -135,13 +137,7 @@ namespace Fryzjer.Pages.AbstractFactory
                         if (currentVacationBlock != null)
                             blocks.Add(currentVacationBlock);
 
-                        string statusText = reservation.status switch
-                        {
-                            'O' => "Urlop (oczekuje)",
-                            'P' => "Urlop (potwierdzony)",
-                            'Z' => "Urlop (zakoñczony)",
-                            _ => "Urlop"
-                        };
+                        string statusText = GetStatusText(reservation.status);
 
                         string modal = reservation.status switch
                         {
@@ -277,7 +273,6 @@ namespace Fryzjer.Pages.AbstractFactory
             }
         }
 
-        // Implementacja IScheduleOperations
         public void HandleReservation(int reservationId)
         {
             OnPostDeleteReservation(reservationId);
@@ -297,7 +292,6 @@ namespace Fryzjer.Pages.AbstractFactory
             OnPostVacationRequestAsync(request).Wait();
         }
 
-        // Obs³uga rezerwacji
         public IActionResult OnPostDeleteReservation(int reservationId)
         {
             var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
@@ -352,7 +346,6 @@ namespace Fryzjer.Pages.AbstractFactory
             return RedirectToPage();
         }
 
-        // Obs³uga urlopów
         [HttpPost]
         public async Task<IActionResult> OnPostVacationRequestAsync([FromBody] VacationRequest request)
         {
@@ -501,7 +494,21 @@ namespace Fryzjer.Pages.AbstractFactory
             return slots;
         }
 
-        // Klasy pomocnicze
+        /// <summary>
+        /// Zwraca opis statusu na podstawie przekazanego znaku.
+        /// </summary>
+        public string GetStatusText(char status)
+        {
+            return status switch
+            {
+                'O' => "Oczekuj¹cy",
+                'P' => "Potwierdzony",
+                'A' => "Anulowany",
+                'Z' => "Zakoñczony",
+                _ => "Nieznany"
+            };
+        }
+
         public class VacationRequest
         {
             public DateTime startDate { get; set; }
@@ -517,18 +524,6 @@ namespace Fryzjer.Pages.AbstractFactory
             public string startTime { get; set; }
             public string endTime { get; set; }
             public char status { get; set; }
-        }
-
-        public string GetStatusText(char status)
-        {
-            return status switch
-            {
-                'O' => "Oczekuj¹cy",
-                'P' => "Potwierdzony",
-                'A' => "Anulowany",
-                'Z' => "Zakoñczony",
-                _ => "Nieznany"
-            };
         }
     }
 }

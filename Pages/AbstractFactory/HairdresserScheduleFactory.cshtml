@@ -42,7 +42,7 @@
                                 while (startTime < block.StartTime)
                                 {
                                     var slotDateTime = day.Date.Add(startTime);
-                                    
+
                                     @if (slotDateTime > currentDateTime)
                                     {
                                         <li>
@@ -564,7 +564,7 @@
         document.getElementById('saveReservation')?.addEventListener('click', async () => {
             const date = document.getElementById('reservationDate').value;
             const startTime = document.getElementById('reservationStart').value;
-            
+
             // Sprawdź czy termin nie jest w przeszłości
             const reservationDateTime = new Date(date + 'T' + startTime);
             if (reservationDateTime < new Date()) {
