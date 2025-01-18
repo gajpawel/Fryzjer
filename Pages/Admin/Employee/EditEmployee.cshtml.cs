@@ -15,10 +15,13 @@ namespace Fryzjer.Pages.Admin
     {
         private HairdresserRepository _hairdresserRepository;
         private PlaceRepository _placeRepository;
+
+        private readonly FryzjerContext _context;
         public EditEmployeeModel(FryzjerContext context)
         {
             _hairdresserRepository = new HairdresserRepository(context);
             _placeRepository = new PlaceRepository(context);
+            _context = context;
         }
 
         [BindProperty]
@@ -51,6 +54,13 @@ namespace Fryzjer.Pages.Admin
             if (existingHairdresser == null)
             {
                 return NotFound();
+            }
+            
+            //Sprawdzenie czy login nie jest zajêty
+            if(existingHairdresser.login != Hairdresser.login && (_context.Client.Any(c => c.Login == Hairdresser.login) || _context.Hairdresser.Any(h => h.login == Hairdresser.login) || _context.Administrator.Any(c => c.Login == Hairdresser.login))) {
+                Places = _placeRepository.getAll();
+                ModelState.AddModelError("Hairdresser.login", "Ten login jest ju¿ zajêty.");
+                return Page();
             }
 
             // Aktualizuj tylko zmienione pola

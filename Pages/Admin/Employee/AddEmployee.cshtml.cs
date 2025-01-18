@@ -4,6 +4,8 @@ using Fryzjer.Data;
 using Fryzjer.Models;
 using Microsoft.AspNetCore.Identity;
 using Fryzjer.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 
 namespace Fryzjer.Pages.Admin
 {
@@ -12,10 +14,13 @@ namespace Fryzjer.Pages.Admin
         private HairdresserRepository _hairdresserRepository;
         private PlaceRepository _placeRepository;
 
+        private readonly FryzjerContext _context;
+
         public AddEmployeeModel(FryzjerContext context)
         {
             _hairdresserRepository = new HairdresserRepository(context);
             _placeRepository = new PlaceRepository(context);
+            _context = context;
         }
 
         [BindProperty]
@@ -33,6 +38,25 @@ namespace Fryzjer.Pages.Admin
             if (!ModelState.IsValid)
             {
                 Places = _placeRepository.getAll();
+                return Page();
+            }
+
+            if (_context.Hairdresser.Any(h => h.login == NewHairdresser.login))
+            {
+                Places = _placeRepository.getAll();
+                ModelState.AddModelError("NewHairdresser.login", "Ten login jest ju¿ zajêty.");
+                return Page();
+            }
+            if (_context.Client.Any(c => c.Login == NewHairdresser.login))
+            {
+                Places = _placeRepository.getAll();
+                ModelState.AddModelError("NewHairdresser.login", "Ten login jest ju¿ zajêty.");
+                return Page();
+            }
+            if (_context.Administrator.Any(a => a.Login == NewHairdresser.login))
+            {
+                Places = _placeRepository.getAll();
+                ModelState.AddModelError("NewHairdresser.login", "Ten login jest ju¿ zajêty.");
                 return Page();
             }
 

@@ -71,5 +71,14 @@ namespace Fryzjer.Pages
             else
 				return false;
         }
-	}
+
+        public bool CheckManagerSession()
+        {
+            var userType = HttpContext.Session.GetString("UserType");
+            if (userType != null && (userType.Equals("Admin") || userType.Equals("Hairdresser")))
+                return true;
+            else
+                return false;
+        }
+    }
 }
