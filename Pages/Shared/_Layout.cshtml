@@ -32,9 +32,6 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark @(Context.Request.Path == "/Admin/AdminProfile" ? "active" : "")" asp-area="" asp-page="/Admin/AdminProfile">Panel admina</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark @(Context.Request.Path == "/Admin/Clients/ClientIndex" ? "active" : "")" asp-area="" asp-page="/Admin/Clients/ClientIndex">Klienci</a>
-                            </li>
                         }
                         else if (Context.Session?.GetString("UserType") == "Hairdresser") // Zalogowany fryzjer
                         {
@@ -63,19 +60,19 @@
                                         <a class="dropdown-item @(Context.Request.Path == "/Admin/AdminProfile" ? "active" : "")" asp-area="" asp-page="/Admin/AdminProfile">Profil admina</a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item @(Context.Request.Path == "/Admin/Schedule" ? "active" : "")" asp-area="" asp-page="/Admin/Schedule">Harmonogram</a>
+                                        <a class="dropdown-item @(Context.Request.Path == "/ScheduleManagement" ? "active" : "")" asp-area="" asp-page="/ScheduleManagement">Harmonogram</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(Context.Request.Path == "/Admin/Requests" ? "active" : "")" asp-area="" asp-page="/Admin/Requests">Wnioski o urlop</a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item @(Context.Request.Path == "/Admin/EmployeeManagement" ? "active" : "")" asp-area="" asp-page="/Admin/EmployeeManagement">Pracownicy</a>
+                                        <a class="dropdown-item @(Context.Request.Path == "/Admin/Employee/EmployeeManagement" ? "active" : "")" asp-area="" asp-page="/Admin/Employee/EmployeeManagement">Pracownicy</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(Context.Request.Path == "/Admin/Services/Services" ? "active" : "")" asp-area="" asp-page="/Admin/Services/Services">Usługi</a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item @(Context.Request.Path == "/Admin/Salon" ? "active" : "")" asp-area="" asp-page="/Admin/Salon">Lista lokali</a>
+                                        <a class="dropdown-item @(Context.Request.Path == "/Admin/Salon/Salon" ? "active" : "")" asp-area="" asp-page="/Admin/Salon/Salon">Lista lokali</a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item @(Context.Request.Path == "/Admin/AccessManagement" ? "active" : "")" asp-area="" asp-page="/Admin/AccessManagement">Dane logowania</a>

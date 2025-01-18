@@ -11,6 +11,7 @@ namespace Fryzjer.Pages.Hairdressers
         private readonly FryzjerContext _context;
 
         public Hairdresser? Hairdresser { get; set; }
+        public List<Specialization> Specialization { get; set; }
 
         public HairdresserProfileModel(FryzjerContext context)
         {
@@ -37,6 +38,11 @@ namespace Fryzjer.Pages.Hairdressers
                 // Jeœli fryzjer nie istnieje w bazie danych
                 return RedirectToPage("/Index");
             }
+
+            Specialization = _context.Specialization
+                .Include(s => s.Service) // £adowanie powi¹zanej lokalizacji
+                .Where(s => s.Hairdresser.Id == Hairdresser.Id)
+                .ToList();
 
             // Jeœli wszystkie dane s¹ poprawne, wyœwietlenie profilu
             return Page();

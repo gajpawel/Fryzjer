@@ -12,9 +12,9 @@
         @if (!string.IsNullOrEmpty(Model.Hairdresser.photoPath))
         {
             <img src="@Url.Content($"~/{Model.Hairdresser.photoPath}")"
-                 alt="Zdjęcie profilowe"
-                 class="img-thumbnail"
-                 style="max-width: 200px; max-height: 200px;">
+            alt="Zdjęcie profilowe"
+            class="img-thumbnail"
+            style="max-width: 200px; max-height: 200px;">
         }
         else
         {
@@ -23,17 +23,21 @@
     </div>
 
     <dl class="row">
-        <dt class="col-sm-3">Imię</dt>
-        <dd class="col-sm-9">@Model.Hairdresser.Name</dd>
-
-        <dt class="col-sm-3">Nazwisko</dt>
-        <dd class="col-sm-9">@Model.Hairdresser.Surname</dd>
+        <dt class="col-sm-3">Imię i nazwisko</dt>
+        <dd class="col-sm-9">@Model.Hairdresser.Name @Model.Hairdresser.Surname</dd>
 
         <dt class="col-sm-3">Login</dt>
         <dd class="col-sm-9">@Model.Hairdresser.login</dd>
 
         <dt class="col-sm-3">Lokalizacja</dt>
         <dd class="col-sm-9">@(Model.Hairdresser.Place?.Name ?? "Brak przypisanego lokalu")</dd>
+
+        <dt class="col-sm-3">Specjalizacje</dt>
+        <dd class="col-sm-9">
+            @foreach (var specialization in Model.Specialization)
+            {
+                <em> @specialization.Service.Name,</em>
+            } </dd>
     </dl>
 
     <a asp-page="/Hairdressers/EditDescription" class="btn btn-primary mt-3">Zarządzaj treścią wizytówki</a>
