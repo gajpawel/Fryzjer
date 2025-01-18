@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Controllers", "Controllers"
 	ProjectSection(SolutionItems) = preProject
 		ClientController.cs = ClientController.cs
 		ClientReservationController.cs = ClientReservationController.cs
+		HairdresserServiceController.cs = HairdresserServiceController.cs
 		ReservationController.cs = ReservationController.cs
 	EndProjectSection
 EndProject
