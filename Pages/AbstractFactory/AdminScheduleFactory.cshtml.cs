@@ -62,11 +62,13 @@ namespace Fryzjer.Pages.AbstractFactory
                 {
                     var date = startDate.AddDays(i);
 
-                    // Get reservations without ordering first
+                    // Exclude cancelled reservations (status 'A') from the query
                     var reservations = await _context.Reservation
                         .Include(r => r.Client)
                         .Include(r => r.Service)
-                        .Where(r => r.date.Date == date && r.HairdresserId == hairdresserId)
+                        .Where(r => r.date.Date == date &&
+                                   r.HairdresserId == hairdresserId &&
+                                   r.status != 'A')  // Exclude cancelled reservations
                         .ToListAsync();
 
                     // Order in memory
@@ -99,7 +101,9 @@ namespace Fryzjer.Pages.AbstractFactory
                                     ReservationId = reservation.Id,
                                     ClientInfo = $"Urlop ({GetStatusText(reservation.status)})",
                                     ServiceName = "Urlop",
-                                    Status = reservation.status
+                                    Status = reservation.status,
+                                    ClientId = reservation.ClientId ?? 0,
+                                    ServiceId = reservation.ServiceId
                                 };
                             }
                             else
@@ -124,7 +128,9 @@ namespace Fryzjer.Pages.AbstractFactory
                                     ReservationId = reservation.Id,
                                     ClientInfo = FormatClientInfo(reservation),
                                     ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
-                                    Status = reservation.status
+                                    Status = reservation.status,
+                                    ClientId = reservation.ClientId ?? 0,
+                                    ServiceId = reservation.ServiceId
                                 };
                             }
                             else
