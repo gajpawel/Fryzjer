@@ -115,6 +115,10 @@ namespace Fryzjer.Pages.AbstractFactory
 
             foreach (var reservation in reservations)
             {
+
+                if (reservation.status == 'O' && reservation.Service?.Name == "urlop")
+                    continue;
+
                 if (currentBlock == null || reservation.time != currentBlock.EndTime)
                 {
                     if (currentBlock != null)

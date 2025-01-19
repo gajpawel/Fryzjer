@@ -67,17 +67,28 @@ namespace Fryzjer.Controllers
                 }
 
                 // Sprawdzanie, czy istnieją nakładające się rezerwacje
-                var overlappingReservations = _context.Reservation
-                    .Where(r => r.HairdresserId == request.HairdresserId && r.date == request.Date)
-                    .AsEnumerable()
-                    .Where(r => (r.time >= startTime && r.time < endTime))
-                    .ToList();
 
-                if (overlappingReservations.Any())
+            
+                var overlappingReservations = _context.Reservation
+            .Include(r => r.Service) // Dołączenie usługi dla rezerwacji
+            .Where(r => r.HairdresserId == request.HairdresserId && r.date == request.Date)
+            .AsEnumerable()
+            .Where(r => (r.time >= startTime && r.time < endTime))
+            .ToList();
+
+                foreach (var overlapping in overlappingReservations)
                 {
-                    _logger.LogWarning("Overlapping reservations detected.");
-                    return BadRequest("Wybrany czas rezerwacji nakłada się na istniejącą rezerwację.");
+
+
+                    // Jeżeli status to 'O' i nazwa usługi to "urlop", pozwalamy kontynuować
+                    if (overlapping.status == 'O' && overlapping.Service?.Name == "urlop")
+                    {
+                        _logger.LogInformation("Overlapping reservation with status 'O' and service 'urlop' detected. Adding new reservation is allowed.");
+                        continue; // Kontynuujemy proces dodawania rezerwacji
+                    }
                 }
+
+
 
                 int numberOfReservations = (int)Math.Ceiling(request.ServiceDuration / 15.0);
                 _logger.LogInformation("Creating reservations.");
