@@ -49,7 +49,6 @@ namespace Fryzjer.Pages
                 return date.AddDays(WeekOffset * 7);
             }
         }
-
         public async Task<IActionResult> OnGetAsync(int? hairdresserId = null, int weekOffset = 0)
         {
             WeekOffset = weekOffset;
@@ -79,10 +78,61 @@ namespace Fryzjer.Pages
 
                 var operations = _scheduleFactory.CreateSchedule();
                 var (weeklySchedule1, weeklySchedule2) = operations.CreateSchedule(SelectedHairdresserId.Value, WeekStartDate);
-                WeeklySchedule = weeklySchedule1.Concat(weeklySchedule2).ToList();
+
+                // Filtruj tylko dni bieżącego tygodnia
+                WeeklySchedule = MergeConsecutiveBlocks(
+                    weeklySchedule1
+                        .Concat(weeklySchedule2)
+                        .Where(day => day.Date >= WeekStartDate && day.Date < WeekStartDate.AddDays(7))
+                        .ToList()
+                );
             }
 
             return Page();
+        }
+
+
+        private List<DailySchedule> MergeConsecutiveBlocks(List<DailySchedule> schedule)
+        {
+            foreach (var day in schedule)
+            {
+                var mergedBlocks = new List<TimeBlock>();
+                TimeBlock currentBlock = null;
+
+                foreach (var block in day.TimeBlocks.OrderBy(b => b.StartTime))
+                {
+                    if (currentBlock == null)
+                    {
+                        currentBlock = block;
+                    }
+                    else
+                    {
+                        bool canMerge = currentBlock.EndTime == block.StartTime &&
+                                       currentBlock.ServiceId == block.ServiceId &&
+                                       currentBlock.ClientId == block.ClientId &&
+                                       currentBlock.Status == block.Status;
+
+                        if (canMerge)
+                        {
+                            currentBlock.EndTime = block.EndTime;
+                        }
+                        else
+                        {
+                            mergedBlocks.Add(currentBlock);
+                            currentBlock = block;
+                        }
+                    }
+                }
+
+                if (currentBlock != null)
+                {
+                    mergedBlocks.Add(currentBlock);
+                }
+
+                day.TimeBlocks = mergedBlocks;
+            }
+
+            return schedule;
         }
     }
 }

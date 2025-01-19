@@ -148,6 +148,7 @@ namespace Fryzjer.Controllers
                     }
                 }
 
+
                 // Tworzenie rezerwacji w ramach podanego zakresu czasowego (co 15 minut)
                 var currentTime = startTime;
                 while (currentTime < endTime)
@@ -165,6 +166,7 @@ namespace Fryzjer.Controllers
                     _context.Reservation.Add(reservation);
                     currentTime = currentTime.Add(new TimeSpan(0, 15, 0));
                 }
+
 
                 _context.SaveChanges();
                 return Ok(isVacation ? "Wniosek o urlop został złożony." : "Rezerwacja została utworzona.");

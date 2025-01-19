@@ -29,22 +29,22 @@
             <div class="col">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5>
-                        Harmonogram od @Model.WeekStartDate.ToString("dd.MM.yyyy") 
+                        Harmonogram od @Model.WeekStartDate.ToString("dd.MM.yyyy")
                         do @Model.WeekStartDate.AddDays(5).ToString("dd.MM.yyyy")
                     </h5>
                     <div class="btn-group">
-                        <a href="?hairdresserId=@Model.SelectedHairdresserId&weekOffset=@(Model.WeekOffset - 1)" 
+                        <a href="?hairdresserId=@Model.SelectedHairdresserId&weekOffset=@(Model.WeekOffset - 1)"
                            class="btn btn-outline-primary">
                             <i class="bi bi-arrow-left"></i> Poprzedni tydzień
                         </a>
                         @if (Model.WeekOffset != 0)
                         {
-                            <a href="?hairdresserId=@Model.SelectedHairdresserId&weekOffset=0" 
+                            <a href="?hairdresserId=@Model.SelectedHairdresserId&weekOffset=0"
                                class="btn btn-outline-secondary">
                                 Bieżący tydzień
                             </a>
                         }
-                        <a href="?hairdresserId=@Model.SelectedHairdresserId&weekOffset=@(Model.WeekOffset + 1)" 
+                        <a href="?hairdresserId=@Model.SelectedHairdresserId&weekOffset=@(Model.WeekOffset + 1)"
                            class="btn btn-outline-primary">
                             Następny tydzień <i class="bi bi-arrow-right"></i>
                         </a>
@@ -53,71 +53,105 @@
             </div>
         </div>
 
-    {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">@Model.SelectedHairdresser.Name @Model.SelectedHairdresser.Surname</h5>
-                <small class="text-muted">@(Model.SelectedHairdresser.Place?.Name ?? "Brak przypisanego lokalu")</small>
-            </div>
-            <div class="card-body p-2">
-                <div class="schedule-container">
-                    <div class="d-flex">
-                        @foreach (var day in Model.WeeklySchedule)
-                        {
-                            <div class="day-column flex-fill mx-1">
-                                <h6 class="text-center">@day.Date.ToString("dddd, dd-MM")</h6>
-                                <div class="time-slots">
-                                    @foreach (var block in day.TimeBlocks)
-                                    {
-                                        <div class="time-block @(block.IsReserved ? "reserved" : "") p-1 mb-1"
-                                             data-bs-toggle="tooltip"
-                                             data-bs-placement="top"
-                                             title="@(block.IsReserved ? $"{block.ClientInfo}\n{block.ServiceName}" : "Wolny termin")">
-                                            <small>@block.TimeRange</small>
-                                            @if (block.IsReserved)
-                                            {
-                                                <div class="client-info">
-                                                    <small>@block.ServiceName</small>
-                                                </div>
-                                            }
-                                        </div>
-                                    }
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">@Model.SelectedHairdresser.Name @Model.SelectedHairdresser.Surname</h5>
+                    <small class="text-muted">@(Model.SelectedHairdresser.Place?.Name ?? "Brak przypisanego lokalu")</small>
+                </div>
+                <div class="card-body p-2">
+                    <div class="schedule-container">
+                        <div class="d-flex">
+                            @foreach (var day in Model.WeeklySchedule)
+                            {
+                                <div class="day-column flex-fill mx-1">
+                                    <h6 class="text-center">@day.Date.ToString("dddd, dd-MM")</h6>
+                                    <div class="time-slots">
+                                        @foreach (var block in day.TimeBlocks)
+                                        {
+                                            <div class="time-block @(block.IsReserved ? "reserved" : "") p-1 mb-1"
+                                                 data-bs-toggle="tooltip"
+                                                 data-bs-placement="top"
+                                                 title="@(block.IsReserved ? $"{block.ClientInfo}\n{block.ServiceName}" : "Wolny termin")">
+                                                <small>@block.TimeRange</small>
+                                                @if (block.IsReserved)
+                                                {
+                                                    <div class="client-info">
+                                                        <small>@block.ServiceName</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
-                            </div>
-                        }
+                            }
+                        </div>
                     </div>
+
+
                 </div>
             </div>
-        </div>
-    }
+        }
 
 
-<style>
-    .time-block {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-    }
+        <style>
+            .time-block {
+                background-color: #f8f9fa;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                padding: 5px;
+                transition: background-color 0.3s ease, transform 0.2s ease;
+            }
 
-    .time-block.reserved {
-        background-color: #e2e3e5;
-    }
+                .time-block:hover {
+                    background-color: #e9ecef;
+                    transform: scale(1.02);
+                }
 
-    .schedule-container {
-        overflow-x: auto;
-    }
+                .time-block.reserved {
+                    background-color: #adb5bd;
+                    color: #ffffff;
+                    font-weight: bold;
+                }
 
-    .day-column {
-        min-width: 150px;
-    }
+                    .time-block.reserved:hover {
+                        background-color: #868e96;
+                    }
 
-    .client-info {
-        font-size: 0.75rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-</style>
+                .time-block.vacation {
+                    background-color: #ffe066;
+                    color: #856404;
+                }
+
+            .schedule-container {
+                overflow-x: auto;
+                padding: 10px 0;
+            }
+
+            .day-column {
+                min-width: 160px;
+                padding: 10px;
+                border-right: 1px solid #dee2e6;
+                display: none; /* Domyślnie ukryj kolumny */
+            }
+
+                .day-column:nth-child(-n+5) {
+                    display: block; /* Pokaż tylko kolumny od poniedziałku do piątku */
+                }
+
+                .day-column:last-child {
+                    border-right: none;
+                }
+
+            .client-info {
+                font-size: 0.8rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
+
+
 
         @section Scripts {
         <script>
@@ -128,4 +162,4 @@
             })
         </script>
         }
-}
+    }
