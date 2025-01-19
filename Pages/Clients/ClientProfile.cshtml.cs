@@ -214,6 +214,18 @@ namespace Fryzjer.Pages.Clients
                 _context.SaveChanges(); // Zapisujemy zmiany w bazie danych
             }
 
+            var previousReservation = reservation;
+            reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservation.Id + 1);
+
+            while (reservation != null && reservation.date == previousReservation.date && reservation.HairdresserId == previousReservation.HairdresserId && previousReservation.ServiceId == reservation.ServiceId && previousReservation.time + TimeSpan.FromMinutes(15) >= reservation.time)
+            {
+                reservation.status = 'A';
+                _context.SaveChanges();
+                previousReservation = reservation;
+                reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservation.Id + 1);
+            }
+
+
             // Po anulowaniu, prze³adowujemy stronê, aby zaktualizowaæ widok
             return RedirectToPage();
         }

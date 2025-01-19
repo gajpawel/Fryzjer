@@ -65,6 +65,7 @@
                             }
                         </li>
                 }
+                @{Model.previousReservation=null;}
             </ul>
         }
         else
@@ -103,13 +104,22 @@
             <ul class="list-group">
                 @foreach (var reservation in Model.PastReservations)
                 {
+                        @if (Model.previousReservation != null && reservation.date == Model.previousReservation.date && reservation.HairdresserId == Model.previousReservation.HairdresserId && Model.previousReservation.ServiceId == reservation.ServiceId && Model.previousReservation.time + TimeSpan.FromMinutes(15) >= reservation.time)
+                        {
+                            Model.previousReservation = reservation;
+                            continue;
+                        }
                     <li class="list-group-item">
                         <strong>Data:</strong> @reservation.date.ToString("yyyy-MM-dd") @reservation.time.ToString(@"hh\:mm")<br />
                         <strong>Usługa:</strong> @(reservation.Service != null ? reservation.Service.Name : "Usługa nieznana")<br />
                         <strong>Fryzjer:</strong> @(reservation.Hairdresser != null ? reservation.Hairdresser?.Name + " " + reservation.Hairdresser?.Surname : "Fryzjer nieznany")<br />
                         <strong>Status:</strong> @(reservation.status == 'Z' ? "Zakończona" : "Anulowana")
+                            @{
+                                Model.previousReservation = reservation;
+                            }
                     </li>
                 }
+                    @{Model.previousReservation = null; }
             </ul>
         }
         else
