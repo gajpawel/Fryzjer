@@ -40,6 +40,7 @@ namespace Fryzjer.Pages.AbstractFactory
                 return _pageModel as IScheduleOperations;
             }
         }
+
         public void OnGet(int week = 0)
         {
             var hairdresserId = _httpContextAccessor.HttpContext?.Session.GetInt32("HairdresserId");
@@ -51,6 +52,7 @@ namespace Fryzjer.Pages.AbstractFactory
 
             CurrentWeek = week;
 
+            // Pobierz us³ugi fryzjera
             var hairdresserServices = _context.Specialization
                 .Where(s => s.HairdresserId == hairdresserId)
                 .Include(s => s.Service)
@@ -61,12 +63,14 @@ namespace Fryzjer.Pages.AbstractFactory
 
             var startDate = DateTime.Now.Date.AddDays(7 * week);
 
+            // Jeœli jest weekend, poka¿ nastêpny tydzieñ
             if (startDate.DayOfWeek == DayOfWeek.Saturday || startDate.DayOfWeek == DayOfWeek.Sunday)
             {
                 startDate = startDate.AddDays(((int)DayOfWeek.Monday - (int)startDate.DayOfWeek + 7) % 7);
             }
             else
             {
+                // Dla pozosta³ych dni ustaw na pocz¹tek tygodnia
                 startDate = startDate.AddDays(-(int)startDate.DayOfWeek + (int)DayOfWeek.Monday);
             }
 
@@ -84,6 +88,7 @@ namespace Fryzjer.Pages.AbstractFactory
             var schedule1 = new List<DailySchedule>();
             var schedule2 = new List<DailySchedule>();
 
+            // Generuj pierwszy tydzieñ
             for (int i = 0; i < 5; i++)
             {
                 var date = startDate.AddDays(i);
@@ -94,6 +99,7 @@ namespace Fryzjer.Pages.AbstractFactory
                 });
             }
 
+            // Generuj drugi tydzieñ
             var nextWeek = startDate.AddDays(7);
             for (int i = 0; i < 5; i++)
             {
@@ -110,44 +116,55 @@ namespace Fryzjer.Pages.AbstractFactory
         private List<TimeBlock> GenerateDailyTimeBlocks(DateTime date, int hairdresserId)
         {
             var blocks = new List<TimeBlock>();
-
-            if (date.Date < DateTime.Now.Date.AddDays(-((int)DateTime.Now.DayOfWeek - 1)))
-            {
-                return blocks;
-            }
-
             var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
 
             var reservations = _context.Reservation
                 .Include(r => r.Client)
                 .Include(r => r.Service)
-                .Where(r => r.date == date && r.HairdresserId == hairdresserId)
+                .Where(r => r.date == date && r.HairdresserId == hairdresserId && r.status != 'A')
                 .AsEnumerable()
                 .OrderBy(r => r.time)
                 .ToList();
 
+            bool isHistoricalDate = date.Date < DateTime.Now.Date;
+            if (isHistoricalDate)
+            {
+                reservations = reservations.Where(r => r.status == 'Z').ToList();
+            }
+
             TimeBlock currentBlock = null;
             TimeBlock currentVacationBlock = null;
 
-            foreach (var reservation in reservations)
+            // Grupujemy rezerwacje urlopowe
+            var vacationGroups = reservations
+                .Where(r => vacationService != null && r.ServiceId == vacationService.Id)
+                .GroupBy(r => new { r.status, r.ClientId })
+                .ToList();
+
+            // Przetwarzamy ka¿d¹ grupê urlopow¹
+            foreach (var vacationGroup in vacationGroups)
             {
-                if (reservation.status == 'A')
-                    continue;
+                var orderedVacations = vacationGroup.OrderBy(r => r.time).ToList();
+                var groupStart = orderedVacations.First();
+                var lastTime = groupStart.time;
 
-                bool isVacation = (vacationService != null && reservation.ServiceId == vacationService.Id);
-
-                if (isVacation)
+                // Tworzymy nowy blok dla ka¿dej niepo³¹czonej sekwencji
+                foreach (var vacation in orderedVacations)
                 {
-                    if (currentVacationBlock == null ||
-                        reservation.time != currentVacationBlock.EndTime ||
-                        reservation.status != currentVacationBlock.Status)
+                    if (vacation.time != lastTime && vacation.time != lastTime.Add(TimeSpan.FromMinutes(15)))
                     {
+                        // Jeœli jest przerwa, dodajemy poprzedni blok i zaczynamy nowy
                         if (currentVacationBlock != null)
+                        {
                             blocks.Add(currentVacationBlock);
+                            currentVacationBlock = null;
+                        }
+                    }
 
-                        string statusText = GetStatusText(reservation.status);
-
-                        string modal = reservation.status switch
+                    if (currentVacationBlock == null)
+                    {
+                        string statusText = GetStatusText(vacation.status);
+                        string modal = vacation.status switch
                         {
                             'O' => "#manageVacationModal",
                             'Z' => "",
@@ -156,100 +173,99 @@ namespace Fryzjer.Pages.AbstractFactory
 
                         currentVacationBlock = new TimeBlock
                         {
-                            StartTime = reservation.time,
-                            EndTime = reservation.time.Add(TimeSpan.FromMinutes(15)),
+                            StartTime = vacation.time,
+                            EndTime = vacation.time.Add(TimeSpan.FromMinutes(15)),
                             IsReserved = true,
-                            ReservationId = reservation.Id,
-                            ClientId = (int)reservation.ClientId,
+                            ReservationId = vacation.Id,
+                            ClientId = (int)vacation.ClientId,
                             ClientInfo = statusText,
-                            ServiceId = reservation.ServiceId,
+                            ServiceId = vacation.ServiceId,
                             ServiceName = "Urlop",
                             Modal = modal,
-                            Status = reservation.status,
-                            BlockClass = $"vacation-{reservation.status.ToString().ToLower()}"
+                            Status = vacation.status,
+                            BlockClass = $"vacation-{vacation.status.ToString().ToLower()}"
                         };
                     }
                     else
                     {
-                        currentVacationBlock.EndTime = currentVacationBlock.EndTime.Add(TimeSpan.FromMinutes(15));
+                        currentVacationBlock.EndTime = vacation.time.Add(TimeSpan.FromMinutes(15));
                     }
+
+                    lastTime = vacation.time;
+                }
+
+                if (currentVacationBlock != null)
+                {
+                    blocks.Add(currentVacationBlock);
+                    currentVacationBlock = null;
+                }
+            }
+
+            // Przetwarzanie zwyk³ych rezerwacji (nie-urlopowych)
+            foreach (var reservation in reservations.Where(r => vacationService == null || r.ServiceId != vacationService.Id))
+            {
+                bool startNew = currentBlock == null ||
+                               reservation.time != currentBlock.EndTime ||
+                               reservation.status != currentBlock.Status ||
+                               reservation.ClientId != currentBlock.ClientId ||
+                               reservation.ServiceId != currentBlock.ServiceId;
+
+                if (startNew)
+                {
+                    if (currentBlock != null)
+                        blocks.Add(currentBlock);
+
+                    string modal = reservation.status switch
+                    {
+                        'O' => "#manageReservationModal",
+                        'Z' => "",
+                        _ => "#deleteReservationModal"
+                    };
+
+                    string clientInfo = (reservation.Client != null)
+                        ? $"{reservation.Client.Name} {reservation.Client.Surname}\nTel: {reservation.Client.Phone}"
+                        : "Zarezerwowane";
+
+                    if (reservation.status == 'Z')
+                    {
+                        clientInfo += "\n(Zakoñczone)";
+                    }
+
+                    string blockClass = reservation.status switch
+                    {
+                        'O' => "pending",
+                        'P' => "reserved",
+                        'Z' => "completed",
+                        _ => "reserved"
+                    };
+
+                    currentBlock = new TimeBlock
+                    {
+                        StartTime = reservation.time,
+                        EndTime = reservation.time.Add(TimeSpan.FromMinutes(15)),
+                        IsReserved = true,
+                        ReservationId = reservation.Id,
+                        ClientId = (int)reservation.ClientId,
+                        ClientInfo = clientInfo,
+                        ServiceId = reservation.ServiceId,
+                        ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
+                        Modal = modal,
+                        Status = reservation.status,
+                        BlockClass = blockClass
+                    };
                 }
                 else
                 {
-                    bool startNew = false;
-                    if (currentBlock == null)
-                    {
-                        startNew = true;
-                    }
-                    else
-                    {
-                        if (reservation.time != currentBlock.EndTime
-                            || reservation.status != currentBlock.Status
-                            || reservation.ClientId != currentBlock.ClientId
-                            || reservation.ServiceId != currentBlock.ServiceId)
-                        {
-                            startNew = true;
-                        }
-                    }
-
-                    if (startNew)
-                    {
-                        if (currentBlock != null)
-                            blocks.Add(currentBlock);
-
-                        string modal = reservation.status switch
-                        {
-                            'O' => "#manageReservationModal",
-                            'Z' => "",
-                            _ => "#deleteReservationModal"
-                        };
-
-                        string clientInfo = (reservation.Client != null)
-                            ? $"{reservation.Client.Name} {reservation.Client.Surname}\nTel: {reservation.Client.Phone}"
-                            : "Zarezerwowane";
-
-                        if (reservation.status == 'Z')
-                        {
-                            clientInfo += "\n(Zakoñczone)";
-                        }
-
-                        string blockClass = reservation.status switch
-                        {
-                            'O' => "pending",
-                            'P' => "reserved",
-                            'Z' => "completed",
-                            _ => "reserved"
-                        };
-
-                        currentBlock = new TimeBlock
-                        {
-                            StartTime = reservation.time,
-                            EndTime = reservation.time.Add(TimeSpan.FromMinutes(15)),
-                            IsReserved = true,
-                            ReservationId = reservation.Id,
-                            ClientId = (int)reservation.ClientId,
-                            ClientInfo = clientInfo,
-                            ServiceId = reservation.ServiceId,
-                            ServiceName = reservation.Service?.Name ?? "Brak us³ugi",
-                            Modal = modal,
-                            Status = reservation.status,
-                            BlockClass = blockClass
-                        };
-                    }
-                    else
-                    {
-                        currentBlock.EndTime = currentBlock.EndTime.Add(TimeSpan.FromMinutes(15));
-                    }
+                    currentBlock.EndTime = currentBlock.EndTime.Add(TimeSpan.FromMinutes(15));
                 }
             }
 
             if (currentBlock != null)
                 blocks.Add(currentBlock);
-            if (currentVacationBlock != null)
-                blocks.Add(currentVacationBlock);
 
-            return blocks;
+            return blocks.OrderBy(b => b.StartTime).ToList();
         }
+
         private void LoadVacationHistory(int hairdresserId)
         {
             var vacationService = _context.Service.FirstOrDefault(s => s.Name.ToLower() == "urlop");
@@ -298,6 +314,7 @@ namespace Fryzjer.Pages.AbstractFactory
 
             OnPostVacationRequestAsync(request).Wait();
         }
+
         [HttpPost]
         public async Task<IActionResult> OnPostVacationRequestAsync([FromBody] VacationRequest request)
         {
@@ -445,6 +462,7 @@ namespace Fryzjer.Pages.AbstractFactory
             }
             return slots;
         }
+
         public IActionResult OnPostDeleteReservation(int reservationId)
         {
             var reservation = _context.Reservation.FirstOrDefault(r => r.Id == reservationId);
