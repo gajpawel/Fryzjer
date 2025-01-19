@@ -44,11 +44,11 @@ namespace Fryzjer.Pages.Admin
                     return;
                 }
 
-                // Pobieramy wszystkie rezerwacje urlopowe z danymi fryzjerów i salonów
+                // Pobieramy wszystkie rezerwacje urlopowe, ignoruj¹c te, które maj¹ brak przypisanego fryzjera
                 var allVacationRequests = _context.Reservation
                     .Include(r => r.Hairdresser)
                     .ThenInclude(h => h.Place)
-                    .Where(r => r.ServiceId == vacationService.Id)
+                    .Where(r => r.ServiceId == vacationService.Id && r.Hairdresser != null)
                     .ToList();
 
                 // Grupujemy rezerwacje urlopowe
@@ -110,6 +110,7 @@ namespace Fryzjer.Pages.Admin
                 }
 
                 var mainRequest = _context.Reservation
+                    .Include(r => r.Hairdresser)
                     .FirstOrDefault(r => r.Id == requestId);
 
                 if (mainRequest == null)
@@ -145,7 +146,6 @@ namespace Fryzjer.Pages.Admin
                     }
                 }
 
-
                 // Zatwierdzamy urlop
                 foreach (var request in vacationBlock)
                 {
@@ -168,6 +168,7 @@ namespace Fryzjer.Pages.Admin
             try
             {
                 var mainRequest = _context.Reservation
+                    .Include(r => r.Hairdresser)
                     .FirstOrDefault(r => r.Id == requestId);
 
                 if (mainRequest == null)
