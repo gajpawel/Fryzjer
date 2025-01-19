@@ -80,10 +80,15 @@ namespace Fryzjer.Controllers
                 {
 
 
-                    // Jeżeli status to 'O' i nazwa usługi to "urlop", pozwalamy kontynuować
                     if (overlapping.status == 'O' && overlapping.Service?.Name == "urlop")
                     {
                         _logger.LogInformation("Overlapping reservation with status 'O' and service 'urlop' detected. Adding new reservation is allowed.");
+                        continue; // Kontynuujemy proces dodawania rezerwacji
+                    }
+
+                    if (overlapping.status == 'A')
+                    {
+                        _logger.LogInformation("Overlapping reservation with status 'A'.");
                         continue; // Kontynuujemy proces dodawania rezerwacji
                     }
                 }

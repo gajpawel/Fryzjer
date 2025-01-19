@@ -119,6 +119,9 @@ namespace Fryzjer.Pages.AbstractFactory
                 if (reservation.status == 'O' && reservation.Service?.Name == "urlop")
                     continue;
 
+                if (reservation.status == 'A')
+                    continue;
+
                 if (currentBlock == null || reservation.time != currentBlock.EndTime)
                 {
                     if (currentBlock != null)
