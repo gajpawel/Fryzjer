@@ -91,7 +91,56 @@ namespace Fryzjer.Pages
             return Page();
         }
 
+        public async Task<IActionResult> OnPostDeleteVacationAsync(int reservationId)
+        {
+            try
+            {
+                var vacationService = await _context.Service.FirstOrDefaultAsync(s => s.Name.ToLower() == "urlop");
+                if (vacationService == null)
+                {
+                    return BadRequest("Nie znaleziono usługi 'Urlop'.");
+                }
 
+                // Pobierz pierwszą rezerwację urlopu
+                var vacationReservation = await _context.Reservation
+                    .FirstOrDefaultAsync(r => r.Id == reservationId && r.ServiceId == vacationService.Id);
+
+                if (vacationReservation == null)
+                {
+                    return BadRequest("Nie znaleziono wskazanej rezerwacji urlopu.");
+                }
+
+                // Znajdź wszystkie połączone rezerwacje urlopu
+                var connectedVacations = await _context.Reservation
+                    .Where(r => r.date == vacationReservation.date &&
+                               r.HairdresserId == vacationReservation.HairdresserId &&
+                               r.ServiceId == vacationService.Id &&
+                               r.ClientId == vacationReservation.ClientId &&
+                               (r.status == 'O' || r.status == 'P'))
+                    .ToListAsync();
+
+                // Zmień status wszystkich znalezionych rezerwacji na 'A' (anulowane)
+                foreach (var vacation in connectedVacations)
+                {
+                    vacation.status = 'A';
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Przekieruj z powrotem do strony z parametrami
+                return RedirectToPage(new
+                {
+                    hairdresserId = vacationReservation.HairdresserId,
+                    weekOffset = WeekOffset
+                });
+            }
+            catch (Exception ex)
+            {
+                // W przypadku błędu, zaloguj go i zwróć komunikat
+                _logger.LogError(ex, "Błąd podczas usuwania urlopu");
+                return BadRequest($"Wystąpił błąd podczas usuwania urlopu: {ex.Message}");
+            }
+        }
         private List<DailySchedule> MergeConsecutiveBlocks(List<DailySchedule> schedule)
         {
             foreach (var day in schedule)

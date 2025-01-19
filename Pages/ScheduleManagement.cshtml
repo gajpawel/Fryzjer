@@ -53,21 +53,50 @@
             </div>
         </div>
 
-        {
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">@Model.SelectedHairdresser.Name @Model.SelectedHairdresser.Surname</h5>
-                    <small class="text-muted">@(Model.SelectedHairdresser.Place?.Name ?? "Brak przypisanego lokalu")</small>
-                </div>
-                <div class="card-body p-2">
-                    <div class="schedule-container">
-                        <div class="d-flex">
-                            @foreach (var day in Model.WeeklySchedule)
-                            {
-                                <div class="day-column flex-fill mx-1">
-                                    <h6 class="text-center">@day.Date.ToString("dddd, dd-MM")</h6>
-                                    <div class="time-slots">
-                                        @foreach (var block in day.TimeBlocks)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">@Model.SelectedHairdresser.Name @Model.SelectedHairdresser.Surname</h5>
+                <small class="text-muted">@(Model.SelectedHairdresser.Place?.Name ?? "Brak przypisanego lokalu")</small>
+            </div>
+            <div class="card-body p-2">
+                <div class="schedule-container">
+                    <div class="d-flex">
+                        @foreach (var day in Model.WeeklySchedule)
+                        {
+                            <div class="day-column flex-fill mx-1">
+                                <h6 class="text-center">@day.Date.ToString("dddd, dd-MM")</h6>
+                                <div class="time-slots">
+                                    @foreach (var block in day.TimeBlocks)
+                                    {
+                                        @if (block.ServiceName == "Urlop")
+                                        {
+                                            <div class="time-block @(block.IsReserved ? "reserved vacation" : "") p-1 mb-1"
+                                                 data-bs-toggle="tooltip"
+                                                 data-bs-placement="top"
+                                                 title="@(block.IsReserved ? $"Urlop\n{block.ClientInfo}" : "Wolny termin")">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <small>@block.TimeRange</small>
+                                                    <div class="btn-group">
+                                                        <form method="post" class="d-inline">
+                                                            <input type="hidden" name="reservationId" value="@block.ReservationId" />
+                                                            <button type="submit"
+                                                                    asp-page-handler="DeleteVacation"
+                                                                    class="btn btn-danger btn-sm"
+                                                                    onclick="return confirm('Czy na pewno chcesz usunąć ten urlop?')">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                @if (block.IsReserved)
+                                                {
+                                                    <div class="vacation-info">
+                                                        <small>Urlop</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
                                         {
                                             <div class="time-block @(block.IsReserved ? "reserved" : "") p-1 mb-1"
                                                  data-bs-toggle="tooltip"
@@ -82,17 +111,14 @@
                                                 }
                                             </div>
                                         }
-                                    </div>
+                                    }
                                 </div>
-                            }
-                        </div>
+                            </div>
+                        }
                     </div>
-
-
                 </div>
             </div>
-        }
-
+        </div>
 
         <style>
             .time-block {
@@ -121,7 +147,12 @@
                 .time-block.vacation {
                     background-color: #ffe066;
                     color: #856404;
+                    border: 1px solid #ffeeba;
                 }
+
+                    .time-block.vacation:hover {
+                        background-color: #ffd43b;
+                    }
 
             .schedule-container {
                 overflow-x: auto;
@@ -132,26 +163,44 @@
                 min-width: 160px;
                 padding: 10px;
                 border-right: 1px solid #dee2e6;
-                display: none; /* Domyślnie ukryj kolumny */
+                display: none;
             }
 
                 .day-column:nth-child(-n+5) {
-                    display: block; /* Pokaż tylko kolumny od poniedziałku do piątku */
+                    display: block;
                 }
 
                 .day-column:last-child {
                     border-right: none;
                 }
 
-            .client-info {
+            .client-info, .vacation-info {
                 font-size: 0.8rem;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+
+            .vacation-info {
+                color: #856404;
+            }
+
+            .btn-group .btn-sm {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.75rem;
+            }
+
+            .time-block .btn-danger {
+                background-color: #dc3545;
+                border-color: #dc3545;
+                color: white;
+            }
+
+                .time-block .btn-danger:hover {
+                    background-color: #c82333;
+                    border-color: #bd2130;
+                }
         </style>
-
-
 
         @section Scripts {
         <script>
@@ -163,3 +212,4 @@
         </script>
         }
     }
+</div>
